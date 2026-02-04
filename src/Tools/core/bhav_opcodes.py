@@ -1,0 +1,415 @@
+"""
+BHAV Instruction Opcode Reference
+
+Extracted from FreeSO source code.
+Maps BHAV instruction opcodes (0-255) to their semantics.
+"""
+
+# Opcode Categories
+OPCODE_CATEGORIES = {
+    "Control": [0, 1, 13, 14, 17, 20, 28, 49, 50],
+    "Debug": [15],
+    "Looks": [7, 23, 36, 41],
+    "Looks/Debug": [21],
+    "Math": [8],
+    "Math/Control": [2],
+    "Math/Position": [11, 12],
+    "Object": [18, 31, 32, 42, 51],
+    "Position": [4, 5, 16, 27, 45, 46],
+    "Sim": [6, 22, 25, 26, 29, 44],
+    "TSO": [62, 67],
+    "Unknown": [24, 38, 39, 43],
+}
+
+# Primitive Instruction Opcodes (0-255)
+PRIMITIVE_INSTRUCTIONS = {
+    0: {
+        "name": "Sleep",
+        "category": "Control",
+        "description": "Pause execution for specified duration (ticks)",
+        "stack_effect": "Pops duration from stack",
+        "operand": "Sleep duration in 1/30ths of a second",
+        "exit_code": "CONTINUE",
+    },
+    1: {
+        "name": "GenericTSOCall",
+        "category": "Control",
+        "description": "Call a primitive/subroutine based on operand",
+        "stack_effect": "Varies by called primitive",
+        "operand": "Primitive to call (can be subroutine ID 0x0100+)",
+        "exit_code": "CONTINUE, GOTO_TRUE, GOTO_FALSE, or ERROR",
+    },
+    2: {
+        "name": "Expression",
+        "category": "Math/Control",
+        "description": "Evaluate mathematical/logical expression and branch",
+        "stack_effect": "Pushes result (0 or 1)",
+        "operand": "LHS operand, RHS operand, operator, scopes",
+        "exit_code": "GOTO_TRUE or GOTO_FALSE based on result",
+    },
+    4: {
+        "name": "Grab",
+        "category": "Position",
+        "description": "Pick up object from world",
+        "stack_effect": "Requires object ID on stack",
+        "operand": "Animation type",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    5: {
+        "name": "Drop",
+        "category": "Position",
+        "description": "Put down held object",
+        "stack_effect": "No effect on stack",
+        "operand": "Unknown",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    6: {
+        "name": "ChangeSuit",
+        "category": "Sim",
+        "description": "Change sim's outfit/accessories",
+        "stack_effect": "Pops outfit index",
+        "operand": "Outfit type",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    7: {
+        "name": "Refresh",
+        "category": "Looks",
+        "description": "Redraw object graphics",
+        "stack_effect": "No effect",
+        "operand": "None",
+        "exit_code": "CONTINUE",
+    },
+    8: {
+        "name": "RandomNumber",
+        "category": "Math",
+        "description": "Generate random number and push to stack",
+        "stack_effect": "Pushes random value 0 to max",
+        "operand": "Max value (exclusive)",
+        "exit_code": "CONTINUE",
+    },
+    11: {
+        "name": "GetDistanceTo",
+        "category": "Math/Position",
+        "description": "Calculate distance to another object",
+        "stack_effect": "Pops target object ID, pushes distance",
+        "operand": "None",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    12: {
+        "name": "GetDirectionTo",
+        "category": "Math/Position",
+        "description": "Get direction (angle) to another object",
+        "stack_effect": "Pops target object ID, pushes direction",
+        "operand": "None",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    13: {
+        "name": "PushInteraction",
+        "category": "Control",
+        "description": "Queue an interaction on sim's action queue",
+        "stack_effect": "Complex operand stack usage",
+        "operand": "Interaction definition",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    14: {
+        "name": "FindBestObjectForFunction",
+        "category": "Control",
+        "description": "Search lot for best object with given function",
+        "stack_effect": "Pushes best matching object ID",
+        "operand": "Function/TTAB to search for",
+        "exit_code": "CONTINUE or GOTO_FALSE (not found)",
+    },
+    15: {
+        "name": "Breakpoint",
+        "category": "Debug",
+        "description": "Debugging breakpoint (pause execution)",
+        "stack_effect": "No effect",
+        "operand": "Debug message or ID",
+        "exit_code": "CONTINUE",
+    },
+    16: {
+        "name": "FindLocationFor",
+        "category": "Position",
+        "description": "Find suitable position for sim",
+        "stack_effect": "Pushes X, Y coordinates",
+        "operand": "Search parameters",
+        "exit_code": "CONTINUE or GOTO_FALSE (none found)",
+    },
+    17: {
+        "name": "IdleForInput",
+        "category": "Control",
+        "description": "Wait for user interaction",
+        "stack_effect": "May push user input data",
+        "operand": "Idle behavior ID or function",
+        "exit_code": "Varies based on input",
+    },
+    18: {
+        "name": "RemoveObjectInstance",
+        "category": "Object",
+        "description": "Delete object from world",
+        "stack_effect": "Pops object ID",
+        "operand": "Cleanup BHAV (optional)",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    20: {
+        "name": "RunFunctionalTree",
+        "category": "Control",
+        "description": "Execute a functional tree (interaction decision tree)",
+        "stack_effect": "Complex interaction parameters",
+        "operand": "TTAB (interaction table) ID",
+        "exit_code": "CONTINUE, GOTO_TRUE, GOTO_FALSE",
+    },
+    21: {
+        "name": "ShowString",
+        "category": "Looks/Debug",
+        "description": "Display text bubble over object/sim",
+        "stack_effect": "Pops string data",
+        "operand": "String resource ID",
+        "exit_code": "CONTINUE",
+    },
+    22: {
+        "name": "LookTowards",
+        "category": "Sim",
+        "description": "Face towards location or object",
+        "stack_effect": "May pop target position",
+        "operand": "Look duration, animation",
+        "exit_code": "CONTINUE",
+    },
+    23: {
+        "name": "PlaySoundEvent",
+        "category": "Looks",
+        "description": "Play audio sound effect",
+        "stack_effect": "Pops sound ID or frequency",
+        "operand": "Sound parameters",
+        "exit_code": "CONTINUE",
+    },
+    24: {
+        "name": "OldRelationship",
+        "category": "Unknown",
+        "description": "Not yet documented",
+        "stack_effect": "",
+        "operand": "",
+        "exit_code": "",
+    },
+    25: {
+        "name": "TransferFunds",
+        "category": "Sim",
+        "description": "Move money between objects",
+        "stack_effect": "Pops source, target, amount",
+        "operand": "None",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    26: {
+        "name": "Relationship",
+        "category": "Sim",
+        "description": "Modify relationship between sims",
+        "stack_effect": "Pops sim IDs and relationship value",
+        "operand": "Relationship operation (add, set, etc.)",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    27: {
+        "name": "GotoRelativePosition",
+        "category": "Position",
+        "description": "Walk to relative position",
+        "stack_effect": "Pops X, Y, Z offsets",
+        "operand": "Animation/routing parameters",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    28: {
+        "name": "RunTreeByName",
+        "category": "Control",
+        "description": "Execute interaction by name string",
+        "stack_effect": "Complex interaction parameters",
+        "operand": "Interaction name string ID",
+        "exit_code": "CONTINUE, GOTO_TRUE, GOTO_FALSE",
+    },
+    29: {
+        "name": "SetMotiveChange",
+        "category": "Sim",
+        "description": "Set how sim's motives change over time",
+        "stack_effect": "Pops motive index and rate",
+        "operand": "Motive parameters",
+        "exit_code": "CONTINUE",
+    },
+    31: {
+        "name": "SetToNext",
+        "category": "Object",
+        "description": "Advance to next animation frame/state",
+        "stack_effect": "No effect",
+        "operand": "None",
+        "exit_code": "CONTINUE or END if last frame",
+    },
+    32: {
+        "name": "TestObjectType",
+        "category": "Object",
+        "description": "Check if object matches type",
+        "stack_effect": "Pops object ID",
+        "operand": "Object type to test",
+        "exit_code": "GOTO_TRUE or GOTO_FALSE",
+    },
+    36: {
+        "name": "Dialog",
+        "category": "Looks",
+        "description": "Show dialog with global string",
+        "stack_effect": "Pops string ID",
+        "operand": "Dialog options",
+        "exit_code": "CONTINUE",
+    },
+    38: {
+        "name": "DialogString",
+        "category": "Unknown",
+        "description": "Not yet documented",
+        "stack_effect": "",
+        "operand": "",
+        "exit_code": "",
+    },
+    39: {
+        "name": "DialogChoice",
+        "category": "Unknown",
+        "description": "Not yet documented",
+        "stack_effect": "",
+        "operand": "",
+        "exit_code": "",
+    },
+    41: {
+        "name": "SetBalloonHeadline",
+        "category": "Looks",
+        "description": "Set speech balloon text above sim",
+        "stack_effect": "Pops string ID",
+        "operand": "Balloon icon/type",
+        "exit_code": "CONTINUE",
+    },
+    42: {
+        "name": "CreateObjectInstance",
+        "category": "Object",
+        "description": "Create new object on lot",
+        "stack_effect": "Pushes new object ID",
+        "operand": "GUID of object to create",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    43: {
+        "name": "DropOnto",
+        "category": "Unknown",
+        "description": "Not yet documented",
+        "stack_effect": "",
+        "operand": "",
+        "exit_code": "",
+    },
+    44: {
+        "name": "AnimateSim",
+        "category": "Sim",
+        "description": "Play animation on sim",
+        "stack_effect": "May pop animation ID",
+        "operand": "Animation event ID",
+        "exit_code": "CONTINUE",
+    },
+    45: {
+        "name": "GotoRoutingSlot",
+        "category": "Position",
+        "description": "Walk to predefined routing slot",
+        "stack_effect": "May pop slot data",
+        "operand": "SLOT index",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    46: {
+        "name": "Snap",
+        "category": "Position",
+        "description": "Instantly teleport to location",
+        "stack_effect": "Pops X, Y, Z, rotation",
+        "operand": "None",
+        "exit_code": "CONTINUE",
+    },
+    49: {
+        "name": "NotifyOutOfIdle",
+        "category": "Control",
+        "description": "Signal that object left idle state",
+        "stack_effect": "No effect",
+        "operand": "None",
+        "exit_code": "CONTINUE",
+    },
+    50: {
+        "name": "ChangeActionString",
+        "category": "Control",
+        "description": "Update action queue string display",
+        "stack_effect": "Pops string ID",
+        "operand": "String resource",
+        "exit_code": "CONTINUE",
+    },
+    51: {
+        "name": "TS1InventoryOperations",
+        "category": "Object",
+        "description": "Handle TS1-specific inventory",
+        "stack_effect": "Complex inventory operations",
+        "operand": "Operation type",
+        "exit_code": "CONTINUE or ERROR",
+    },
+    62: {
+        "name": "InvokePlugin",
+        "category": "TSO",
+        "description": "Call plugin/extension",
+        "stack_effect": "Plugin-dependent",
+        "operand": "Plugin identifier",
+        "exit_code": "Plugin-defined",
+    },
+    67: {
+        "name": "TSOInventoryOperations",
+        "category": "TSO",
+        "description": "Handle TSO-specific inventory operations",
+        "stack_effect": "Complex inventory operations",
+        "operand": "Operation type",
+        "exit_code": "CONTINUE or ERROR",
+    },
+}
+
+# Special Control Flow Opcodes
+SPECIAL_OPCODES = {
+    "0xff00": {
+        "name": "CALL_BEHAVIOR",
+        "category": "Control",
+        "description": "Call sub-behavior by BHAV ID",
+        "stack_effect": "Complex parameter passing",
+        "operand": "BHAV ID to call (0x0100+)",
+        "exit_code": "CONTINUE, GOTO_TRUE, GOTO_FALSE, ERROR, or RETURN",
+    },
+    "0xff01": {
+        "name": "RETURN",
+        "category": "Control",
+        "description": "Return from current BHAV",
+        "stack_effect": "Clears call stack frame",
+        "operand": "None",
+        "exit_code": "RETURN",
+    },
+    "0xffff": {
+        "name": "JUMP",
+        "category": "Control",
+        "description": "Unconditional jump to instruction",
+        "stack_effect": "No effect",
+        "operand": "Target instruction offset",
+        "exit_code": "CONTINUE (at new location)",
+    },
+}
+
+def get_opcode_info(opcode: int) -> dict:
+    """Get semantics for an opcode.
+    
+    Args:
+        opcode: Instruction opcode (0-255 for primitives, 0xFF00+ for special)
+    
+    Returns:
+        Dictionary with name, category, description, stack_effect, etc.
+    """
+    if opcode in PRIMITIVE_INSTRUCTIONS:
+        return PRIMITIVE_INSTRUCTIONS[opcode]
+    else:
+        return {"name": "Unknown", "category": "Unknown", "description": "Undefined opcode"}
+
+def get_category_opcodes(category: str) -> list:
+    """Get all opcodes in a category.
+    
+    Args:
+        category: Category name (e.g., "Control", "Math", "Sim")
+    
+    Returns:
+        List of opcode numbers in that category
+    """
+    return OPCODE_CATEGORIES.get(category, [])

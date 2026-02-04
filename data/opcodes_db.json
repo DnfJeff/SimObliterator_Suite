@@ -1,0 +1,444 @@
+{
+  "_meta": {
+    "version": "2.0.0",
+    "description": "BHAV opcode definitions for The Sims 1 - cross-referenced with FreeSO",
+    "source": "SimObliterator Archiver by Dnf_Jeff",
+    "last_updated": "2025-02-15"
+  },
+  "opcode_ranges": {
+    "primitives": {
+      "min": 0,
+      "max": 255,
+      "description": "Built-in primitive instructions"
+    },
+    "global_subroutines": {
+      "min": 256,
+      "max": 4095,
+      "description": "Global BHAV subroutines"
+    },
+    "local_subroutines": {
+      "min": 4096,
+      "max": 8191,
+      "description": "Local object BHAV subroutines"
+    },
+    "semi_global_subroutines": {
+      "min": 8192,
+      "max": 65535,
+      "description": "Semi-global BHAV subroutines"
+    }
+  },
+  "primitives": {
+    "0": {
+      "name": "Sleep",
+      "category": "Control",
+      "description": "Sleep/pause for N ticks"
+    },
+    "1": {
+      "name": "GenericSimsCall",
+      "category": "Sim",
+      "description": "Generic Sims system call (tutorial, expressions, etc.)"
+    },
+    "2": {
+      "name": "Expression",
+      "category": "Math",
+      "description": "Evaluate/set variable expressions"
+    },
+    "3": {
+      "name": "FindBestInteraction",
+      "category": "Interaction",
+      "description": "Find best available interaction"
+    },
+    "4": {
+      "name": "Grab",
+      "category": "Object",
+      "description": "Grab/pick up stack object"
+    },
+    "5": {
+      "name": "Drop",
+      "category": "Object",
+      "description": "Drop stack object"
+    },
+    "6": {
+      "name": "ChangeSuitOrAccessory",
+      "category": "Appearance",
+      "description": "Change Sim outfit or accessory"
+    },
+    "7": {
+      "name": "Refresh",
+      "category": "Update",
+      "description": "Refresh graphic/lighting/room score"
+    },
+    "8": {
+      "name": "Random",
+      "category": "Math",
+      "description": "Generate random number"
+    },
+    "9": {
+      "name": "Burn",
+      "category": "Object",
+      "description": "Set object on fire/burn"
+    },
+    "10": {
+      "name": "Tutorial",
+      "category": "Tutorial",
+      "description": "Tutorial begin/end hook"
+    },
+    "11": {
+      "name": "GetDistanceTo",
+      "category": "Math",
+      "description": "Calculate distance to object"
+    },
+    "12": {
+      "name": "GetDirectionTo",
+      "category": "Math",
+      "description": "Calculate direction to object"
+    },
+    "13": {
+      "name": "PushInteraction",
+      "category": "Interaction",
+      "description": "Queue/push interaction onto stack"
+    },
+    "14": {
+      "name": "FindBestObjectForFunction",
+      "category": "Object",
+      "description": "Find best object that can perform function"
+    },
+    "15": {
+      "name": "TreeBreakpoint",
+      "category": "Debug",
+      "description": "Debug breakpoint in behavior tree"
+    },
+    "16": {
+      "name": "FindLocationFor",
+      "category": "Position",
+      "description": "Find valid placement location"
+    },
+    "17": {
+      "name": "IdleForInput",
+      "category": "Control",
+      "description": "Wait/idle for user input"
+    },
+    "18": {
+      "name": "RemoveObjectInstance",
+      "category": "Object",
+      "description": "Delete object instance"
+    },
+    "19": {
+      "name": "MakeNewCharacter",
+      "category": "Sim",
+      "description": "Create new Sim"
+    },
+    "20": {
+      "name": "RunFunctionalTree",
+      "category": "Control",
+      "description": "Run behavior tree"
+    },
+    "21": {
+      "name": "ShowString",
+      "category": "UI",
+      "description": "Display string to user"
+    },
+    "22": {
+      "name": "Look",
+      "category": "Animation",
+      "description": "Look at target"
+    },
+    "23": {
+      "name": "PlaySoundEvent",
+      "category": "Sound",
+      "description": "Play sound effect"
+    },
+    "24": {
+      "name": "OldRelationship",
+      "category": "Relationship",
+      "description": "Old relationship ops"
+    },
+    "25": {
+      "name": "TransferFunds",
+      "category": "Money",
+      "description": "Transfer simoleons"
+    },
+    "26": {
+      "name": "Relationship",
+      "category": "Relationship",
+      "description": "Relationship operations"
+    },
+    "27": {
+      "name": "GrabPersonsWork",
+      "category": "Sim",
+      "description": "Get work info"
+    },
+    "28": {
+      "name": "Subroutine",
+      "category": "Control",
+      "description": "Call subroutine"
+    },
+    "29": {
+      "name": "SysLog",
+      "category": "Debug",
+      "description": "Write to system log"
+    },
+    "30": {
+      "name": "SetToNext",
+      "category": "Control",
+      "description": "Set iteration target"
+    },
+    "31": {
+      "name": "TestAttribute",
+      "category": "Object",
+      "description": "Test object attribute"
+    },
+    "32": {
+      "name": "GetObjectOfInterest",
+      "category": "Object",
+      "description": "Get interest target"
+    },
+    "33": {
+      "name": "SpecialEffect",
+      "category": "Effect",
+      "description": "Trigger visual effect"
+    },
+    "34": {
+      "name": "DialogGlobal",
+      "category": "UI",
+      "description": "Show dialog"
+    },
+    "35": {
+      "name": "DialogLocal",
+      "category": "UI",
+      "description": "Show local dialog"
+    },
+    "36": {
+      "name": "LookAt",
+      "category": "Animation",
+      "description": "Look at object"
+    },
+    "37": {
+      "name": "SetAttribute",
+      "category": "Object",
+      "description": "Set object attribute"
+    },
+    "38": {
+      "name": "RefreshObject",
+      "category": "Object",
+      "description": "Refresh object state"
+    },
+    "39": {
+      "name": "ObjectOwner",
+      "category": "Object",
+      "description": "Get/set object owner"
+    },
+    "40": {
+      "name": "TestObjectType",
+      "category": "Object",
+      "description": "Test object type"
+    },
+    "41": {
+      "name": "PlayMotive",
+      "category": "Motive",
+      "description": "Play motive change"
+    },
+    "42": {
+      "name": "SetToRandomTempNumber",
+      "category": "Math",
+      "description": "Set random temp"
+    },
+    "43": {
+      "name": "PushInteraction",
+      "category": "Queue",
+      "description": "Push interaction to queue"
+    },
+    "44": {
+      "name": "TreeBreakpoint",
+      "category": "Debug",
+      "description": "Tree breakpoint"
+    },
+    "45": {
+      "name": "FindBestInteraction",
+      "category": "Queue",
+      "description": "Find best interaction"
+    },
+    "46": {
+      "name": "ShowDebugDialog",
+      "category": "Debug",
+      "description": "Show debug dialog"
+    },
+    "47": {
+      "name": "TestSimulationStatus",
+      "category": "Control",
+      "description": "Test sim state"
+    },
+    "48": {
+      "name": "ObjectFunction",
+      "category": "Object",
+      "description": "Call object function"
+    },
+    "49": {
+      "name": "LightingGlobal",
+      "category": "Render",
+      "description": "Global lighting ops"
+    },
+    "50": {
+      "name": "Animate2D",
+      "category": "Animation",
+      "description": "2D sprite animation"
+    },
+    "51": {
+      "name": "TakeDeal",
+      "category": "Money",
+      "description": "Accept deal"
+    },
+    "52": {
+      "name": "IncrementStatistic",
+      "category": "Stats",
+      "description": "Increment stat counter"
+    },
+    "53": {
+      "name": "SkillTest",
+      "category": "Skill",
+      "description": "Test Sim skill"
+    },
+    "54": {
+      "name": "GetMotiveFraction",
+      "category": "Motive",
+      "description": "Get motive percentage"
+    },
+    "55": {
+      "name": "GotoRouting",
+      "category": "Movement",
+      "description": "Advanced pathfinding"
+    },
+    "56": {
+      "name": "GotoRelativePosition",
+      "category": "Movement",
+      "description": "Move to relative pos"
+    },
+    "57": {
+      "name": "CreateObject",
+      "category": "Object",
+      "description": "Create new object"
+    },
+    "58": {
+      "name": "SetBalance",
+      "category": "Money",
+      "description": "Set family funds"
+    },
+    "59": {
+      "name": "Notify",
+      "category": "Event",
+      "description": "Send notification"
+    },
+    "60": {
+      "name": "GetOrSet3DFile",
+      "category": "Render",
+      "description": "3D file operations"
+    },
+    "61": {
+      "name": "NotifyStackObjectOfCancellation",
+      "category": "Control",
+      "description": "Cancel notification"
+    },
+    "62": {
+      "name": "GetStackObjectOfCaller",
+      "category": "Control",
+      "description": "Get caller context"
+    },
+    "63": {
+      "name": "GetTerrainInfo",
+      "category": "World",
+      "description": "Get terrain/lot info (TSO)"
+    },
+    "41": {
+      "name": "SetBalloonHeadline",
+      "category": "UI",
+      "description": "Set thought bubble/headline"
+    },
+    "42": {
+      "name": "CreateNewObjectInstance",
+      "category": "Object",
+      "description": "Create new object instance"
+    },
+    "43": {
+      "name": "DropOnto",
+      "category": "Object",
+      "description": "Drop object onto target"
+    },
+    "44": {
+      "name": "AnimateSim",
+      "category": "Animation",
+      "description": "Animate Sim character"
+    },
+    "45": {
+      "name": "GoToRoutingSlot",
+      "category": "Movement",
+      "description": "Go to routing slot position"
+    },
+    "46": {
+      "name": "Snap",
+      "category": "Position",
+      "description": "Snap to grid position"
+    },
+    "47": {
+      "name": "Reach",
+      "category": "Animation",
+      "description": "Reach/grab animation"
+    },
+    "48": {
+      "name": "StopAllSounds",
+      "category": "Sound",
+      "description": "Stop all playing sounds"
+    },
+    "49": {
+      "name": "NotifyStackObjectOutOfIdle",
+      "category": "Control",
+      "description": "Wake object from idle"
+    },
+    "50": {
+      "name": "AddChangeActionString",
+      "category": "UI",
+      "description": "Add/change action string"
+    },
+    "51": {
+      "name": "ManageInventory",
+      "category": "Inventory",
+      "description": "Manage inventory (HD) / Animate object (TSO)"
+    }
+  },
+  "special_opcodes": {
+    "65535": {
+      "name": "Return/End",
+      "category": "Control",
+      "description": "Return from behavior / End of instruction (0xFFFF)"
+    }
+  },
+  "global_subroutines_known": {
+    "256": "Global init",
+    "257": "Global main loop",
+    "258": "Global cleanup"
+  },
+  "categories": {
+    "Control": [0, 1, 17, 20, 28, 30, 47, 49, 61, 62],
+    "Math": [2, 5, 6, 8, 10, 11, 12],
+    "Object": [3, 4, 5, 14, 18, 31, 32, 37, 38, 39, 40, 42, 43, 48, 57],
+    "Sim": [19, 27],
+    "Animation": [7, 22, 36, 44, 47, 50],
+    "Movement": [8, 45, 55, 56],
+    "Position": [9, 16, 46],
+    "Debug": [15, 29],
+    "Tutorial": [10],
+    "UI": [21, 34, 35, 41, 50],
+    "Sound": [23, 48],
+    "Relationship": [24, 26],
+    "Money": [25, 51, 58],
+    "Motive": [54],
+    "Queue": [13],
+    "Render": [60],
+    "Effect": [33],
+    "Stats": [52],
+    "Skill": [53],
+    "Event": [59],
+    "World": [63],
+    "Inventory": [51],
+    "Appearance": [6]
+  }
+}

@@ -1,0 +1,14 @@
+# SimObliterator Suite - Dependencies
+# Install: pip install -r requirements.txt
+
+# Core GUI Framework
+dearpygui>=1.10.0
+
+# Image Processing (optional - enhanced sprite features)
+Pillow>=10.0.0
+
+# Data Handling
+numpy>=1.24.0
+
+# Build Tools (development only)
+# pyinstaller>=6.0.0

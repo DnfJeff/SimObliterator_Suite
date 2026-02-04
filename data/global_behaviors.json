@@ -1,0 +1,2898 @@
+{
+  "8192": {
+    "name": "Init person",
+    "source": "WaiterGlobals.iff"
+  },
+  "8197": {
+    "name": "failure sleep",
+    "source": "WaiterGlobals.iff"
+  },
+  "8194": {
+    "name": "sitting anim delay",
+    "source": "WaiterGlobals.iff"
+  },
+  "8193": {
+    "name": "person main",
+    "source": "WaiterGlobals.iff"
+  },
+  "8198": {
+    "name": "failure hunger",
+    "source": "WaiterGlobals.iff"
+  },
+  "8196": {
+    "name": "hunger motive display",
+    "source": "WaiterGlobals.iff"
+  },
+  "8195": {
+    "name": "Initialize - Male",
+    "source": "WaiterGlobals.iff"
+  },
+  "8199": {
+    "name": "failure bladder",
+    "source": "WaiterGlobals.iff"
+  },
+  "8203": {
+    "name": "init visitor",
+    "source": "WaiterGlobals.iff"
+  },
+  "8202": {
+    "name": "Clerk - Idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8206": {
+    "name": "Seat Someone",
+    "source": "WaiterGlobals.iff"
+  },
+  "8201": {
+    "name": "Main - Server",
+    "source": "WaiterGlobals.iff"
+  },
+  "8200": {
+    "name": "stand up",
+    "source": "WaiterGlobals.iff"
+  },
+  "8204": {
+    "name": "Initialize - Female",
+    "source": "WaiterGlobals.iff"
+  },
+  "8207": {
+    "name": "get my podium",
+    "source": "WaiterGlobals.iff"
+  },
+  "8208": {
+    "name": "Serve Someone",
+    "source": "WaiterGlobals.iff"
+  },
+  "8205": {
+    "name": "return to podium",
+    "source": "WaiterGlobals.iff"
+  },
+  "8255": {
+    "name": "Interaction - Cuddle - A - TEST",
+    "source": "SofaGlobals.iff"
+  },
+  "8220": {
+    "name": "check hygiene",
+    "source": "WaiterGlobals.iff"
+  },
+  "8236": {
+    "name": "Cuddle - Kiss - Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8213": {
+    "name": "Do Next Course",
+    "source": "WaiterGlobals.iff"
+  },
+  "8215": {
+    "name": "Do Initial Welcome TEST",
+    "source": "VacationDirectorGlobals.iff"
+  },
+  "8214": {
+    "name": "Do Initial Welcome",
+    "source": "VacationDirectorGlobals.iff"
+  },
+  "8221": {
+    "name": "check bladder",
+    "source": "WaiterGlobals.iff"
+  },
+  "8231": {
+    "name": "Main - Lana",
+    "source": "VacationDirectorGlobals.iff"
+  },
+  "8218": {
+    "name": "check comfort",
+    "source": "WaiterGlobals.iff"
+  },
+  "8260": {
+    "name": "Scoot TEST",
+    "source": "SofaGlobals.iff"
+  },
+  "8259": {
+    "name": "Scoot",
+    "source": "SofaGlobals.iff"
+  },
+  "8245": {
+    "name": "Reaction - Kiss",
+    "source": "SofaGlobals.iff"
+  },
+  "8266": {
+    "name": "Set Soc&Rel to Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8235": {
+    "name": "Cuddle - Idle - Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8269": {
+    "name": "Adjust LTR to Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8258": {
+    "name": "Return in Temp 0 - Person Sitting to My Right",
+    "source": "SofaGlobals.iff"
+  },
+  "8274": {
+    "name": "randomize Ad",
+    "source": "WaiterGlobals.iff"
+  },
+  "8275": {
+    "name": "process mood",
+    "source": "WaiterGlobals.iff"
+  },
+  "8233": {
+    "name": "try autonomy",
+    "source": "WaiterGlobals.iff"
+  },
+  "8254": {
+    "name": "Interaction - Cuddle - A - Entry - Yawn",
+    "source": "SofaGlobals.iff"
+  },
+  "8286": {
+    "name": "Direction to Person B (with T=Left F=Right)",
+    "source": "SofaGlobals.iff"
+  },
+  "8287": {
+    "name": "Direction to Person A ( with T=Left F=Right)",
+    "source": "SofaGlobals.iff"
+  },
+  "8300": {
+    "name": "move away from door",
+    "source": "WaiterGlobals.iff"
+  },
+  "8301": {
+    "name": "do idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8317": {
+    "name": "visitor leave - with dialog",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8315": {
+    "name": "Fire NPC",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8284": {
+    "name": "Soc & Rel - Kiss A",
+    "source": "SofaGlobals.iff"
+  },
+  "8347": {
+    "name": "Interaction - Push Igloo Rent - TEST",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8256": {
+    "name": "Interaction - Cuddle - B - Entry",
+    "source": "SofaGlobals.iff"
+  },
+  "8219": {
+    "name": "check hunger",
+    "source": "WaiterGlobals.iff"
+  },
+  "8283": {
+    "name": "person main loop",
+    "source": "WaiterGlobals.iff"
+  },
+  "8352": {
+    "name": "Interaction - Ask About Personality TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8353": {
+    "name": "STR & LTR Me to StackObject => x?",
+    "source": "WaiterGlobals.iff"
+  },
+  "8305": {
+    "name": "burn to death",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8350": {
+    "name": "Interaction - Ask About Mood TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8346": {
+    "name": "Interaction - Push Igloo Rent",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8280": {
+    "name": "Soc & Rel - Cuddle A",
+    "source": "SofaGlobals.iff"
+  },
+  "8276": {
+    "name": "route waiting animation",
+    "source": "WaiterGlobals.iff"
+  },
+  "8310": {
+    "name": "get me out of pool",
+    "source": "WaiterGlobals.iff"
+  },
+  "8290": {
+    "name": "transition from idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8312": {
+    "name": "check for military school",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8328": {
+    "name": "Same Guids?",
+    "source": "WaiterGlobals.iff"
+  },
+  "8271": {
+    "name": "Verify Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8249": {
+    "name": "Return in Temp 0 - Person B State",
+    "source": "SofaGlobals.iff"
+  },
+  "8326": {
+    "name": "visitor leave help",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8246": {
+    "name": "Return in Temp 0 - Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8331": {
+    "name": "do new adult left stand",
+    "source": "WaiterGlobals.iff"
+  },
+  "8307": {
+    "name": "do swimming idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8333": {
+    "name": "do new adult middle stand",
+    "source": "WaiterGlobals.iff"
+  },
+  "8278": {
+    "name": "is either person a visitor?",
+    "source": "SofaGlobals.iff"
+  },
+  "8242": {
+    "name": "Reaction - Carress",
+    "source": "SofaGlobals.iff"
+  },
+  "8252": {
+    "name": "Set - Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8303": {
+    "name": "do idle and mood",
+    "source": "WaiterGlobals.iff"
+  },
+  "8336": {
+    "name": "do new adult middle stand crossed",
+    "source": "WaiterGlobals.iff"
+  },
+  "8322": {
+    "name": "Collect Kids",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8238": {
+    "name": "Cuddle - Person A - Loop",
+    "source": "SofaGlobals.iff"
+  },
+  "8308": {
+    "name": "design-a-person",
+    "source": "WaiterGlobals.iff"
+  },
+  "8348": {
+    "name": "Clerk - try to kill a snowman or sandcastle",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8324": {
+    "name": "Check for kid collection",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8264": {
+    "name": "Push Swap on Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8318": {
+    "name": "Cancel Interaction",
+    "source": "WaiterGlobals.iff"
+  },
+  "8319": {
+    "name": "Cancel Interaction TEST",
+    "source": "WaiterGlobals.iff"
+  },
+  "8329": {
+    "name": "Am I a clone?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8298": {
+    "name": "init NPC",
+    "source": "WaiterGlobals.iff"
+  },
+  "8299": {
+    "name": "check motive failure",
+    "source": "WaiterGlobals.iff"
+  },
+  "8361": {
+    "name": "Interaction - Cheerup Motivational TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8359": {
+    "name": "try autonomy - no people",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8224": {
+    "name": "check environment",
+    "source": "WaiterGlobals.iff"
+  },
+  "8223": {
+    "name": "check stress",
+    "source": "WaiterGlobals.iff"
+  },
+  "8209": {
+    "name": "Take Orders",
+    "source": "WaiterGlobals.iff"
+  },
+  "8316": {
+    "name": "Fire NPC Test",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8355": {
+    "name": "Interaction - Attack Sissy Fight TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8314": {
+    "name": "Return in Temp 0 - Random Picnic Basket 1.5",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8340": {
+    "name": "PC - Check Motive Failures",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8294": {
+    "name": "Greet",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8292": {
+    "name": "reset idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8293": {
+    "name": "visitor say hello",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8338": {
+    "name": "do new adult middle stand hips",
+    "source": "WaiterGlobals.iff"
+  },
+  "8334": {
+    "name": "do new adult left stand hips",
+    "source": "WaiterGlobals.iff"
+  },
+  "8289": {
+    "name": "transition to idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8363": {
+    "name": "Interaction - Compliment Worship TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8257": {
+    "name": "Interaction - Cuddle - B - TEST",
+    "source": "SofaGlobals.iff"
+  },
+  "8327": {
+    "name": "try burn to death",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8237": {
+    "name": "Cuddle - Kiss - Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8216": {
+    "name": "check a motive",
+    "source": "WaiterGlobals.iff"
+  },
+  "8263": {
+    "name": "Swap Seats - B",
+    "source": "SofaGlobals.iff"
+  },
+  "8366": {
+    "name": "Interaction - Entertain With Harm TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8268": {
+    "name": "Adjust STR to Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8211": {
+    "name": "init relationships",
+    "source": "WaiterGlobals.iff"
+  },
+  "8225": {
+    "name": "check social",
+    "source": "WaiterGlobals.iff"
+  },
+  "8226": {
+    "name": "check entertained",
+    "source": "WaiterGlobals.iff"
+  },
+  "8227": {
+    "name": "check next motive",
+    "source": "WaiterGlobals.iff"
+  },
+  "8228": {
+    "name": "CT - Scold",
+    "source": "VacationDirectorGlobals.iff"
+  },
+  "8230": {
+    "name": "get social eligibility",
+    "source": "WaiterGlobals.iff"
+  },
+  "8232": {
+    "name": "Cuddle - Embrace - Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8229": {
+    "name": "do idle core",
+    "source": "WaiterGlobals.iff"
+  },
+  "8265": {
+    "name": "Set Soc&Rel to Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8210": {
+    "name": "cleanup function",
+    "source": "WaiterGlobals.iff"
+  },
+  "8250": {
+    "name": "Set - Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8244": {
+    "name": "load tree",
+    "source": "WaiterGlobals.iff"
+  },
+  "8234": {
+    "name": "Cuddle - Idle - Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8304": {
+    "name": "generate gift",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8288": {
+    "name": "Cuddle Fun",
+    "source": "SofaGlobals.iff"
+  },
+  "8362": {
+    "name": "Interaction - Cheerup Puppet TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8351": {
+    "name": "Interaction - Ask About Needs TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8345": {
+    "name": "Add Hot Date Interests",
+    "source": "WaiterGlobals.iff"
+  },
+  "8349": {
+    "name": "Return in Temp 0 - Random SnowCastle",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8281": {
+    "name": "Soc & Rel - Cuddle B",
+    "source": "SofaGlobals.iff"
+  },
+  "8311": {
+    "name": "is any resident awake?",
+    "source": "WaiterGlobals.iff"
+  },
+  "8277": {
+    "name": "get interaction eligibility",
+    "source": "WaiterGlobals.iff"
+  },
+  "8291": {
+    "name": "look at something",
+    "source": "WaiterGlobals.iff"
+  },
+  "8272": {
+    "name": "Verify Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8248": {
+    "name": "Return in Temp 0 - Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8325": {
+    "name": "init motives",
+    "source": "WaiterGlobals.iff"
+  },
+  "8247": {
+    "name": "Return in Temp 0 - Person A State",
+    "source": "SofaGlobals.iff"
+  },
+  "8360": {
+    "name": "Interaction - Brag Primp TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8332": {
+    "name": "do new adult right stand",
+    "source": "WaiterGlobals.iff"
+  },
+  "8306": {
+    "name": "ghost main",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8279": {
+    "name": "Soc & Rel - Carress B",
+    "source": "SofaGlobals.iff"
+  },
+  "8243": {
+    "name": "Reaction - Embrace",
+    "source": "SofaGlobals.iff"
+  },
+  "8251": {
+    "name": "Set - Person A State",
+    "source": "SofaGlobals.iff"
+  },
+  "8296": {
+    "name": "Shoo out",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8253": {
+    "name": "Set - Person B State",
+    "source": "SofaGlobals.iff"
+  },
+  "8295": {
+    "name": "Interaction - Push Tent Rent - TEST",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8297": {
+    "name": "Shoo out TEST",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8302": {
+    "name": "route ask to move animation",
+    "source": "WaiterGlobals.iff"
+  },
+  "8335": {
+    "name": "do new adult left stand crossed",
+    "source": "WaiterGlobals.iff"
+  },
+  "8337": {
+    "name": "do new adult right stand hips",
+    "source": "WaiterGlobals.iff"
+  },
+  "8339": {
+    "name": "do new adult right stand crossed",
+    "source": "WaiterGlobals.iff"
+  },
+  "8342": {
+    "name": "PC - main",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8341": {
+    "name": "PC - Bladder Failure",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8344": {
+    "name": "re-find exit",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8323": {
+    "name": "Collect Kids TEST",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8262": {
+    "name": "Swap Seats - A - TEST",
+    "source": "SofaGlobals.iff"
+  },
+  "8309": {
+    "name": "swim bladder failure",
+    "source": "WaiterGlobals.iff"
+  },
+  "8357": {
+    "name": "Interaction - Brag Flex TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8356": {
+    "name": "Interaction - Attack Shove TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8222": {
+    "name": "check energy",
+    "source": "WaiterGlobals.iff"
+  },
+  "8343": {
+    "name": "PC - Sleep Failure",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8365": {
+    "name": "Interaction - Entertain With Puppet TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8261": {
+    "name": "Return in Temp 0 - Stk Obj of Sofa Tile to My Right",
+    "source": "SofaGlobals.iff"
+  },
+  "8212": {
+    "name": "random social ad",
+    "source": "WaiterGlobals.iff"
+  },
+  "8267": {
+    "name": "Adjust STR to Person A",
+    "source": "SofaGlobals.iff"
+  },
+  "8282": {
+    "name": "check queue",
+    "source": "WaiterGlobals.iff"
+  },
+  "8364": {
+    "name": "Interaction - Dance Slow TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8285": {
+    "name": "Soc & Rel - Kiss B",
+    "source": "SofaGlobals.iff"
+  },
+  "8320": {
+    "name": "process visitors",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8321": {
+    "name": "schedule a parent",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8217": {
+    "name": "CT - Fine",
+    "source": "VacationDirectorGlobals.iff"
+  },
+  "8313": {
+    "name": "Interaction - Push Volleyball - TEST",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8273": {
+    "name": "opposite sex couple?",
+    "source": "SofaGlobals.iff"
+  },
+  "8330": {
+    "name": "do new adult idle",
+    "source": "WaiterGlobals.iff"
+  },
+  "8354": {
+    "name": "STR & LTR Me to StackObject <= x?",
+    "source": "WaiterGlobals.iff"
+  },
+  "8240": {
+    "name": "Push Entry on Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8241": {
+    "name": "Push Sit on AutoFollow Sim",
+    "source": "SofaGlobals.iff"
+  },
+  "8239": {
+    "name": "Cuddle - Person B - Loop",
+    "source": "SofaGlobals.iff"
+  },
+  "8270": {
+    "name": "Adjust LTR to Person B",
+    "source": "SofaGlobals.iff"
+  },
+  "8358": {
+    "name": "Init NPC Jobs",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8369": {
+    "name": "Interaction - Flirt Serenade TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8367": {
+    "name": "Interaction - Flirt Check Out TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8368": {
+    "name": "Interaction - Flirt Sexy Growl TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8370": {
+    "name": "Interaction - Greet Kiss Hand TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "341": {
+    "name": "missing animation tree",
+    "source": "Global.iff"
+  },
+  "357": {
+    "name": "get my relationship to temp 0",
+    "source": "Global.iff"
+  },
+  "258": {
+    "name": "random motion",
+    "source": "Global.iff"
+  },
+  "282": {
+    "name": "divide tick counts",
+    "source": "Global.iff"
+  },
+  "279": {
+    "name": "standard multi-tile exit",
+    "source": "Global.iff"
+  },
+  "342": {
+    "name": "set object hidden",
+    "source": "Global.iff"
+  },
+  "300": {
+    "name": "SetComfortFromInt",
+    "source": "Global.iff"
+  },
+  "308": {
+    "name": "set sprite visibility",
+    "source": "Global.iff"
+  },
+  "298": {
+    "name": "censor",
+    "source": "Global.iff"
+  },
+  "270": {
+    "name": "SetEnvironment",
+    "source": "Global.iff"
+  },
+  "267": {
+    "name": "SetStress",
+    "source": "Global.iff"
+  },
+  "269": {
+    "name": "SetEntertained",
+    "source": "Global.iff"
+  },
+  "268": {
+    "name": "SetSocial",
+    "source": "Global.iff"
+  },
+  "278": {
+    "name": "standard multi-tile entry",
+    "source": "Global.iff"
+  },
+  "266": {
+    "name": "SetEnergy",
+    "source": "Global.iff"
+  },
+  "276": {
+    "name": "Test Behind",
+    "source": "Global.iff"
+  },
+  "289": {
+    "name": "mod8",
+    "source": "Global.iff"
+  },
+  "261": {
+    "name": "SetComfort",
+    "source": "Global.iff"
+  },
+  "257": {
+    "name": "IncComfort-g",
+    "source": "Global.iff"
+  },
+  "383": {
+    "name": "Create Stool",
+    "source": "Global.iff"
+  },
+  "305": {
+    "name": "my dirt inc",
+    "source": "Global.iff"
+  },
+  "315": {
+    "name": "sfx Hit Person",
+    "source": "Global.iff"
+  },
+  "284": {
+    "name": "fail food chain object",
+    "source": "Global.iff"
+  },
+  "381": {
+    "name": "Schedule with Hour",
+    "source": "Global.iff"
+  },
+  "369": {
+    "name": "Schedule with param",
+    "source": "Global.iff"
+  },
+  "379": {
+    "name": "enable debug balloons?",
+    "source": "Global.iff"
+  },
+  "301": {
+    "name": "is object's room outside",
+    "source": "Global.iff"
+  },
+  "397": {
+    "name": "enable social outcome choice?",
+    "source": "Global.iff"
+  },
+  "259": {
+    "name": "old idle",
+    "source": "Global.iff"
+  },
+  "307": {
+    "name": "Schedule",
+    "source": "Global.iff"
+  },
+  "411": {
+    "name": "Is Object in Use Flag Set?",
+    "source": "Global.iff"
+  },
+  "273": {
+    "name": "Standard Exit",
+    "source": "Global.iff"
+  },
+  "414": {
+    "name": "count people in house",
+    "source": "Global.iff"
+  },
+  "348": {
+    "name": "set room impact",
+    "source": "Global.iff"
+  },
+  "306": {
+    "name": "Check Schedule",
+    "source": "Global.iff"
+  },
+  "378": {
+    "name": "Dress Work",
+    "source": "Global.iff"
+  },
+  "302": {
+    "name": "Clean",
+    "source": "Global.iff"
+  },
+  "415": {
+    "name": "Exit Skill Object",
+    "source": "Global.iff"
+  },
+  "288": {
+    "name": "In Use?",
+    "source": "Global.iff"
+  },
+  "291": {
+    "name": "try fliiping object",
+    "source": "Global.iff"
+  },
+  "293": {
+    "name": "create multiple floods under me",
+    "source": "Global.iff"
+  },
+  "396": {
+    "name": "create flood in front of object",
+    "source": "Global.iff"
+  },
+  "395": {
+    "name": "create flood in front of me",
+    "source": "Global.iff"
+  },
+  "388": {
+    "name": "fall on floor - end",
+    "source": "Global.iff"
+  },
+  "385": {
+    "name": "NPC Get Paid",
+    "source": "Global.iff"
+  },
+  "350": {
+    "name": "repair finished",
+    "source": "Global.iff"
+  },
+  "416": {
+    "name": "Relationship Impact for Join",
+    "source": "Global.iff"
+  },
+  "404": {
+    "name": "schedule phone call",
+    "source": "Global.iff"
+  },
+  "296": {
+    "name": "schedule phone call with neighbor",
+    "source": "Global.iff"
+  },
+  "352": {
+    "name": "relationship",
+    "source": "Global.iff"
+  },
+  "358": {
+    "name": "Do I Love temp 0?",
+    "source": "Global.iff"
+  },
+  "360": {
+    "name": "is temp 0 friends with me?",
+    "source": "Global.iff"
+  },
+  "297": {
+    "name": "help display - broken object",
+    "source": "Global.iff"
+  },
+  "309": {
+    "name": "help display - autosnapshot",
+    "source": "Global.iff"
+  },
+  "351": {
+    "name": "repair start",
+    "source": "Global.iff"
+  },
+  "310": {
+    "name": "help display - object dirty",
+    "source": "Global.iff"
+  },
+  "292": {
+    "name": "create multiple floods in front of object",
+    "source": "Global.iff"
+  },
+  "387": {
+    "name": "fall on floor - begin",
+    "source": "Global.iff"
+  },
+  "417": {
+    "name": "Exit Repair Function",
+    "source": "Global.iff"
+  },
+  "406": {
+    "name": "drop object from my slot to floor",
+    "source": "Global.iff"
+  },
+  "313": {
+    "name": "do the drop",
+    "source": "Global.iff"
+  },
+  "314": {
+    "name": "Is Stack Object held by person?",
+    "source": "Global.iff"
+  },
+  "283": {
+    "name": "go over and wait around",
+    "source": "Global.iff"
+  },
+  "392": {
+    "name": "do electrocution",
+    "source": "Global.iff"
+  },
+  "409": {
+    "name": "repair - Should Tantrum?",
+    "source": "Global.iff"
+  },
+  "377": {
+    "name": "Dress Swimsuit",
+    "source": "Global.iff"
+  },
+  "319": {
+    "name": "Robot Sound?",
+    "source": "Global.iff"
+  },
+  "318": {
+    "name": "Am I a clone?",
+    "source": "Global.iff"
+  },
+  "299": {
+    "name": "SetComfortFromMain",
+    "source": "Global.iff"
+  },
+  "285": {
+    "name": "Fun Object Test",
+    "source": "Global.iff"
+  },
+  "322": {
+    "name": "Trigger Prude Hit - 1.4",
+    "source": "Global.iff"
+  },
+  "353": {
+    "name": "Find someone i love",
+    "source": "Global.iff"
+  },
+  "287": {
+    "name": "verify stack obj id",
+    "source": "Global.iff"
+  },
+  "265": {
+    "name": "hide menu",
+    "source": "Global.iff"
+  },
+  "326": {
+    "name": "Home Only",
+    "source": "Global.iff"
+  },
+  "330": {
+    "name": "does stack object love anyone?",
+    "source": "Global.iff"
+  },
+  "329": {
+    "name": "do I love anyone?",
+    "source": "Global.iff"
+  },
+  "343": {
+    "name": "Create Trash Pile By Size",
+    "source": "Global.iff"
+  },
+  "290": {
+    "name": "old Wait for Notify",
+    "source": "Global.iff"
+  },
+  "264": {
+    "name": "test for user interrupt",
+    "source": "Global.iff"
+  },
+  "323": {
+    "name": "Trigger Prude Finger - 1.4",
+    "source": "Global.iff"
+  },
+  "335": {
+    "name": "Boost STR 1.4",
+    "source": "Global.iff"
+  },
+  "328": {
+    "name": "Allow Autonomous?",
+    "source": "Global.iff"
+  },
+  "331": {
+    "name": "Push Date Response - 1.4",
+    "source": "Global.iff"
+  },
+  "324": {
+    "name": "Get Stack Object's Autofollow Sim and Place In Temp 0",
+    "source": "Global.iff"
+  },
+  "263": {
+    "name": "Find Closest Person",
+    "source": "Global.iff"
+  },
+  "354": {
+    "name": "Downtown - Double ad for night",
+    "source": "Global.iff"
+  },
+  "405": {
+    "name": "Exit fun object",
+    "source": "Global.iff"
+  },
+  "362": {
+    "name": "wash hands if neat",
+    "source": "Global.iff"
+  },
+  "338": {
+    "name": "Bored Social - 1.4",
+    "source": "Global.iff"
+  },
+  "371": {
+    "name": "Start Jealousy",
+    "source": "Global.iff"
+  },
+  "372": {
+    "name": "End Jealousy",
+    "source": "Global.iff"
+  },
+  "333": {
+    "name": "Get My Autofollow Sim in Temp 0 - 1.4",
+    "source": "Global.iff"
+  },
+  "303": {
+    "name": "Clean test",
+    "source": "Global.iff"
+  },
+  "391": {
+    "name": "Exit Downtown Object?",
+    "source": "Global.iff"
+  },
+  "418": {
+    "name": "Turn on All TV's in Room 1.4",
+    "source": "Global.iff"
+  },
+  "420": {
+    "name": "Autofollow my family member?",
+    "source": "Global.iff"
+  },
+  "380": {
+    "name": "push slap onto temp0 and temp1",
+    "source": "Global.iff"
+  },
+  "320": {
+    "name": "Is lot a Downtown Lot?",
+    "source": "Global.iff"
+  },
+  "422": {
+    "name": "Return in Temp 0 - Make WORD - 1.5",
+    "source": "Global.iff"
+  },
+  "421": {
+    "name": "Return in Temp 0 & 1 - HIBYTE and LOBYTE - 1.5",
+    "source": "Global.iff"
+  },
+  "363": {
+    "name": "Am I a Child?",
+    "source": "Global.iff"
+  },
+  "430": {
+    "name": "Is Temp 0 a Child? - 1.5",
+    "source": "Global.iff"
+  },
+  "274": {
+    "name": "Move forward n tiles (n)",
+    "source": "Global.iff"
+  },
+  "432": {
+    "name": "Set Multi-Tile Dyn Sprite - 1.5",
+    "source": "Global.iff"
+  },
+  "437": {
+    "name": "Prize Token - Get Num in Temp - 1.5",
+    "source": "Global.iff"
+  },
+  "262": {
+    "name": "set direction",
+    "source": "Global.iff"
+  },
+  "439": {
+    "name": "Turn Sim to Face Direction - 1.5",
+    "source": "Global.iff"
+  },
+  "440": {
+    "name": "Set Multi-Tile Lighting - 1.5",
+    "source": "Global.iff"
+  },
+  "275": {
+    "name": "set object lighting",
+    "source": "Global.iff"
+  },
+  "441": {
+    "name": "Notify Multi-Tile - 1.5",
+    "source": "Global.iff"
+  },
+  "260": {
+    "name": "set object graphic",
+    "source": "Global.iff"
+  },
+  "442": {
+    "name": "Return in Temp 0 & 1 - Mutli-Tile Dimensions [base 0] - 1.5",
+    "source": "Global.iff"
+  },
+  "438": {
+    "name": "Set Multi-Tile Wall Placement Flags - 1.5",
+    "source": "Global.iff"
+  },
+  "271": {
+    "name": "Init Object",
+    "source": "Global.iff"
+  },
+  "400": {
+    "name": "group talk create",
+    "source": "Global.iff"
+  },
+  "390": {
+    "name": "group talk cancel",
+    "source": "Global.iff"
+  },
+  "403": {
+    "name": "group talk exit person",
+    "source": "Global.iff"
+  },
+  "401": {
+    "name": "group talk do",
+    "source": "Global.iff"
+  },
+  "429": {
+    "name": "Turn Off All Dyn Sprites - 1.5",
+    "source": "Global.iff"
+  },
+  "449": {
+    "name": "Return in Temp 0 - Tile ID w/ Lowest Subindex - 1.5",
+    "source": "Global.iff"
+  },
+  "444": {
+    "name": "Group Talk - MT - Create - 1.5",
+    "source": "Global.iff"
+  },
+  "402": {
+    "name": "group talk add person",
+    "source": "Global.iff"
+  },
+  "445": {
+    "name": "Group Talk - MT -  Add Person - 1.5",
+    "source": "Global.iff"
+  },
+  "447": {
+    "name": "Group Talk - MT - Do - 1.5",
+    "source": "Global.iff"
+  },
+  "448": {
+    "name": "Group Talk - MT - Exit Person - 1.5",
+    "source": "Global.iff"
+  },
+  "450": {
+    "name": "can join away from home? - 1.5",
+    "source": "Global.iff"
+  },
+  "455": {
+    "name": "Push Interaction by Number - 1.5",
+    "source": "Global.iff"
+  },
+  "453": {
+    "name": "Find Nearest Rental Shack - 1.5",
+    "source": "Global.iff"
+  },
+  "454": {
+    "name": "Find Nearest Rent Shack and Push Interaction - 1.5",
+    "source": "Global.iff"
+  },
+  "355": {
+    "name": "verify person in stack obj",
+    "source": "Global.iff"
+  },
+  "359": {
+    "name": "am I friends with temp 0",
+    "source": "Global.iff"
+  },
+  "367": {
+    "name": "idle minutes",
+    "source": "Global.iff"
+  },
+  "460": {
+    "name": "Set All Wall Placement Flags - 1.5",
+    "source": "Global.iff"
+  },
+  "426": {
+    "name": "Get Available Family Kid in Temp 0 - 1.5",
+    "source": "Global.iff"
+  },
+  "451": {
+    "name": "Add Deviant Act to Vacation Controller - 1.5",
+    "source": "Global.iff"
+  },
+  "413": {
+    "name": "wake everyone in my room with balloon",
+    "source": "Global.iff"
+  },
+  "345": {
+    "name": "wake everyone sleeping in lot",
+    "source": "Global.iff"
+  },
+  "425": {
+    "name": "animated idle for - 1.5",
+    "source": "Global.iff"
+  },
+  "370": {
+    "name": "animated idle for",
+    "source": "Global.iff"
+  },
+  "462": {
+    "name": "Is Stack Object in the Selected Sim's Party - 1.5",
+    "source": "Global.iff"
+  },
+  "349": {
+    "name": "repair inc",
+    "source": "Global.iff"
+  },
+  "456": {
+    "name": "Vacation - Add to Vacation Score 1.5",
+    "source": "Global.iff"
+  },
+  "347": {
+    "name": "dirty inc",
+    "source": "Global.iff"
+  },
+  "464": {
+    "name": "Route a away if dating",
+    "source": "Global.iff"
+  },
+  "410": {
+    "name": "can join?",
+    "source": "Global.iff"
+  },
+  "461": {
+    "name": "Exit Vacation Object? 1.5",
+    "source": "Global.iff"
+  },
+  "465": {
+    "name": "verify stack obj id with category - 1.5",
+    "source": "Global.iff"
+  },
+  "424": {
+    "name": "Is lot a Vacation Lot?",
+    "source": "Global.iff"
+  },
+  "436": {
+    "name": "Prize Token - Remove - 1.5",
+    "source": "Global.iff"
+  },
+  "435": {
+    "name": "Prize Token - Add - 1.5",
+    "source": "Global.iff"
+  },
+  "457": {
+    "name": "Vacation - Subtract from Vacation Score 1.5",
+    "source": "Global.iff"
+  },
+  "458": {
+    "name": "Vacation - Get Vacation Score in Temp 0 1.5",
+    "source": "Global.iff"
+  },
+  "459": {
+    "name": "Vacation - Save Score",
+    "source": "Global.iff"
+  },
+  "272": {
+    "name": "Standard entry",
+    "source": "Global.iff"
+  },
+  "277": {
+    "name": "set multi-object graphic",
+    "source": "Global.iff"
+  },
+  "256": {
+    "name": "set graphic",
+    "source": "Global.iff"
+  },
+  "466": {
+    "name": "Remove Time Tokens",
+    "source": "Global.iff"
+  },
+  "325": {
+    "name": "Allow in Downtown Only",
+    "source": "Global.iff"
+  },
+  "321": {
+    "name": "Is lot a Residential Lot?",
+    "source": "Global.iff"
+  },
+  "423": {
+    "name": "Allow on Vacation Only",
+    "source": "Global.iff"
+  },
+  "327": {
+    "name": "Find Cash Register 1.4",
+    "source": "Global.iff"
+  },
+  "346": {
+    "name": "Downtown - Half ad for night",
+    "source": "Global.iff"
+  },
+  "356": {
+    "name": "Push Browse of Same Type",
+    "source": "Global.iff"
+  },
+  "471": {
+    "name": "Allow On Neighborhood Lots Only",
+    "source": "Global.iff"
+  },
+  "361": {
+    "name": "Does temp 0 love me?",
+    "source": "Global.iff"
+  },
+  "304": {
+    "name": "clean inc",
+    "source": "Global.iff"
+  },
+  "473": {
+    "name": "Dream - Pet - About Other Sim",
+    "source": "Global.iff"
+  },
+  "472": {
+    "name": "Dream - Pet",
+    "source": "Global.iff"
+  },
+  "474": {
+    "name": "Dream - Pet - About Object",
+    "source": "Global.iff"
+  },
+  "427": {
+    "name": "Get Available Family Adult in Temp 0",
+    "source": "Global.iff"
+  },
+  "475": {
+    "name": "Are there any Community Lots?",
+    "source": "Global.iff"
+  },
+  "470": {
+    "name": "Allow On Community Only",
+    "source": "Global.iff"
+  },
+  "428": {
+    "name": "Is lot a Vacation Snow Lot? - 1.5",
+    "source": "Global.iff"
+  },
+  "434": {
+    "name": "Is lot a Vacation Forest Lot? - 1.5",
+    "source": "Global.iff"
+  },
+  "433": {
+    "name": "Is lot a Vacation Beach Lot? - 1.5",
+    "source": "Global.iff"
+  },
+  "344": {
+    "name": "dress normal - just dress",
+    "source": "Global.iff"
+  },
+  "375": {
+    "name": "Is family full?",
+    "source": "Global.iff"
+  },
+  "477": {
+    "name": "Is Away From Home Family Full (1.6)",
+    "source": "Global.iff"
+  },
+  "332": {
+    "name": "Push Interaction on My Autofollow - 1.4",
+    "source": "Global.iff"
+  },
+  "443": {
+    "name": "count my (non-pet) family members - 1.5",
+    "source": "Global.iff"
+  },
+  "478": {
+    "name": "Allow Pet Intersection",
+    "source": "Global.iff"
+  },
+  "469": {
+    "name": "Is Lot A Community Lot?",
+    "source": "Global.iff"
+  },
+  "286": {
+    "name": "show skill progress",
+    "source": "Global.iff"
+  },
+  "365": {
+    "name": "Is either person a child?",
+    "source": "Global.iff"
+  },
+  "311": {
+    "name": "help display - route failure",
+    "source": "Global.iff"
+  },
+  "394": {
+    "name": "create flood under me",
+    "source": "Global.iff"
+  },
+  "408": {
+    "name": "Refuse Fun Object?",
+    "source": "Global.iff"
+  },
+  "480": {
+    "name": "Allow on Studio Lots Only",
+    "source": "Global.iff"
+  },
+  "366": {
+    "name": "idle hours",
+    "source": "Global.iff"
+  },
+  "364": {
+    "name": "Am I an Adult?",
+    "source": "Global.iff"
+  },
+  "481": {
+    "name": "Am I a Star?",
+    "source": "Global.iff"
+  },
+  "337": {
+    "name": "Get Social Availability Scale - 1.4",
+    "source": "Global.iff"
+  },
+  "467": {
+    "name": "Am I a Dog?",
+    "source": "Global.iff"
+  },
+  "468": {
+    "name": "Am I a Cat?",
+    "source": "Global.iff"
+  },
+  "376": {
+    "name": "Dress Formal",
+    "source": "Global.iff"
+  },
+  "431": {
+    "name": "Dress Winter",
+    "source": "Global.iff"
+  },
+  "482": {
+    "name": "Dress High Fashion",
+    "source": "Global.iff"
+  },
+  "317": {
+    "name": "create reaper",
+    "source": "Global.iff"
+  },
+  "446": {
+    "name": "Am I in Selected Sims Party? - 1.5",
+    "source": "Global.iff"
+  },
+  "312": {
+    "name": "privacy - should ignore person",
+    "source": "Global.iff"
+  },
+  "485": {
+    "name": "Is Sim in Stack Object on Fame Track?",
+    "source": "Global.iff"
+  },
+  "336": {
+    "name": "End Autofollow - Bad Behavior 1.4",
+    "source": "Global.iff"
+  },
+  "483": {
+    "name": "Adjust my Fame 1.8",
+    "source": "Global.iff"
+  },
+  "486": {
+    "name": "Dress in specified outfit",
+    "source": "Global.iff"
+  },
+  "487": {
+    "name": "verify neighbor in stack object",
+    "source": "Global.iff"
+  },
+  "398": {
+    "name": "route failure feedback",
+    "source": "Global.iff"
+  },
+  "488": {
+    "name": "Is Stack Object My Peer( Fame )?",
+    "source": "Global.iff"
+  },
+  "368": {
+    "name": "Leave",
+    "source": "Global.iff"
+  },
+  "484": {
+    "name": "Adjust Stack Object's Fame 1.8",
+    "source": "Global.iff"
+  },
+  "382": {
+    "name": "ensure Sim is standing",
+    "source": "Global.iff"
+  },
+  "491": {
+    "name": "Allow on Magic Lots Only",
+    "source": "Global.iff"
+  },
+  "479": {
+    "name": "Is lot a Studio Lot?",
+    "source": "Global.iff"
+  },
+  "452": {
+    "name": "Allow in Locations only",
+    "source": "Global.iff"
+  },
+  "281": {
+    "name": "Wait For Notify",
+    "source": "Global.iff"
+  },
+  "489": {
+    "name": "Am I On a Quest?",
+    "source": "Global.iff"
+  },
+  "494": {
+    "name": "Magic - Get Spell From Ingredients",
+    "source": "Global.iff"
+  },
+  "493": {
+    "name": "Magic - Get Ingredients for Spell",
+    "source": "Global.iff"
+  },
+  "499": {
+    "name": "Magic - Get Ingredients for Press/Oven",
+    "source": "Global.iff"
+  },
+  "496": {
+    "name": "Magic - Has Made Spell/Recipe?",
+    "source": "Global.iff"
+  },
+  "495": {
+    "name": "Magic - Mark Spell/Recipe as made",
+    "source": "Global.iff"
+  },
+  "500": {
+    "name": "Magic - Get Recipe from Ingredients",
+    "source": "Global.iff"
+  },
+  "295": {
+    "name": "flip Sim around",
+    "source": "Global.iff"
+  },
+  "492": {
+    "name": "Is lot a Magic Lot?",
+    "source": "Global.iff"
+  },
+  "384": {
+    "name": "Remove Stool",
+    "source": "Global.iff"
+  },
+  "399": {
+    "name": "wake everyone up in stack objects room",
+    "source": "Global.iff"
+  },
+  "334": {
+    "name": "Charge for Downtown - 1.4",
+    "source": "Global.iff"
+  },
+  "476": {
+    "name": "Allow on Residential Lots only",
+    "source": "Global.iff"
+  },
+  "503": {
+    "name": "Magic - Am I a Doppelganger",
+    "source": "Global.iff"
+  },
+  "316": {
+    "name": "do grim reaper",
+    "source": "Global.iff"
+  },
+  "393": {
+    "name": "kill person for good",
+    "source": "Global.iff"
+  },
+  "412": {
+    "name": "Dress for Bed",
+    "source": "Global.iff"
+  },
+  "294": {
+    "name": "privacy - ask Sims to Shoo",
+    "source": "Global.iff"
+  },
+  "389": {
+    "name": "privacy - do shoo",
+    "source": "Global.iff"
+  },
+  "339": {
+    "name": "dress naked",
+    "source": "Global.iff"
+  },
+  "340": {
+    "name": "dress normal",
+    "source": "Global.iff"
+  },
+  "386": {
+    "name": "privacy - test alone",
+    "source": "Global.iff"
+  },
+  "407": {
+    "name": "Refuse Skill Object?",
+    "source": "Global.iff"
+  },
+  "373": {
+    "name": "find random portal",
+    "source": "Global.iff"
+  },
+  "463": {
+    "name": "Charge for Away from Home 1.5 - 1.6",
+    "source": "Global.iff"
+  },
+  "419": {
+    "name": "Wander",
+    "source": "Global.iff"
+  },
+  "490": {
+    "name": "Magic - Teleport to Stack Object",
+    "source": "Global.iff"
+  },
+  "501": {
+    "name": "Magic - Check For Abuse",
+    "source": "Global.iff"
+  },
+  "280": {
+    "name": "idle",
+    "source": "Global.iff"
+  },
+  "374": {
+    "name": "set to leave",
+    "source": "Global.iff"
+  },
+  "504": {
+    "name": "Magic - Add Token( Invisible )",
+    "source": "Global.iff"
+  },
+  "506": {
+    "name": "Magic - Find Token( Invisible )",
+    "source": "Global.iff"
+  },
+  "505": {
+    "name": "Magic - Remove Token( Invisible )",
+    "source": "Global.iff"
+  },
+  "502": {
+    "name": "Magic - Add Token",
+    "source": "Global.iff"
+  },
+  "497": {
+    "name": "Magic - Find Token",
+    "source": "Global.iff"
+  },
+  "498": {
+    "name": "Magic - Remove Token",
+    "source": "Global.iff"
+  },
+  "8461": {
+    "name": "Allow Brag",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8471": {
+    "name": "Allow Cheer Up?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8412": {
+    "name": "Interaction - Attack Shove",
+    "source": "PersonGlobals.iff"
+  },
+  "8439": {
+    "name": "Interaction - Tickle Extreme",
+    "source": "PersonGlobals.iff"
+  },
+  "8438": {
+    "name": "Interaction - Tickle Chin",
+    "source": "PersonGlobals.iff"
+  },
+  "8441": {
+    "name": "Interaction - Tease Raspberry",
+    "source": "PersonGlobals.iff"
+  },
+  "8440": {
+    "name": "Interaction - Tease Imitate w/Puppet",
+    "source": "PersonGlobals.iff"
+  },
+  "8436": {
+    "name": "Interaction - Nag Place",
+    "source": "PersonGlobals.iff"
+  },
+  "8434": {
+    "name": "Interaction - Nag House",
+    "source": "PersonGlobals.iff"
+  },
+  "8430": {
+    "name": "Interaction - Nag Friends",
+    "source": "PersonGlobals.iff"
+  },
+  "8433": {
+    "name": "Interaction - Kiss Hand",
+    "source": "PersonGlobals.iff"
+  },
+  "8431": {
+    "name": "Interaction - Kiss Dip",
+    "source": "PersonGlobals.iff"
+  },
+  "8432": {
+    "name": "Interaction - Kiss Polite",
+    "source": "PersonGlobals.iff"
+  },
+  "8429": {
+    "name": "Interaction - Insult Shake Fist",
+    "source": "PersonGlobals.iff"
+  },
+  "8428": {
+    "name": "Interaction - Hug Romantic",
+    "source": "PersonGlobals.iff"
+  },
+  "8427": {
+    "name": "Interaction - Hug Friendly",
+    "source": "PersonGlobals.iff"
+  },
+  "8425": {
+    "name": "Interaction - Hug Flying",
+    "source": "PersonGlobals.iff"
+  },
+  "8409": {
+    "name": "Interaction - Flirt Serenade",
+    "source": "PersonGlobals.iff"
+  },
+  "8406": {
+    "name": "Interaction - Flirt Check Out",
+    "source": "PersonGlobals.iff"
+  },
+  "8424": {
+    "name": "Interaction - Dance Slow",
+    "source": "PersonGlobals.iff"
+  },
+  "8420": {
+    "name": "Interaction - Compliment Worship",
+    "source": "PersonGlobals.iff"
+  },
+  "8419": {
+    "name": "Interaction - Cheerup Puppet",
+    "source": "PersonGlobals.iff"
+  },
+  "8418": {
+    "name": "Interaction - Cheerup Motivational",
+    "source": "PersonGlobals.iff"
+  },
+  "8442": {
+    "name": "Interaction - Kiss Face",
+    "source": "PersonGlobals.iff"
+  },
+  "8411": {
+    "name": "Interaction - Ask About Needs",
+    "source": "PersonGlobals.iff"
+  },
+  "8446": {
+    "name": "do I love anyone?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8407": {
+    "name": "Interaction - Flirt Sexy Growl",
+    "source": "PersonGlobals.iff"
+  },
+  "8450": {
+    "name": "Interaction - Greet Air Kiss",
+    "source": "PersonGlobals.iff"
+  },
+  "8451": {
+    "name": "Interaction - Greet Shake Hands",
+    "source": "PersonGlobals.iff"
+  },
+  "8453": {
+    "name": "Interaction - Greet Romantic Kiss",
+    "source": "PersonGlobals.iff"
+  },
+  "8455": {
+    "name": "Interaction - Greet Wave",
+    "source": "PersonGlobals.iff"
+  },
+  "8447": {
+    "name": "does stack object love anyone?",
+    "source": "WaiterGlobals.iff"
+  },
+  "8426": {
+    "name": "Interaction - Entertain with Harm",
+    "source": "PersonGlobals.iff"
+  },
+  "8466": {
+    "name": "Allow Dance?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8474": {
+    "name": "Interaction - Say Goodbye Hug",
+    "source": "PersonGlobals.iff"
+  },
+  "8477": {
+    "name": "Interaction - Say Goodbye Kiss",
+    "source": "PersonGlobals.iff"
+  },
+  "8476": {
+    "name": "Interaction - Say Goodbye Kiss Hand",
+    "source": "PersonGlobals.iff"
+  },
+  "8405": {
+    "name": "Interaction - Entertain Puppet",
+    "source": "PersonGlobals.iff"
+  },
+  "8478": {
+    "name": "Interaction - Say Goodbye Passionate",
+    "source": "PersonGlobals.iff"
+  },
+  "8480": {
+    "name": "Interaction - Say Goodbye Shoo",
+    "source": "PersonGlobals.iff"
+  },
+  "8401": {
+    "name": "Interaction - Tease Raspberry TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8373": {
+    "name": "Interaction - Greet Wave TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8479": {
+    "name": "Interaction - Say Goodbye Shake Hands",
+    "source": "PersonGlobals.iff"
+  },
+  "8481": {
+    "name": "Interaction - Say Goodbye Wave",
+    "source": "PersonGlobals.iff"
+  },
+  "8462": {
+    "name": "Allow Insult?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8378": {
+    "name": "Interaction - Insult Shake Fist TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8386": {
+    "name": "Interaction - Nag Place TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8435": {
+    "name": "Interaction - Nag Money",
+    "source": "PersonGlobals.iff"
+  },
+  "8444": {
+    "name": "add LTR if needed",
+    "source": "WaiterGlobals.iff"
+  },
+  "8518": {
+    "name": "Autofollow - Use Restroom",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8486": {
+    "name": "Convert Interests to 0-1000",
+    "source": "WaiterGlobals.iff"
+  },
+  "8488": {
+    "name": "Build Change Subject Menu",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8457": {
+    "name": "Interaction - Give Rose - TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8403": {
+    "name": "Interaction - Tickle Chin TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8408": {
+    "name": "Interaction - Ask About Interests",
+    "source": "PersonGlobals.iff"
+  },
+  "8371": {
+    "name": "Interaction - Greet Shake Hands TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8437": {
+    "name": "Interaction - Plead Grovel",
+    "source": "PersonGlobals.iff"
+  },
+  "8492": {
+    "name": "Child - Insult",
+    "source": "PersonGlobals.iff"
+  },
+  "8499": {
+    "name": "Child - Cheer up",
+    "source": "PersonGlobals.iff"
+  },
+  "8506": {
+    "name": "Child - Tease",
+    "source": "PersonGlobals.iff"
+  },
+  "8508": {
+    "name": "Child - Talk",
+    "source": "PersonGlobals.iff"
+  },
+  "8510": {
+    "name": "Child - Tickle",
+    "source": "PersonGlobals.iff"
+  },
+  "8512": {
+    "name": "Cheat - FALSE TEST",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8513": {
+    "name": "Cheat - Ungreet",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8515": {
+    "name": "Interaction - Ask to Date",
+    "source": "PersonGlobals.iff"
+  },
+  "8421": {
+    "name": "Interaction - Ask to Hangout",
+    "source": "PersonGlobals.iff"
+  },
+  "8516": {
+    "name": "Interaction - Proposition Invite Home",
+    "source": "PersonGlobals.iff"
+  },
+  "8390": {
+    "name": "Interaction - Proposition Move In TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8413": {
+    "name": "Interaction - Attack Sissy Fight",
+    "source": "PersonGlobals.iff"
+  },
+  "8400": {
+    "name": "Interaction - Tease Imitate w/puppet TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8404": {
+    "name": "Interaction - Tickle Extreme TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8445": {
+    "name": "Allow Autonomous?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8382": {
+    "name": "Interaction - Kiss Passionate TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8375": {
+    "name": "Interaction - Hug Flying TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8417": {
+    "name": "Interaction - Brag Primp Male",
+    "source": "PersonGlobals.iff"
+  },
+  "8416": {
+    "name": "Interaction - Brag Primp Female",
+    "source": "PersonGlobals.iff"
+  },
+  "8376": {
+    "name": "Interaction - Hug Romantic TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8443": {
+    "name": "Interaction - Kiss Face TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8379": {
+    "name": "Interaction - Kiss Hand TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8381": {
+    "name": "Interaction - Kiss Dip TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8384": {
+    "name": "Interaction - Nag House TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8468": {
+    "name": "Allow Tickle?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8526": {
+    "name": "Child - Handstand",
+    "source": "PersonGlobals.iff"
+  },
+  "8509": {
+    "name": "Child - Talk TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8517": {
+    "name": "Interaction - Proposition Invite Downtown",
+    "source": "PersonGlobals.iff"
+  },
+  "8387": {
+    "name": "Interaction - Plead Grovel TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8464": {
+    "name": "Allow Plead?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8422": {
+    "name": "Interaction - Ask to Hangout TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8388": {
+    "name": "Interaction - Proposition Invite Home TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8521": {
+    "name": "fill townie friend count",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8502": {
+    "name": "Child - Hug - Normal",
+    "source": "PersonGlobals.iff"
+  },
+  "8522": {
+    "name": "Child - Hug - Tent",
+    "source": "PersonGlobals.iff"
+  },
+  "8523": {
+    "name": "Child - Hug - Tent TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8537": {
+    "name": "Child - Jabber TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8524": {
+    "name": "Child - Annoy Poke",
+    "source": "PersonGlobals.iff"
+  },
+  "8525": {
+    "name": "Child - Annoy Poke TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8528": {
+    "name": "Child - Scold",
+    "source": "PersonGlobals.iff"
+  },
+  "8493": {
+    "name": "Child - Joke",
+    "source": "PersonGlobals.iff"
+  },
+  "8530": {
+    "name": "Child - Annoy Push",
+    "source": "PersonGlobals.iff"
+  },
+  "8531": {
+    "name": "Child - Annoy Push TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8532": {
+    "name": "Child - Annoy Kick Shin",
+    "source": "PersonGlobals.iff"
+  },
+  "8533": {
+    "name": "Child - Annoy Kick Shin TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8497": {
+    "name": "Child - Brag",
+    "source": "PersonGlobals.iff"
+  },
+  "8503": {
+    "name": "Child - Hug - Normal TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8496": {
+    "name": "Child - Brag TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8494": {
+    "name": "Child - Joke TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8498": {
+    "name": "Child - Cheer up TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8504": {
+    "name": "Child - Scare",
+    "source": "PersonGlobals.iff"
+  },
+  "8511": {
+    "name": "Child - Tickle TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8501": {
+    "name": "Child - Entertain",
+    "source": "PersonGlobals.iff"
+  },
+  "8538": {
+    "name": "Child - Jabber",
+    "source": "PersonGlobals.iff"
+  },
+  "8535": {
+    "name": "Child - RPS",
+    "source": "PersonGlobals.iff"
+  },
+  "8540": {
+    "name": "Child - Play Fight",
+    "source": "PersonGlobals.iff"
+  },
+  "8520": {
+    "name": "Interaction - Wait",
+    "source": "PersonGlobals.iff"
+  },
+  "8543": {
+    "name": "Child - Spazz Dance",
+    "source": "PersonGlobals.iff"
+  },
+  "8491": {
+    "name": "Child - Insult - Test",
+    "source": "PersonGlobals.iff"
+  },
+  "8536": {
+    "name": "Child - RPS TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8542": {
+    "name": "Child - Whisper",
+    "source": "PersonGlobals.iff"
+  },
+  "8541": {
+    "name": "Child - Whisper TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8495": {
+    "name": "Child - Ask to leave TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8546": {
+    "name": "Child - Greet",
+    "source": "PersonGlobals.iff"
+  },
+  "8500": {
+    "name": "Child - Entertain TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8507": {
+    "name": "Child - Tease TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8505": {
+    "name": "Child - Scare TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8544": {
+    "name": "Child - Spazz Dance TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8527": {
+    "name": "Child - Handstand TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8456": {
+    "name": "Interaction - Give Rose",
+    "source": "PersonGlobals.iff"
+  },
+  "8539": {
+    "name": "Child - Play Fight - TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8547": {
+    "name": "CT - Does Stk Obj have Vacation Award?",
+    "source": "PersonGlobals.iff"
+  },
+  "8529": {
+    "name": "Child - Scold TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8548": {
+    "name": "CT - Has Disease?",
+    "source": "PersonGlobals.iff"
+  },
+  "8514": {
+    "name": "Interaction - Ask to Date TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8549": {
+    "name": "Vacation - Date Sleep",
+    "source": "PersonGlobals.iff"
+  },
+  "8552": {
+    "name": "Interaction - Dog - Pounce",
+    "source": "PersonGlobals.iff"
+  },
+  "8484": {
+    "name": "Allow Nag",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8385": {
+    "name": "Interaction - Nag Money TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8383": {
+    "name": "Interaction - Nag Friends TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8553": {
+    "name": "Interaction - Dog - Pounce TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8490": {
+    "name": "Interaction - Talk - Gossip",
+    "source": "PersonGlobals.iff"
+  },
+  "8561": {
+    "name": "Find - Dog in Family?",
+    "source": "PersonGlobals.iff"
+  },
+  "8557": {
+    "name": "Interaction - Talk - About Dog TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8560": {
+    "name": "Find - Cat in Family?",
+    "source": "PersonGlobals.iff"
+  },
+  "8563": {
+    "name": "Find - Dog on Lot?",
+    "source": "PersonGlobals.iff"
+  },
+  "8558": {
+    "name": "Interaction - Talk - About Cat",
+    "source": "PersonGlobals.iff"
+  },
+  "8556": {
+    "name": "Interaction - Talk - About Dog",
+    "source": "PersonGlobals.iff"
+  },
+  "8534": {
+    "name": "do shy child",
+    "source": "PersonGlobals.iff"
+  },
+  "8415": {
+    "name": "Interaction - Brag Flex",
+    "source": "PersonGlobals.iff"
+  },
+  "8566": {
+    "name": "Interaction - Proposition Invite Somewhere",
+    "source": "PersonGlobals.iff"
+  },
+  "8565": {
+    "name": "Interaction - Proposition Invite Downtown TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8389": {
+    "name": "Interaction - Proposition Invite Somewhere TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8567": {
+    "name": "Interaction - Cat - RubOnLegs",
+    "source": "PersonGlobals.iff"
+  },
+  "8414": {
+    "name": "Is Date from my family?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8564": {
+    "name": "Push Bark at door",
+    "source": "PersonGlobals.iff"
+  },
+  "8568": {
+    "name": "Interaction - Cat - RubOnLegs TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8555": {
+    "name": "Interaction - Dog - Whine TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8551": {
+    "name": "Interaction - Dog - Beg TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8554": {
+    "name": "Interaction - Dog - Whine",
+    "source": "PersonGlobals.iff"
+  },
+  "8550": {
+    "name": "Interaction - Dog - Beg",
+    "source": "PersonGlobals.iff"
+  },
+  "8569": {
+    "name": "Interaction - SS - Biggest Fan",
+    "source": "PersonGlobals.iff"
+  },
+  "8571": {
+    "name": "Interaction - SS - For Autograph",
+    "source": "PersonGlobals.iff"
+  },
+  "8573": {
+    "name": "Interaction - SS - Hug You?",
+    "source": "PersonGlobals.iff"
+  },
+  "8589": {
+    "name": "Interaction - SS - Kiss Superstar",
+    "source": "PersonGlobals.iff"
+  },
+  "8575": {
+    "name": "Interaction - SS - Photo Op",
+    "source": "PersonGlobals.iff"
+  },
+  "8577": {
+    "name": "Interaction - SS - Publicity Event",
+    "source": "PersonGlobals.iff"
+  },
+  "8587": {
+    "name": "Interaction - SS - Talk About Biz",
+    "source": "PersonGlobals.iff"
+  },
+  "8579": {
+    "name": "Interaction - SS - You Famous?",
+    "source": "PersonGlobals.iff"
+  },
+  "8581": {
+    "name": "Interaction - SS - Star Quality",
+    "source": "PersonGlobals.iff"
+  },
+  "8583": {
+    "name": "Interaction - SS - Talk About Self",
+    "source": "PersonGlobals.iff"
+  },
+  "8459": {
+    "name": "Interaction - Object Menu",
+    "source": "PersonGlobals.iff"
+  },
+  "8458": {
+    "name": "Interaction - Object Menu TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8594": {
+    "name": "Interaction - Invite in Trailer",
+    "source": "PersonGlobals.iff"
+  },
+  "8595": {
+    "name": "Interaction - Talk Name Drop TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8489": {
+    "name": "Interaction - Talk Change Subject",
+    "source": "PersonGlobals.iff"
+  },
+  "8398": {
+    "name": "Interaction - Talk Change Subject TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8597": {
+    "name": "Interaction - Talk Change Gossip",
+    "source": "PersonGlobals.iff"
+  },
+  "8454": {
+    "name": "Interaction - Greet Kiss Hand",
+    "source": "PersonGlobals.iff"
+  },
+  "8599": {
+    "name": "Interaction - SS - Greet - Shake Hands",
+    "source": "PersonGlobals.iff"
+  },
+  "8600": {
+    "name": "Interaction - SS - Can Call You?",
+    "source": "PersonGlobals.iff"
+  },
+  "8604": {
+    "name": "Interaction - SS - Brag/Boast",
+    "source": "PersonGlobals.iff"
+  },
+  "8585": {
+    "name": "Interaction - SS - Give Autograph",
+    "source": "PersonGlobals.iff"
+  },
+  "8593": {
+    "name": "Interaction - Invite in Trailer - TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8608": {
+    "name": "Interaction - SS - Greet - Wave",
+    "source": "PersonGlobals.iff"
+  },
+  "8611": {
+    "name": "Interaction - SS - Greet Kiss",
+    "source": "PersonGlobals.iff"
+  },
+  "8602": {
+    "name": "Interaction - SS - Grovel",
+    "source": "PersonGlobals.iff"
+  },
+  "8591": {
+    "name": "SS - get social eligibility",
+    "source": "PersonGlobals.iff"
+  },
+  "8590": {
+    "name": "Interaction - SS - Kiss Superstar TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8613": {
+    "name": "get social eligibility( old )",
+    "source": "PersonGlobals.iff"
+  },
+  "8394": {
+    "name": "Interaction - Say Goodbye Hug TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8475": {
+    "name": "Interaction - Say Goodbye Kiss Cheeks",
+    "source": "PersonGlobals.iff"
+  },
+  "8393": {
+    "name": "Interaction - Say Goodbye Kiss Cheeks TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8395": {
+    "name": "Interaction - Say Goodbye Kiss Hand TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8396": {
+    "name": "Interaction - Say Goodbye Kiss TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8397": {
+    "name": "Interaction - Say Goodbye Passionate TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8392": {
+    "name": "Interaction - Say Goodbye Shake Hands TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8586": {
+    "name": "Interaction - SS - Give Autograph TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8482": {
+    "name": "Check Auto-follow Conditions",
+    "source": "WaiterGlobals.iff"
+  },
+  "8612": {
+    "name": "get interaction eligibility( old )",
+    "source": "PersonGlobals.iff"
+  },
+  "8570": {
+    "name": "Interaction - SS - Biggest Fan TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8574": {
+    "name": "Interaction - SS - Hug You? TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8584": {
+    "name": "Interaction - SS - Talk About Self TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8605": {
+    "name": "Interaction - SS - Brag/Boast TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8588": {
+    "name": "Interaction - SS - Talk About Biz TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8582": {
+    "name": "Interaction - SS - Star Quality TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8603": {
+    "name": "Interaction - SS - Grovel TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8598": {
+    "name": "Interaction - SS - Greet - Shake Hands TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8609": {
+    "name": "Interaction - SS - Greet - Wave TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8610": {
+    "name": "Interaction - SS - Greet Kiss TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8572": {
+    "name": "Interaction - SS - For Autograph TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8483": {
+    "name": "Autofollow",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8614": {
+    "name": "verify date",
+    "source": "PersonGlobals.iff"
+  },
+  "8578": {
+    "name": "Interaction - SS - Publicity Event TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8576": {
+    "name": "Interaction - SS - Photo Op TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8580": {
+    "name": "Interaction - SS - You Famous? TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8601": {
+    "name": "Interaction - SS - Can Call You? TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8618": {
+    "name": "Magic - get social eligibility",
+    "source": "PersonGlobals.iff"
+  },
+  "8619": {
+    "name": "Interaction - Magic - Hotfoot",
+    "source": "PersonGlobals.iff"
+  },
+  "8621": {
+    "name": "Interaction - Magic - Levitate",
+    "source": "PersonGlobals.iff"
+  },
+  "8625": {
+    "name": "Interaction - Magic - Shock",
+    "source": "PersonGlobals.iff"
+  },
+  "8627": {
+    "name": "Interaction - Magic - Spook",
+    "source": "PersonGlobals.iff"
+  },
+  "8423": {
+    "name": "Downtown Auto Follow",
+    "source": "WaiterGlobals.iff"
+  },
+  "8633": {
+    "name": "Magic - Attraction",
+    "source": "PersonGlobals.iff"
+  },
+  "8519": {
+    "name": "up social ad by relationship",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8399": {
+    "name": "Interaction - Talk Gossip TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8463": {
+    "name": "Allow Kiss?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8629": {
+    "name": "Interaction - Magic - Toad",
+    "source": "PersonGlobals.iff"
+  },
+  "8636": {
+    "name": "Interaction - Magic - Hypnotize",
+    "source": "PersonGlobals.iff"
+  },
+  "8634": {
+    "name": "Interaction - Magic - Mood Up",
+    "source": "PersonGlobals.iff"
+  },
+  "8639": {
+    "name": "Ghost - Can Scare or Wake Person?",
+    "source": "PersonGlobals.iff"
+  },
+  "8469": {
+    "name": "Allow Compliment?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8607": {
+    "name": "Interaction - Dismiss TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8606": {
+    "name": "Interaction - Dismiss",
+    "source": "PersonGlobals.iff"
+  },
+  "8472": {
+    "name": "Allow Entertain?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8487": {
+    "name": "Allow Goodbye?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8391": {
+    "name": "Interaction - Say Goodbye Shoo TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8467": {
+    "name": "Allow Tease?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8643": {
+    "name": "Interaction - Magic - Banish",
+    "source": "PersonGlobals.iff"
+  },
+  "8465": {
+    "name": "Allow Flirt?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8652": {
+    "name": "Interaction - Magic - Talk About Magic",
+    "source": "PersonGlobals.iff"
+  },
+  "8592": {
+    "name": "SS - get interaction eligibility",
+    "source": "PersonGlobals.iff"
+  },
+  "8617": {
+    "name": "Magic - get interaction eligibility",
+    "source": "PersonGlobals.iff"
+  },
+  "8655": {
+    "name": "Interaction - Wake Up Clone",
+    "source": "PersonGlobals.iff"
+  },
+  "8656": {
+    "name": "Interaction - Wake Up Clone TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8657": {
+    "name": "Query - Is Object a Fridge",
+    "source": "PersonGlobals.iff"
+  },
+  "8660": {
+    "name": "Magic - Anti-Attraction",
+    "source": "PersonGlobals.iff"
+  },
+  "8659": {
+    "name": "Clone - Find My Charm",
+    "source": "PersonGlobals.iff"
+  },
+  "8460": {
+    "name": "Allow Attack?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8658": {
+    "name": "Clone - Hungry",
+    "source": "PersonGlobals.iff"
+  },
+  "8620": {
+    "name": "Interaction - Magic - Hotfoot TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8637": {
+    "name": "Interaction - Magic - Hypnotize TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8622": {
+    "name": "Interaction - Magic - Levitate TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8650": {
+    "name": "Interaction - Magic - Love Me",
+    "source": "PersonGlobals.iff"
+  },
+  "8651": {
+    "name": "Interaction - Magic - Love Me TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8623": {
+    "name": "Interaction - Magic - MagicTrick",
+    "source": "PersonGlobals.iff"
+  },
+  "8647": {
+    "name": "Interaction - Magic - Relationship Up TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8626": {
+    "name": "Interaction - Magic - Shock TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8628": {
+    "name": "Interaction - Magic - Spook TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8630": {
+    "name": "Interaction - Magic - Toad TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8410": {
+    "name": "Interaction - Ask About Job",
+    "source": "PersonGlobals.iff"
+  },
+  "8653": {
+    "name": "Interaction - Magic - Talk About Magic TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8664": {
+    "name": "Magic - Token Remove",
+    "source": "PersonGlobals.iff"
+  },
+  "8663": {
+    "name": "Interaction - Magic - Freak out TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8402": {
+    "name": "Interaction - Tease Scare TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8645": {
+    "name": "MAGIC - Ghost Social Test",
+    "source": "PersonGlobals.iff"
+  },
+  "8615": {
+    "name": "Interaction - Magic - Marry Me",
+    "source": "PersonGlobals.iff"
+  },
+  "8616": {
+    "name": "Interaction - Magic - Marry Me TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8624": {
+    "name": "Interaction - Magic - MagicTrick TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8635": {
+    "name": "Interaction - Magic - Mood Up TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8648": {
+    "name": "Interaction - Magic - Make Friend",
+    "source": "PersonGlobals.iff"
+  },
+  "8649": {
+    "name": "Interaction - Magic - Make Friend TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8654": {
+    "name": "Clone - Main Loop",
+    "source": "PersonGlobals.iff"
+  },
+  "8473": {
+    "name": "Allow Greet",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8452": {
+    "name": "Interaction - Greet Hug",
+    "source": "PersonGlobals.iff"
+  },
+  "8372": {
+    "name": "Interaction - Greet Hug TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8449": {
+    "name": "Interaction - Greet Polite Kiss",
+    "source": "PersonGlobals.iff"
+  },
+  "8374": {
+    "name": "Interaction - Greet Romantic TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8448": {
+    "name": "Interaction - Greet Air Kiss TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8485": {
+    "name": "Greet with Gift Test",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8545": {
+    "name": "Child - Greet TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8632": {
+    "name": "Interaction - Magic - Talk About Quest",
+    "source": "PersonGlobals.iff"
+  },
+  "8470": {
+    "name": "Allow Hug?",
+    "source": "RentalClerkGlobals.iff"
+  },
+  "8377": {
+    "name": "Interaction - Hug Friendly TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8380": {
+    "name": "Interaction - Kiss Cheek TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8644": {
+    "name": "Interaction - Magic - Banish TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8662": {
+    "name": "Interaction - Magic - Freak Out",
+    "source": "PersonGlobals.iff"
+  },
+  "8562": {
+    "name": "Find - Cat on Lot?",
+    "source": "PersonGlobals.iff"
+  },
+  "8559": {
+    "name": "Interaction - Talk - About Cat TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8596": {
+    "name": "Interaction - Talk Change Gossip TEST",
+    "source": "PersonGlobals.iff"
+  },
+  "8661": {
+    "name": "Clone - Bad",
+    "source": "PersonGlobals.iff"
+  },
+  "8638": {
+    "name": "Ghost - Wander",
+    "source": "PersonGlobals.iff"
+  },
+  "8640": {
+    "name": "Ghost - Scare",
+    "source": "PersonGlobals.iff"
+  },
+  "8642": {
+    "name": "Ghost - Play Haunt Sound",
+    "source": "PersonGlobals.iff"
+  },
+  "8641": {
+    "name": "Ghost - Main Loop",
+    "source": "PersonGlobals.iff"
+  },
+  "8646": {
+    "name": "Interaction - Magic - Relationship Up",
+    "source": "PersonGlobals.iff"
+  },
+  "8631": {
+    "name": "Interaction - Magic - Talk About Quest TEST",
+    "source": "PersonGlobals.iff"
+  }
+}
