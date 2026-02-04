@@ -17,6 +17,8 @@ from typing import Optional, Dict, List, Tuple, Any
 from dataclasses import dataclass, field
 from io import BytesIO
 
+from utils.binary import IoBuffer, ByteOrder
+
 
 # ============================================================================
 # Data Classes for Save Data
@@ -160,6 +162,11 @@ class IoBuffer:
     def __init__(self, data: bytes):
         self.data = data
         self.pos = 0
+    
+    @classmethod
+    def from_bytes(cls, data: bytes, byte_order=None) -> 'IoBuffer':
+        """Create from bytes (byte_order ignored for compatibility)."""
+        return cls(data)
     
     @property
     def has_more(self) -> bool:

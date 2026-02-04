@@ -53,6 +53,9 @@ class ActionCategory(Enum):
     SEARCH = "search"
     SYSTEM = "system"
     UI = "ui"
+    TTAB = "ttab"
+    SLOT = "slot"
+    LOCALIZATION = "localization"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -523,6 +526,152 @@ class ActionRegistry:
                 requires_confirmation=confirm,
                 audited=mut == Mutability.WRITE or name == "CancelMutation",
                 checks=["Selection validity", "Mode gating", "Undo availability"]
+            ))
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 11. TTAB / INTERACTION ACTIONS
+        # ═══════════════════════════════════════════════════════════════════
+        
+        ttab_actions = [
+            ("LoadTTAB", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ParseTTABFull", Mutability.READ, RiskLevel.LOW, False, False),
+            ("EditTTABAutonomy", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("EditTTABMotiveEffect", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("AddTTABInteraction", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("RemoveTTABInteraction", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("BuildMultiObjectContext", Mutability.READ, RiskLevel.LOW, False, False),
+            ("SwitchObjectContext", Mutability.READ, RiskLevel.LOW, False, False),
+        ]
+        
+        for name, mut, risk, pipeline, confirm in ttab_actions:
+            scope = ActionScope.FILE if "Context" in name else ActionScope.OBJECT
+            self.register(ActionDefinition(
+                name=name,
+                category=ActionCategory.TTAB,
+                mutability=mut,
+                scope=scope,
+                risk=risk,
+                requires_pipeline=pipeline,
+                requires_confirmation=confirm,
+                audited=mut == Mutability.WRITE or "Load" in name or "Build" in name,
+                checks=["Multi-OBJD awareness", "Autonomy range", "TTAB version"]
+            ))
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 12. SLOT / ROUTING ACTIONS
+        # ═══════════════════════════════════════════════════════════════════
+        
+        slot_actions = [
+            ("LoadSLOT", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ParseSLOT", Mutability.READ, RiskLevel.LOW, False, False),
+            ("AddSLOT", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("EditSLOT", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("RemoveSLOT", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("DuplicateSLOT", Mutability.WRITE, RiskLevel.LOW, True, False),
+            ("CreateChairSlots", Mutability.WRITE, RiskLevel.LOW, True, False),
+            ("CreateCounterSlots", Mutability.WRITE, RiskLevel.LOW, True, False),
+        ]
+        
+        for name, mut, risk, pipeline, confirm in slot_actions:
+            self.register(ActionDefinition(
+                name=name,
+                category=ActionCategory.SLOT,
+                mutability=mut,
+                scope=ActionScope.OBJECT,
+                risk=risk,
+                requires_pipeline=pipeline,
+                requires_confirmation=confirm,
+                audited=mut == Mutability.WRITE or "Load" in name,
+                checks=["Slot position bounds", "Slot type", "Facing normalization"]
+            ))
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 13. BHAV AUTHORING ACTIONS
+        # ═══════════════════════════════════════════════════════════════════
+        
+        authoring_actions = [
+            ("CreateInstruction", Mutability.PREVIEW, RiskLevel.LOW, False, False),
+            ("BuildOperand", Mutability.PREVIEW, RiskLevel.LOW, False, False),
+            ("CreateBHAV", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("InsertInstruction", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("DeleteInstruction", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("MoveInstruction", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("CopyInstructions", Mutability.READ, RiskLevel.LOW, False, False),
+            ("PasteInstructions", Mutability.WRITE, RiskLevel.HIGH, True, True),
+            ("RewirePointers", Mutability.WRITE, RiskLevel.HIGH, True, True),
+        ]
+        
+        for name, mut, risk, pipeline, confirm in authoring_actions:
+            self.register(ActionDefinition(
+                name=name,
+                category=ActionCategory.BHAV,
+                mutability=mut,
+                scope=ActionScope.OBJECT,
+                risk=risk,
+                requires_pipeline=pipeline,
+                requires_confirmation=confirm,
+                audited=mut == Mutability.WRITE,
+                checks=["Pointer validity", "BHAV ID range", "Operand validation", "Auto-rewire"]
+            ))
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 14. LOCALIZATION / STRING ACTIONS
+        # ═══════════════════════════════════════════════════════════════════
+        
+        localization_actions = [
+            ("ParseSTR", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ListLanguageSlots", Mutability.READ, RiskLevel.LOW, False, False),
+            ("AuditLocalization", Mutability.READ, RiskLevel.LOW, False, False),
+            ("CopyLanguageSlot", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("FillMissingSlots", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+            ("FindSTRReferences", Mutability.READ, RiskLevel.LOW, False, False),
+            ("FindOrphanSTR", Mutability.READ, RiskLevel.LOW, False, False),
+            ("EditSTREntry", Mutability.WRITE, RiskLevel.MEDIUM, True, True),
+        ]
+        
+        for name, mut, risk, pipeline, confirm in localization_actions:
+            scope = ActionScope.FILE if "Orphan" in name or "Audit" in name or "References" in name else ActionScope.OBJECT
+            self.register(ActionDefinition(
+                name=name,
+                category=ActionCategory.LOCALIZATION,
+                mutability=mut,
+                scope=scope,
+                risk=risk,
+                requires_pipeline=pipeline,
+                requires_confirmation=confirm,
+                audited=mut == Mutability.WRITE or "Audit" in name or "Orphan" in name,
+                checks=["STR# format detection", "Language code validation", "Catalog references"]
+            ))
+        
+        # ═══════════════════════════════════════════════════════════════════
+        # 15. LOT / AMBIENCE ACTIONS
+        # ═══════════════════════════════════════════════════════════════════
+        
+        lot_actions = [
+            ("AnalyzeLot", Mutability.READ, RiskLevel.LOW, False, False),
+            ("GetTerrainType", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ListAmbienceObjects", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ScanLotFolder", Mutability.READ, RiskLevel.LOW, False, False),
+            ("FindAmbienceByGUID", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ParseSIMI", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ParseHOUS", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ListLotARRYChunks", Mutability.READ, RiskLevel.LOW, False, False),
+            ("ExtractLotObjects", Mutability.READ, RiskLevel.LOW, False, False),
+            ("CompareLots", Mutability.READ, RiskLevel.LOW, False, False),
+        ]
+        
+        for name, mut, risk, pipeline, confirm in lot_actions:
+            scope = ActionScope.FILE if "Folder" in name or "Compare" in name else ActionScope.OBJECT
+            self.register(ActionDefinition(
+                name=name,
+                category=ActionCategory.ANALYSIS,
+                mutability=mut,
+                scope=scope,
+                risk=risk,
+                requires_pipeline=pipeline,
+                requires_confirmation=confirm,
+                audited="Analyze" in name or "Scan" in name or "Compare" in name,
+                checks=["House number extraction", "Terrain type lookup", "ARRY chunk validation"]
             ))
 
 

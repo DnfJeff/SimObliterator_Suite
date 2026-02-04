@@ -4,7 +4,7 @@
 
 This document maps discovered capabilities across tools to inform integration into the Suite.
 
-> 📋 **See Also**: [ACTION_SURFACE.md](ACTION_SURFACE.md) — Canonical action definitions (110 actions, 52 write, 28 high-risk)
+> 📋 **See Also**: [ACTION_SURFACE.md](ACTION_SURFACE.md) — Canonical action definitions (143 actions, 71 write, 36 high-risk)
 
 ---
 
@@ -441,19 +441,20 @@ from formats.iff.chunks.sprite_export import SPR2Decoder  # Where is this?
 - Provenance display for selected result
 - Cross-pack equivalence search
 
-### Panels Implemented (21 total)
+### Panels Implemented (24 total)
 
-| Category   | Panels                                             |
-| ---------- | -------------------------------------------------- |
-| Core       | FileLoader, IFFInspector, FARBrowser, IFFViewer    |
-| Inspection | ChunkInspector, ObjectInspector, SemanticInspector |
-| Editing    | BHAVEditor, SaveEditor                             |
-| Navigation | LibraryBrowser, VisualObjectBrowser, NavigationBar |
-| Analysis   | GraphCanvas, DiffCompare, TaskRunner               |
-| Safety     | SafetyTrust                                        |
-| Support    | GlobalSearch, Preferences, Log, StatusBar          |
-| Overview   | **SystemOverview** (NEW)                           |
-| Export     | **SpriteExport** (NEW)                             |
+| Category   | Panels                                                 |
+| ---------- | ------------------------------------------------------ |
+| Core       | FileLoader, IFFInspector, FARBrowser, IFFViewer        |
+| Inspection | ChunkInspector, ObjectInspector, SemanticInspector     |
+| Editing    | BHAVEditor, SaveEditor, **TTABEditor**, **SLOTEditor** |
+| Navigation | LibraryBrowser, VisualObjectBrowser, NavigationBar     |
+| Analysis   | GraphCanvas, DiffCompare, TaskRunner                   |
+| Safety     | SafetyTrust                                            |
+| Support    | GlobalSearch, Preferences, Log, StatusBar              |
+| Overview   | **SystemOverview** (NEW)                               |
+| Export     | **SpriteExport** (NEW)                                 |
+| Authoring  | **InstructionBuilder** (NEW)                           |
 
 ### Entity Abstractions
 
@@ -463,6 +464,24 @@ from formats.iff.chunks.sprite_export import SPR2Decoder  # Where is this?
 | BehaviorEntity    | BHAV with semantic context  | `Tools/entities/behavior_entity.py`     |
 | SimEntity         | Sim data from saves         | `Tools/entities/sim_entity.py`          |
 | RelationshipGraph | Dependency analysis         | `Tools/entities/relationship_entity.py` |
+
+### Core Modules (NEW - February 2026)
+
+| Module              | Purpose                              | File                                  |
+| ------------------- | ------------------------------------ | ------------------------------------- |
+| TTABEditor          | Full TTAB parsing w/ autonomy        | `Tools/core/ttab_editor.py`           |
+| SLOTEditor          | Routing slot editor (IFF Pencil gap) | `Tools/core/slot_editor.py`           |
+| BHAVAuthoring       | Create instructions from scratch     | `Tools/core/bhav_authoring.py`        |
+| ActionMapper        | CLI/Script "Fuck the UI" interface   | `Tools/core/action_mapper.py`         |
+| STRParser           | Language-aware STR# parser           | `Tools/core/str_parser.py`            |
+| STRReferenceScanner | Find all STR# usages                 | `Tools/core/str_reference_scanner.py` |
+| LocalizationAuditor | Check missing language slots         | `Tools/core/localization_audit.py`    |
+| BHAVCallGraph       | Cross-BHAV call relationships        | `Tools/core/bhav_call_graph.py`       |
+| BHAVRewirer         | Pointer updates on instruction edit  | `Tools/core/bhav_rewiring.py`         |
+| IDConflictScanner   | Detect overlapping IDs across files  | `Tools/core/id_conflict_scanner.py`   |
+| VariableAnalyzer    | Track variable usage in BHAVs        | `Tools/core/variable_analyzer.py`     |
+| PrimitiveReference  | Enhanced opcode documentation        | `Tools/core/primitive_reference.py`   |
+| MultiObjectContext  | Track OBJDs in multi-object IFFs     | `Tools/core/ttab_editor.py`           |
 
 ### Safety & Mutation
 
@@ -498,6 +517,74 @@ from formats.iff.chunks.sprite_export import SPR2Decoder  # Where is this?
 | unknowns_db.json      | 167+ unknown opcodes | `data/unknowns_db.json`      |
 | opcodes_db.json       | Known opcode defs    | `data/opcodes_db.json`       |
 | global_behaviors.json | Global BHAV catalog  | `data/global_behaviors.json` |
+| execution_model.json  | SimAntics VM model   | `data/execution_model.json`  |
+
+---
+
+## 🔧 CLI / ACTION MAPPER ("Fuck the UI")
+
+> All functionality available without GUI via `action_mapper.py`
+
+### Python API
+
+```python
+from src.Tools.core.action_mapper import ActionMapper
+
+mapper = ActionMapper()
+
+# List all available actions
+mapper.list_actions()
+
+# Parse TTAB with autonomy (the field Menu Editor misses!)
+result = mapper.execute("get-autonomy", file="multitile.iff")
+
+# List objects in multi-OBJD file
+result = mapper.execute("list-objects", file="multitile.iff")
+
+# Create BHAV instruction from scratch
+result = mapper.execute("create-instruction", opcode=0x02,
+                        operands={"dest_scope": 6, "dest_index": 0, "operator": 0})
+
+# Batch processing
+results = mapper.run_batch([
+    {"action": "list-chunks", "args": {"file": "obj1.iff"}},
+    {"action": "parse-ttab", "args": {"file": "obj2.iff"}},
+])
+```
+
+### CLI Usage
+
+```bash
+# List all actions
+python -m src.Tools.core.action_mapper list-actions
+
+# Parse file
+python -m src.Tools.core.action_mapper list-chunks object.iff
+
+# BHAV operations
+python -m src.Tools.core.action_mapper parse-bhav object.iff --bhav-id 0x1000
+python -m src.Tools.core.action_mapper bhav-call-graph object.iff --format dot
+
+# TTAB/Autonomy (community pain point!)
+python -m src.Tools.core.action_mapper get-autonomy multitile.iff
+python -m src.Tools.core.action_mapper list-interactions object.iff
+
+# Export
+python -m src.Tools.core.action_mapper export-report object.iff -o report.json -f json
+```
+
+### Action Categories
+
+| Category | Actions                                                                                     | Description       |
+| -------- | ------------------------------------------------------------------------------------------- | ----------------- |
+| `file`   | load-iff, list-chunks, extract-chunk, validate-iff                                          | File I/O          |
+| `object` | list-objects, get-object-info, scan-id-conflicts                                            | OBJD operations   |
+| `bhav`   | parse-bhav, list-bhavs, bhav-call-graph, analyze-variables, create-bhav, create-instruction | BHAV operations   |
+| `ttab`   | parse-ttab, list-interactions, get-autonomy, set-autonomy                                   | TTAB/Interactions |
+| `string` | parse-str, list-strings, localization-audit, find-str-references                            | STR#/Localization |
+| `slot`   | parse-slot, list-slots, add-slot                                                            | Routing slots     |
+| `export` | export-report, export-bhav-dot, export-opcodes                                              | Export operations |
+| `meta`   | list-actions, help, version                                                                 | Meta operations   |
 
 ---
 

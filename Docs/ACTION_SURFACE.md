@@ -287,21 +287,122 @@ Every action MUST declare:
 
 ---
 
+## 11. TTAB / INTERACTION ACTIONS
+
+> Interaction tables — autonomy, motive effects, multi-object context.
+
+| Action                    | Mutability | Scope  | Risk   | Pipeline | Confirm | Audited |
+| ------------------------- | ---------- | ------ | ------ | -------- | ------- | ------- |
+| `LoadTTAB`                | Read       | Object | Low    | No       | No      | Yes     |
+| `ParseTTABFull`           | Read       | Object | Low    | No       | No      | No      |
+| `EditTTABAutonomy`        | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `EditTTABMotiveEffect`    | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `AddTTABInteraction`      | Write      | Object | High   | Yes      | Yes     | Yes     |
+| `RemoveTTABInteraction`   | Write      | Object | High   | Yes      | Yes     | Yes     |
+| `BuildMultiObjectContext` | Read       | File   | Low    | No       | No      | Yes     |
+| `SwitchObjectContext`     | Read       | File   | Low    | No       | No      | No      |
+
+### Checks Required:
+
+- Multi-OBJD awareness (which TTAB belongs to which OBJD)
+- Autonomy value range (0-100)
+- Motive effect bounds
+- TTAB version compatibility (V4-V10)
+
+---
+
+## 12. SLOT / ROUTING ACTIONS
+
+> Routing slots — where Sims stand, sit, interact.
+
+| Action               | Mutability | Scope  | Risk   | Pipeline | Confirm | Audited |
+| -------------------- | ---------- | ------ | ------ | -------- | ------- | ------- |
+| `LoadSLOT`           | Read       | Object | Low    | No       | No      | Yes     |
+| `ParseSLOT`          | Read       | Object | Low    | No       | No      | No      |
+| `AddSLOT`            | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `EditSLOT`           | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `RemoveSLOT`         | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `DuplicateSLOT`      | Write      | Object | Low    | Yes      | No      | Yes     |
+| `CreateChairSlots`   | Write      | Object | Low    | Yes      | No      | Yes     |
+| `CreateCounterSlots` | Write      | Object | Low    | Yes      | No      | Yes     |
+
+### Checks Required:
+
+- Slot position bounds
+- Slot type validity
+- Facing direction normalization
+- Target slot references
+
+---
+
+## 13. BHAV AUTHORING ACTIONS
+
+> Create instructions and BHAVs from scratch.
+
+| Action              | Mutability | Scope  | Risk | Pipeline | Confirm | Audited |
+| ------------------- | ---------- | ------ | ---- | -------- | ------- | ------- |
+| `CreateInstruction` | Preview    | Object | Low  | No       | No      | No      |
+| `BuildOperand`      | Preview    | Object | Low  | No       | No      | No      |
+| `CreateBHAV`        | Write      | Object | High | Yes      | Yes     | Yes     |
+| `InsertInstruction` | Write      | Object | High | Yes      | Yes     | Yes     |
+| `DeleteInstruction` | Write      | Object | High | Yes      | Yes     | Yes     |
+| `MoveInstruction`   | Write      | Object | High | Yes      | Yes     | Yes     |
+| `CopyInstructions`  | Read       | Object | Low  | No       | No      | No      |
+| `PasteInstructions` | Write      | Object | High | Yes      | Yes     | Yes     |
+| `RewirePointers`    | Write      | Object | High | Yes      | Yes     | Yes     |
+
+### Checks Required:
+
+- Instruction pointer validity (253=error, 254=true, 255=false)
+- BHAV ID range (4096-8191 local, 8192+ semi-global)
+- Operand spec validation per opcode
+- Auto-rewiring on insert/delete
+
+---
+
+## 14. LOCALIZATION / STRING ACTIONS
+
+> STR# parsing, language slots, localization auditing.
+
+| Action              | Mutability | Scope  | Risk   | Pipeline | Confirm | Audited |
+| ------------------- | ---------- | ------ | ------ | -------- | ------- | ------- |
+| `ParseSTR`          | Read       | Object | Low    | No       | No      | No      |
+| `ListLanguageSlots` | Read       | Object | Low    | No       | No      | No      |
+| `AuditLocalization` | Read       | File   | Low    | No       | No      | Yes     |
+| `CopyLanguageSlot`  | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `FillMissingSlots`  | Write      | Object | Medium | Yes      | Yes     | Yes     |
+| `FindSTRReferences` | Read       | File   | Low    | No       | No      | No      |
+| `FindOrphanSTR`     | Read       | File   | Low    | No       | No      | Yes     |
+| `EditSTREntry`      | Write      | Object | Medium | Yes      | Yes     | Yes     |
+
+### Checks Required:
+
+- STR# format detection (0xFFFF, 0xFDFF, 0xFEFF, Pascal)
+- Language code validation (20 languages)
+- Catalog string references
+- Orphan chunk detection
+
+---
+
 ## ACTION COUNTS BY CATEGORY
 
-| Category       | Total Actions | Write Actions | High Risk |
-| -------------- | ------------- | ------------- | --------- |
-| File/Container | 16            | 12            | 8         |
-| Save-State     | 16            | 16            | 6         |
-| BHAV           | 14            | 9             | 9         |
-| Visualization  | 9             | 0             | 0         |
-| Export         | 9             | 0             | 0         |
-| Import         | 9             | 9             | 5         |
-| Analysis       | 10            | 0             | 0         |
-| Search         | 9             | 0             | 0         |
-| System         | 10            | 5             | 0         |
-| UI             | 8             | 1             | 0         |
-| **TOTAL**      | **110**       | **52**        | **28**    |
+| Category         | Total Actions | Write Actions | High Risk |
+| ---------------- | ------------- | ------------- | --------- |
+| File/Container   | 16            | 12            | 8         |
+| Save-State       | 16            | 16            | 6         |
+| BHAV             | 14            | 9             | 9         |
+| Visualization    | 9             | 0             | 0         |
+| Export           | 9             | 0             | 0         |
+| Import           | 9             | 9             | 5         |
+| Analysis         | 10            | 0             | 0         |
+| Search           | 9             | 0             | 0         |
+| System           | 10            | 5             | 0         |
+| UI               | 8             | 1             | 0         |
+| **TTAB**         | **8**         | **4**         | **2**     |
+| **SLOT**         | **8**         | **6**         | **0**     |
+| **BHAV Auth**    | **9**         | **6**         | **6**     |
+| **Localization** | **8**         | **3**         | **0**     |
+| **TOTAL**        | **143**       | **71**        | **36**    |
 
 ---
 
@@ -316,6 +417,29 @@ All code paths MUST:
 5. **Prompt user** if `Requires User Confirmation = Yes`
 
 **Unregistered actions are rejected at runtime.**
+
+---
+
+---
+
+## CLI / ACTION MAPPER
+
+> Programmatic access — "Fuck the UI" interface
+
+All canonical actions are accessible via `action_mapper.py`:
+
+```python
+from src.Tools.core.action_mapper import ActionMapper
+mapper = ActionMapper()
+result = mapper.execute("parse-ttab", file="object.iff")
+```
+
+CLI:
+
+```bash
+python -m src.Tools.core.action_mapper list-actions
+python -m src.Tools.core.action_mapper get-autonomy object.iff
+```
 
 ---
 

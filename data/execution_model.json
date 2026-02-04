@@ -1,0 +1,277 @@
+{
+  "_comment": "SimAntics Execution Model Reference - How BHAVs and trees work",
+  "_version": "1.0.0",
+
+  "entry_points": {
+    "description": "Ways that BHAV code gets invoked by the engine",
+
+    "objf_hooks": {
+      "description": "OBJF (Object Functions) chunk defines hooks called by engine at specific times",
+      "hooks": {
+        "init": {
+          "index": 0,
+          "name": "Init",
+          "description": "Called when object is first placed or loaded. Set up initial state.",
+          "timing": "Once on creation/load",
+          "stack_object": "None"
+        },
+        "main": {
+          "index": 1,
+          "name": "Main",
+          "description": "Main idle loop. Called repeatedly while object has nothing else to do.",
+          "timing": "Continuous when idle",
+          "stack_object": "Varies"
+        },
+        "cleanup": {
+          "index": 2,
+          "name": "Cleanup",
+          "description": "Called when object is being deleted.",
+          "timing": "Once on deletion",
+          "stack_object": "None"
+        },
+        "sleep": {
+          "index": 3,
+          "name": "Sleep",
+          "description": "Called when transitioning to lot unload.",
+          "timing": "On lot exit",
+          "stack_object": "None"
+        },
+        "wake": {
+          "index": 4,
+          "name": "Wake",
+          "description": "Called when lot is loaded and object wakes up.",
+          "timing": "On lot load",
+          "stack_object": "None"
+        },
+        "activate": {
+          "index": 5,
+          "name": "Activate",
+          "description": "Called when object receives focus or activation.",
+          "timing": "On user interaction",
+          "stack_object": "Activating sim"
+        },
+        "deactivate": {
+          "index": 6,
+          "name": "Deactivate",
+          "description": "Called when object loses focus.",
+          "timing": "On focus loss",
+          "stack_object": "None"
+        }
+      }
+    },
+
+    "ttab_interactions": {
+      "description": "TTAB (Tree Table) defines pie menu interactions",
+      "structure": {
+        "action_bhav": "BHAV that runs when interaction is selected",
+        "test_bhav": "Guard BHAV that determines if interaction appears (green = show, red = hide)",
+        "autonomy": "Whether sims can choose this autonomously",
+        "motive_effects": "Expected motive changes for autonomy AI"
+      },
+      "flow": [
+        "1. User clicks object → engine collects all interactions",
+        "2. For each interaction, run test_bhav (guard)",
+        "3. If guard returns true → add to pie menu",
+        "4. User selects → run action_bhav",
+        "5. Action runs until completion or interruption"
+      ]
+    },
+
+    "global_events": {
+      "description": "Global BHAVs in Global.iff called for system-wide events",
+      "examples": [
+        "SS::test_user_interrupt (1800) - Check if user clicked elsewhere",
+        "Time tick handlers",
+        "Lot transition events"
+      ]
+    }
+  },
+
+  "instruction_flow": {
+    "description": "How BHAV instructions execute",
+
+    "pointer_semantics": {
+      "description": "Each instruction has true_pointer and false_pointer",
+      "true_pointer": "Next instruction if primitive returns true (success)",
+      "false_pointer": "Next instruction if primitive returns false (failure)",
+      "special_values": {
+        "253": {
+          "name": "ERROR",
+          "hex": "0xFD",
+          "description": "Return error from this BHAV (caller gets false)"
+        },
+        "254": {
+          "name": "TRUE",
+          "hex": "0xFE",
+          "description": "Return true from this BHAV"
+        },
+        "255": {
+          "name": "FALSE",
+          "hex": "0xFF",
+          "description": "Return false from this BHAV"
+        }
+      }
+    },
+
+    "execution": {
+      "start": "Always begins at instruction 0",
+      "flow": "Follow true/false pointers based on primitive result",
+      "end": "When special pointer (253-255) is reached",
+      "blocking": "Some primitives yield (Sleep, Animate) - execution resumes later"
+    }
+  },
+
+  "tree_types": {
+    "description": "Different categories of BHAV execution contexts",
+
+    "main_tree": {
+      "name": "Main/Action Tree",
+      "description": "The primary tree for an interaction or idle loop",
+      "characteristics": [
+        "Can run blocking primitives",
+        "Can be interrupted",
+        "Persists across ticks"
+      ]
+    },
+
+    "check_tree": {
+      "name": "Check/Test Tree",
+      "description": "Guard trees for testing conditions",
+      "characteristics": [
+        "Must complete immediately (no blocking)",
+        "Return true/false determines availability",
+        "Cannot modify game state (ideally)"
+      ]
+    },
+
+    "private_tree": {
+      "name": "Private/Subroutine",
+      "description": "Helper BHAVs called via Gosub",
+      "characteristics": [
+        "Inherits context from caller",
+        "Return value goes to caller",
+        "Can be blocking if caller is main tree"
+      ]
+    }
+  },
+
+  "variable_scopes": {
+    "description": "Where data lives during execution",
+
+    "scopes": {
+      "0": {
+        "name": "My (Object Attributes)",
+        "description": "Attributes of the running object",
+        "persistence": "Saved with object",
+        "scope": "Object-local"
+      },
+      "1": {
+        "name": "Stack Object's Attributes",
+        "description": "Attributes of the current target object",
+        "persistence": "Saved with that object",
+        "scope": "Context-dependent"
+      },
+      "4": {
+        "name": "Global",
+        "description": "Game-wide global variables",
+        "persistence": "Saved with game",
+        "scope": "Global"
+      },
+      "5": {
+        "name": "Literal",
+        "description": "Constant value in operand",
+        "persistence": "N/A (read-only)",
+        "scope": "Instruction-local"
+      },
+      "6": {
+        "name": "Local",
+        "description": "Local variable for this BHAV invocation",
+        "persistence": "Lost on BHAV exit",
+        "scope": "BHAV-local"
+      },
+      "7": {
+        "name": "Temp (Temporary)",
+        "description": "Temporary variable shared across BHAV calls in same tree",
+        "persistence": "Lost on tree exit",
+        "scope": "Tree-local"
+      },
+      "8": {
+        "name": "Parameter",
+        "description": "Value passed by Gosub caller",
+        "persistence": "For this invocation",
+        "scope": "BHAV-local"
+      },
+      "9": {
+        "name": "BCON (Constants)",
+        "description": "Value from BCON chunk constant table",
+        "persistence": "N/A (read-only)",
+        "scope": "Object-local"
+      },
+      "26": {
+        "name": "Tuning",
+        "description": "Tuning constant from BCON (for easy modding)",
+        "persistence": "N/A (read-only)",
+        "scope": "Object-local"
+      }
+    }
+  },
+
+  "common_patterns": {
+    "description": "Frequently seen code patterns",
+
+    "guard_tree_pattern": {
+      "name": "Standard Guard",
+      "description": "Check if sim can do something",
+      "structure": [
+        "Check sim state (hungry enough, etc.)",
+        "Check object state (not broken, etc.)",
+        "Return true if all checks pass"
+      ]
+    },
+
+    "action_loop_pattern": {
+      "name": "Action Loop",
+      "description": "Main interaction execution",
+      "structure": [
+        "Route to object",
+        "Play entry animation",
+        "Loop: animate + adjust motives + check interrupts",
+        "Play exit animation",
+        "Return true"
+      ]
+    },
+
+    "interrupt_check_pattern": {
+      "name": "Interrupt Check",
+      "description": "Check if action should stop",
+      "structure": [
+        "Call SS::test_user_interrupt (1800)",
+        "If true → exit action early",
+        "If false → continue"
+      ]
+    }
+  },
+
+  "bhav_id_ranges": {
+    "description": "What different BHAV ID ranges mean",
+
+    "ranges": {
+      "0-255": {
+        "name": "Primitives",
+        "description": "Built-in engine functions, not actual BHAVs"
+      },
+      "256-4095": {
+        "name": "Global BHAVs",
+        "description": "BHAVs in Global.iff, available to all objects"
+      },
+      "4096-8191": {
+        "name": "Local BHAVs",
+        "description": "BHAVs in the object's own IFF file"
+      },
+      "8192+": {
+        "name": "Semi-Global BHAVs",
+        "description": "BHAVs in a shared semi-global IFF file"
+      }
+    }
+  }
+}

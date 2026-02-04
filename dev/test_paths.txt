@@ -1,0 +1,77 @@
+# SimObliterator Suite - Test Path Configuration
+# ==============================================
+# Edit these paths to match your system. Lines starting with # are comments.
+# Leave paths empty or commented out if you don't have that resource.
+#
+# The test suite will skip tests requiring paths that aren't configured.
+# All paths should be absolute and use forward slashes or double backslashes.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GAME INSTALLATION (Required for most tests)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Legacy Collection install path (Steam, Epic, or EA App)
+# Example: G:/SteamLibrary/steamapps/common/The Sims Legacy Collection
+GAME_INSTALL=G:/SteamLibrary/steamapps/common/The Sims Legacy Collection
+
+# Original Complete Collection (optional, for comparison tests)
+# COMPLETE_COLLECTION=C:/Program Files (x86)/Maxis/The Sims
+
+# ─────────────────────────────────────────────────────────────────────────────
+# USER DATA (Save games, screenshots, etc.)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Legacy Collection UserData (default: %USERPROFILE%/Saved Games/Electronic Arts/The Sims 25)
+USER_DATA=C:/Users/jeffe/Saved Games/Electronic Arts/The Sims 25
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CUSTOM CONTENT & DOWNLOADS
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Custom content folders (may contain .far, .iff, .zip files up to 3 ZIPs deep)
+# You can specify multiple CC folders - the test will use the first one found
+
+# Official Maxis objects (clean, known-good reference)
+CC_FOLDER_MAXIS=S:/PCGames/SimsStuff/Official Maxis Objects
+
+# Large CC collection (bulk downloads, mixed quality)
+CC_FOLDER=S:/PCGames/SimsStuff/TheSims1 ModBulk
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEST FILES (Known good/bad files for specific tests)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# A known broken save file for corruption testing
+BROKEN_SAVE=C:/Users/jeffe/Desktop/File Compare/ReChanged/User00088.iff
+
+# A known working save file for comparison
+GOOD_SAVE=C:/Users/jeffe/Desktop/File Compare/Works/User00088.iff
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REFERENCE RESOURCES (Documentation, source code references)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# FreeSO source code (for cross-reference validation)
+# FREESO_SOURCE=S:/Repositorys_New/SimObliterator_Private_Versions/Iff_Study/FreeSO
+
+# TheSimsOpenTechDoc path
+# TECH_DOC=S:/Repositorys_New/SimObliterator_Private_Versions/Iff_Study/TheSimsOpenTechDoc
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TEST OUTPUT (Where to write test artifacts)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Directory for test output files (will be created if missing)
+TEST_OUTPUT=./test_output
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EXPANSION PACK PATHS (Optional - for EP-specific tests)
+# ─────────────────────────────────────────────────────────────────────────────
+# If GAME_INSTALL is set, these are typically auto-detected.
+# Only set these if your install has a non-standard structure.
+
+# HOT_DATE=
+# VACATION=
+# UNLEASHED=
+# SUPERSTAR=
+# MAKIN_MAGIC=

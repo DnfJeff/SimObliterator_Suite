@@ -9,68 +9,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2026-02-04
 
-### 🎉 Initial Release
+### Initial Release
 
 First public release of the SimObliterator Suite - a comprehensive toolkit for analyzing, editing, and extracting data from The Sims 1 game files.
 
-### Added
+### Core Systems
 
-#### Core Features
+- **IFF File Parser** - Complete support for IFF container format with chunk-level access
+- **FAR Archive Support** - FAR1 and FAR3 archive reading/writing with recursive discovery
+- **DBPF Support** - Package file format support for expansion content
 
-- **IFF File Parser** - Complete support for IFF container format
-- **FAR Archive Support** - FAR1 and FAR3 archive reading/writing
-- **DBPF Support** - Package file format support
+### Behavior Analysis
 
-#### Behavior Analysis
-
-- **BHAV Disassembler** - Full SimAntics bytecode decoding
-- **Semantic Name Resolution** - 2,287+ behaviors with readable names
-- **Call Graph Builder** - Visualize behavior relationships
+- **BHAV Disassembler** - Full SimAntics bytecode decoding with semantic primitives
+- **Primitive Reference** - Operand field definitions for Expression, Gosub, Sleep, Animate
+- **Variable Analyzer** - Track locals, temps, params across BHAV instructions
+- **Call Graph Builder** - Visualize behavior relationships and dependencies
 - **Execution Tracer** - Path analysis and dead code detection
-- **Forensic Analyzer** - Deep pattern analysis
 
-#### Save File Editing
+### String Table Support
+
+- **STR# Parser** - Full format support (0xFFFF, 0xFDFF, 0xFEFF, Pascal)
+- **Language Awareness** - 20 language codes with proper slot handling
+- **Reference Scanner** - Find all STR# usage from OBJD, TTAB, CTSS
+- **Localization Audit** - Detect missing translations with fix utilities
+
+### SLOT Resource Support
+
+- **SLOT Parser** - Complete routing slot parsing (versions 2-4)
+- **SLOT Editor** - Add, remove, duplicate slots programmatically
+- **XML Export/Import** - Transmogrifier-compatible XML workflow
+- **Binary Serialization** - Round-trip binary encoding
+
+### TTAB Interaction Support
+
+- **Full Field Parsing** - All versions 4-10 with autonomy and motive effects
+- **Multi-Object Context** - Map resources to objects in multi-OBJD files
+- **Flags Decoding** - Complete interaction flag interpretation
+
+### Lot Analysis
+
+- **Terrain Detection** - House number to terrain type mapping (from FreeSO)
+- **Ambience System** - 35 ambient sound definitions with GUIDs
+- **ARRY Chunk Analysis** - Floor, wall, object placement arrays
+
+### Save File Editing
 
 - **Save Manager** - Load and modify save game files
 - **Sim Editor** - Modify skills, motives, relationships
 - **Household Editor** - Manage family funds and members
 - **Career Manager** - 24 career tracks, promotions
-- **Relationship Manager** - Daily/lifetime values
 
-#### Visual Tools
+### ID Conflict Detection
 
-- **Sprite Viewer** - SPR2 decoding with zoom levels
-- **Animation Decoder** - Frame-by-frame analysis
-- **Mesh Exporter** - glTF/GLB 3D model export
-- **Sprite Sheet Export** - Combined sprite exports
+- **GUID Scanner** - Detect duplicate GUIDs across files
+- **BHAV ID Overlap** - Warn on local BHAV ID conflicts
+- **Semi-Global Conflicts** - Detect group ID issues
+- **Range Finder** - Find unused ID ranges
 
-#### Import/Export
-
-- **PNG Import** - Convert PNG to SPR2 with palette quantization
-- **glTF Import** - Import 3D meshes to GMDC format
-- **Modern Export** - Export assets to PNG, glTF, JSON
-- **Legacy Export** - Export to TS1-compatible formats
-
-#### Safety System
+### Safety System
 
 - **Mutation Pipeline** - All writes validated and auditable
 - **Backup Manager** - Automatic backups before modifications
 - **Preview Mode** - See changes before applying
-- **Undo/Redo** - Full mutation history
 
-#### Analysis Tools
+### Test Coverage
 
-- **Unused Asset Detector** - Find orphaned chunks
-- **Cross-Reference Search** - Find dependencies
-- **Expansion Comparison** - Compare across packs
-- **Opcode Database** - 167+ unknown opcodes catalogued
-
-### Technical
-
-- 110 canonical actions - all fully implemented
-- DearPyGUI-based modern interface
-- Self-contained, no external dependencies at runtime
-- Windows 7+ compatible
+- 73 tests across 17 categories
+- Real game file validation
+- Round-trip encoding verification
 
 ---
 

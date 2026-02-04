@@ -290,45 +290,69 @@ def parse_ttab(chunk_data: bytes, chunk_id: int) -> Optional[MinimalTTAB]:
         ttab.interactions = []
         
         for _ in range(count):
+            # Check if we have enough bytes for minimal interaction (8 bytes for IDs + counts)
+            if not buf.has_bytes(8):
+                break
+            
             interaction = TTABInteractionRef()
             
             # These are present in all versions
             interaction.action_function = buf.read_uint16()
             interaction.test_function = buf.read_uint16()
             
-            # Motive count and flags
+            # Motive count and flags - check bytes first
+            if not buf.has_bytes(12):  # 4 + 4 + 4 for motives, flags, tta_index
+                ttab.interactions.append(interaction)
+                break
+            
             num_motives = buf.read_uint32()
             flags = buf.read_uint32()
             
             # TTAs string index
             interaction.tta_index = buf.read_uint32()
             
-            # Version-dependent fields
+            # Version-dependent fields - with bounds checking
             if ttab.version > 6:
+                if not buf.has_bytes(4):
+                    ttab.interactions.append(interaction)
+                    break
                 attenuation_code = buf.read_uint32()
             
+            if not buf.has_bytes(4):
+                ttab.interactions.append(interaction)
+                break
             attenuation_value = buf.read_float()
+            
+            if not buf.has_bytes(8):  # autonomy_threshold + joining_index
+                ttab.interactions.append(interaction)
+                break
             autonomy_threshold = buf.read_uint32()
             joining_index = buf.read_int32()
             
-            # Skip motive entries
-            for j in range(num_motives):
-                if ttab.version > 6:
-                    effect_min = buf.read_int16()
-                effect_delta = buf.read_int16()
-                if ttab.version > 6:
-                    personality = buf.read_uint16()
+            # Skip motive entries (with bounds checking)
+            motive_entry_size = 2  # effect_delta at minimum
+            if ttab.version > 6:
+                motive_entry_size = 6  # effect_min(2) + effect_delta(2) + personality(2)
+            
+            bytes_needed = num_motives * motive_entry_size
+            if bytes_needed > 0 and buf.has_bytes(bytes_needed):
+                for j in range(num_motives):
+                    if ttab.version > 6:
+                        effect_min = buf.read_int16()
+                    effect_delta = buf.read_int16()
+                    if ttab.version > 6:
+                        personality = buf.read_uint16()
             
             # TSO flags for version > 9
-            if ttab.version > 9:
+            if ttab.version > 9 and buf.has_bytes(4):
                 flags2 = buf.read_uint32()
             
             ttab.interactions.append(interaction)
         
         return ttab
     except Exception as e:
-        print(f"Error parsing TTAB: {e}")
-        return None
+        # Silently return partial result instead of printing error
+        return ttab if 'ttab' in dir() else None
 
 
 @dataclass
