@@ -45,18 +45,18 @@ IFF (Interchange File Format) is the primary container format for The Sims 1 gam
 
 ### Common Chunk Types
 
-| Type | Purpose |
-|------|---------|
+| Type | Purpose                                       |
+| ---- | --------------------------------------------- |
 | OBJD | Object Definition - GUID, type, resource refs |
-| BHAV | Behavior - SimAntics bytecode |
-| TTAB | Tree Table - Pie menu interactions |
-| TTAs | Tree Table Strings - Interaction names |
-| STR# | String Table - Localized text |
-| SLOT | Routing Slots - Where Sims stand |
-| CTSS | Catalog Strings - Object descriptions |
-| SPR2 | Sprite - 2D graphics |
-| BCON | Constants - Named integer values |
-| OBJF | Object Functions - Function table |
+| BHAV | Behavior - SimAntics bytecode                 |
+| TTAB | Tree Table - Pie menu interactions            |
+| TTAs | Tree Table Strings - Interaction names        |
+| STR# | String Table - Localized text                 |
+| SLOT | Routing Slots - Where Sims stand              |
+| CTSS | Catalog Strings - Object descriptions         |
+| SPR2 | Sprite - 2D graphics                          |
+| BCON | Constants - Named integer values              |
+| OBJF | Object Functions - Function table             |
 
 ---
 
@@ -91,36 +91,36 @@ Offset  Size  Field
 
 ### Branch Targets
 
-| Value | Meaning |
-|-------|---------|
+| Value | Meaning                           |
+| ----- | --------------------------------- |
 | 0-252 | Jump to instruction at that index |
-| 253   | Return Error |
-| 254   | Return True |
-| 255   | Return False |
+| 253   | Return Error                      |
+| 254   | Return True                       |
+| 255   | Return False                      |
 
 ### ID Ranges
 
-| Range | Scope |
-|-------|-------|
-| 0-255 | Global primitives (Sleep, Expression, etc.) |
-| 256-4095 | Global BHAVs (Behavior.iff) |
-| 4096-8191 | Local BHAVs (within object IFF) |
-| 8192-12287 | Semi-global BHAVs (shared groups) |
+| Range      | Scope                                       |
+| ---------- | ------------------------------------------- |
+| 0-255      | Global primitives (Sleep, Expression, etc.) |
+| 256-4095   | Global BHAVs (Behavior.iff)                 |
+| 4096-8191  | Local BHAVs (within object IFF)             |
+| 8192-12287 | Semi-global BHAVs (shared groups)           |
 
 ### Variable Scopes
 
 The Expression primitive (opcode 0x02) references variables by scope:
 
-| Code | Scope | Description |
-|------|-------|-------------|
-| 0 | My | Object's own attributes |
-| 1 | Stack Object's | Target object's attributes |
-| 4 | Global | Global simulation variables |
-| 5 | Literal | Constant value |
-| 6 | Local | BHAV local variable |
-| 7 | Temp | Temporary (shared across calls) |
-| 8 | Parameter | Function parameter |
-| 9 | BCON | Named constant from BCON chunk |
+| Code | Scope          | Description                     |
+| ---- | -------------- | ------------------------------- |
+| 0    | My             | Object's own attributes         |
+| 1    | Stack Object's | Target object's attributes      |
+| 4    | Global         | Global simulation variables     |
+| 5    | Literal        | Constant value                  |
+| 6    | Local          | BHAV local variable             |
+| 7    | Temp           | Temporary (shared across calls) |
+| 8    | Parameter      | Function parameter              |
+| 9    | BCON           | Named constant from BCON chunk  |
 
 ---
 
@@ -155,23 +155,23 @@ Offset  Size  Field
 
 ### Slot Types
 
-| Code | Type | Purpose |
-|------|------|---------|
-| 0 | Absolute | Fixed world position |
-| 1 | Standing | Where Sim stands to use object |
-| 2 | Sitting | Where Sim sits |
-| 3 | Ground | For dropped items |
-| 4 | Routing Target | Intermediate routing point |
+| Code | Type           | Purpose                        |
+| ---- | -------------- | ------------------------------ |
+| 0    | Absolute       | Fixed world position           |
+| 1    | Standing       | Where Sim stands to use object |
+| 2    | Sitting        | Where Sim sits                 |
+| 3    | Ground         | For dropped items              |
+| 4    | Routing Target | Intermediate routing point     |
 
 ### Slot Flags
 
-| Bit | Flag | Meaning |
-|-----|------|---------|
-| 0x01 | SNAP_TO_SLOT | Sim snaps to exact position |
-| 0x02 | FACE_OBJECT | Sim faces the object |
-| 0x04 | RANDOM_FACING | Random rotation |
-| 0x08 | SITTING_SLOT | Used for sitting animations |
-| 0x10 | ROUTING_SLOT | Used for pathfinding |
+| Bit  | Flag          | Meaning                     |
+| ---- | ------------- | --------------------------- |
+| 0x01 | SNAP_TO_SLOT  | Sim snaps to exact position |
+| 0x02 | FACE_OBJECT   | Sim faces the object        |
+| 0x04 | RANDOM_FACING | Random rotation             |
+| 0x08 | SITTING_SLOT  | Used for sitting animations |
+| 0x10 | ROUTING_SLOT  | Used for pathfinding        |
 
 ---
 
@@ -207,6 +207,7 @@ Offset  Size  Field
 ### Motive Effects
 
 For each motive (count from header):
+
 ```
 Offset  Size  Field
 0x00    2     Effect Min (V7+)
@@ -216,14 +217,14 @@ Offset  Size  Field
 
 ### Interaction Flags
 
-| Bit | Flag | Meaning |
-|-----|------|---------|
-| 0x0001 | ALLOW_VISITORS | Visitors can use |
-| 0x0002 | DEBUG_ONLY | Only in debug mode |
-| 0x0008 | MUST_RUN | Cannot be cancelled |
-| 0x0010 | AUTO_FIRST | Selected by default |
-| 0x0040 | ALLOW_CONSOLE | Available via console |
-| 0x0400 | ALLOW_GHOSTS | Ghosts can use |
+| Bit    | Flag           | Meaning               |
+| ------ | -------------- | --------------------- |
+| 0x0001 | ALLOW_VISITORS | Visitors can use      |
+| 0x0002 | DEBUG_ONLY     | Only in debug mode    |
+| 0x0008 | MUST_RUN       | Cannot be cancelled   |
+| 0x0010 | AUTO_FIRST     | Selected by default   |
+| 0x0040 | ALLOW_CONSOLE  | Available via console |
+| 0x0400 | ALLOW_GHOSTS   | Ghosts can use        |
 
 ---
 
@@ -233,12 +234,12 @@ String tables store localized text with multiple format options.
 
 ### Format Codes
 
-| Code | Format | Description |
-|------|--------|-------------|
-| 0xFFFF | Null-Terminated | Simple null-terminated strings |
-| 0xFDFF | Language-Coded | Language byte + string + comment |
-| 0xFEFF | Paired Null | String + comment pairs |
-| 0x00 | Pascal | Length-prefixed strings |
+| Code   | Format          | Description                      |
+| ------ | --------------- | -------------------------------- |
+| 0xFFFF | Null-Terminated | Simple null-terminated strings   |
+| 0xFDFF | Language-Coded  | Language byte + string + comment |
+| 0xFEFF | Paired Null     | String + comment pairs           |
+| 0x00   | Pascal          | Length-prefixed strings          |
 
 ### Language-Coded Format (0xFDFF)
 
@@ -255,28 +256,28 @@ Each Entry:
 
 ### Language Codes
 
-| Code | Language |
-|------|----------|
-| 0 | US English |
-| 1 | UK English |
-| 2 | French |
-| 3 | German |
-| 4 | Italian |
-| 5 | Spanish |
-| 6 | Dutch |
-| 7 | Danish |
-| 8 | Swedish |
-| 9 | Norwegian |
-| 10 | Finnish |
-| 11 | Hebrew |
-| 12 | Russian |
-| 13 | Portuguese |
-| 14 | Japanese |
-| 15 | Polish |
-| 16 | Chinese Traditional |
-| 17 | Chinese Simplified |
-| 18 | Thai |
-| 19 | Korean |
+| Code | Language            |
+| ---- | ------------------- |
+| 0    | US English          |
+| 1    | UK English          |
+| 2    | French              |
+| 3    | German              |
+| 4    | Italian             |
+| 5    | Spanish             |
+| 6    | Dutch               |
+| 7    | Danish              |
+| 8    | Swedish             |
+| 9    | Norwegian           |
+| 10   | Finnish             |
+| 11   | Hebrew              |
+| 12   | Russian             |
+| 13   | Portuguese          |
+| 14   | Japanese            |
+| 15   | Polish              |
+| 16   | Chinese Traditional |
+| 17   | Chinese Simplified  |
+| 18   | Thai                |
+| 19   | Korean              |
 
 ---
 
@@ -286,21 +287,22 @@ Save files (UserXXXXX.iff) contain lot state and Sim data.
 
 ### Key Chunks
 
-| Type | ID | Purpose |
-|------|-----|---------|
-| SIMI | 1 | Simulation Info - global state, time |
-| HOUS | 0 | House settings - camera, roof |
-| OBJM | 1 | Object Map - placed objects |
-| OBJT | 0 | Object Types - GUID references |
+| Type | ID   | Purpose                              |
+| ---- | ---- | ------------------------------------ |
+| SIMI | 1    | Simulation Info - global state, time |
+| HOUS | 0    | House settings - camera, roof        |
+| OBJM | 1    | Object Map - placed objects          |
+| OBJT | 0    | Object Types - GUID references       |
 | ARRY | 0-10 | Tile arrays - floors, walls, heights |
-| NGBH | 1 | Neighborhood data |
-| FAMI | * | Family/household data |
-| PERS | * | Person (Sim) data |
-| NBRS | * | Neighbor relationships |
+| NGBH | 1    | Neighborhood data                    |
+| FAMI | \*   | Family/household data                |
+| PERS | \*   | Person (Sim) data                    |
+| NBRS | \*   | Neighbor relationships               |
 
 ### SIMI Global Data
 
 Key indices in GlobalData array:
+
 ```
 [0]  - Current Hour (0-23)
 [1]  - Day of Month
@@ -322,32 +324,32 @@ House IFF files contain lot structure separate from save state.
 
 Terrain is NOT stored in the IFF - it's determined by house number:
 
-| House Numbers | Terrain |
-|---------------|---------|
-| 1-27, 30-39 | Grass (default) |
-| 28-29, 46-48 | Sand (beach) |
-| 40-42 | Snow (winter) |
-| 90-94 | Dark Grass (Studio Town) |
-| 95-96 | Autumn Grass (Magic Town) |
-| 99 | Cloud (Magic realm) |
+| House Numbers | Terrain                   |
+| ------------- | ------------------------- |
+| 1-27, 30-39   | Grass (default)           |
+| 28-29, 46-48  | Sand (beach)              |
+| 40-42         | Snow (winter)             |
+| 90-94         | Dark Grass (Studio Town)  |
+| 95-96         | Autumn Grass (Magic Town) |
+| 99            | Cloud (Magic realm)       |
 
 This mapping was discovered in FreeSO's VMTS1Activator.
 
 ### ARRY Chunk IDs
 
-| ID | Purpose |
-|----|---------|
-| 0 | Terrain heights |
-| 1 | Ground floor tiles (8-bit) |
-| 2 | Ground floor walls (8-bit) |
-| 3 | Ground floor object IDs |
-| 6 | Grass liveness state |
-| 7 | Target grass state |
-| 8 | Tile flags |
-| 9 | Pool tiles |
-| 11 | Ground floor tiles (16-bit) |
-| 12 | Ground floor walls (16-bit) |
-| 101-112 | Second floor equivalents |
+| ID      | Purpose                     |
+| ------- | --------------------------- |
+| 0       | Terrain heights             |
+| 1       | Ground floor tiles (8-bit)  |
+| 2       | Ground floor walls (8-bit)  |
+| 3       | Ground floor object IDs     |
+| 6       | Grass liveness state        |
+| 7       | Target grass state          |
+| 8       | Tile flags                  |
+| 9       | Pool tiles                  |
+| 11      | Ground floor tiles (16-bit) |
+| 12      | Ground floor walls (16-bit) |
+| 101-112 | Second floor equivalents    |
 
 ---
 
@@ -385,4 +387,4 @@ The Sims uses multiple ID systems that can conflict.
 
 ---
 
-*This document represents research findings as of February 2026. Some format details may vary by expansion pack version.*
+_This document represents research findings as of February 2026. Some format details may vary by expansion pack version._

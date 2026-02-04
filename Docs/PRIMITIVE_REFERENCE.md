@@ -6,13 +6,13 @@ This document details the operand formats for commonly used SimAntics primitives
 
 ## Primitive Categories
 
-| Range | Category |
-|-------|----------|
-| 0x00-0x0F | Core Control |
-| 0x10-0x1F | Object Operations |
-| 0x20-0x2F | Sim Control |
+| Range     | Category               |
+| --------- | ---------------------- |
+| 0x00-0x0F | Core Control           |
+| 0x10-0x1F | Object Operations      |
+| 0x20-0x2F | Sim Control            |
 | 0x30-0x3F | Motive/Need Operations |
-| 0x40+ | Extended/Custom |
+| 0x40+     | Extended/Custom        |
 
 ---
 
@@ -21,12 +21,14 @@ This document details the operand formats for commonly used SimAntics primitives
 Pauses execution for a specified number of ticks.
 
 ### Operand Format
+
 ```
 [0-1]: Ticks (uint16, little-endian)
 [2-7]: Unused
 ```
 
 ### Behavior
+
 - Blocking primitive - yields to simulation
 - 30 ticks = approximately 1 second at normal speed
 - Returns true when sleep completes
@@ -38,6 +40,7 @@ Pauses execution for a specified number of ticks.
 Plays an animation on the stack object or current sim.
 
 ### Operand Format
+
 ```
 [0-1]: Animation ID (uint16)
 [2]:   Flags
@@ -48,6 +51,7 @@ Plays an animation on the stack object or current sim.
 ```
 
 ### Behavior
+
 - Blocking until animation completes
 - Stack Object determines target
 
@@ -58,6 +62,7 @@ Plays an animation on the stack object or current sim.
 The most versatile primitive - performs math and comparisons.
 
 ### Operand Format
+
 ```
 [0-1]: LHS Data (uint16) - variable index or literal
 [2-3]: RHS Data (uint16) - variable index or literal
@@ -69,47 +74,51 @@ The most versatile primitive - performs math and comparisons.
 ```
 
 ### Assignment Operators (Flag bit 0 = 0)
-| Code | Operator | Meaning |
-|------|----------|---------|
-| 0 | := | Assign |
-| 1 | += | Add |
-| 2 | -= | Subtract |
-| 3 | *= | Multiply |
-| 4 | /= | Divide |
-| 5 | %= | Modulo |
-| 6 | &= | Bitwise AND |
-| 7 | \|= | Bitwise OR |
-| 8 | ^= | Bitwise XOR |
-| 9 | >>= | Shift Right |
-| 10 | <<= | Shift Left |
+
+| Code | Operator | Meaning     |
+| ---- | -------- | ----------- |
+| 0    | :=       | Assign      |
+| 1    | +=       | Add         |
+| 2    | -=       | Subtract    |
+| 3    | \*=      | Multiply    |
+| 4    | /=       | Divide      |
+| 5    | %=       | Modulo      |
+| 6    | &=       | Bitwise AND |
+| 7    | \|=      | Bitwise OR  |
+| 8    | ^=       | Bitwise XOR |
+| 9    | >>=      | Shift Right |
+| 10   | <<=      | Shift Left  |
 
 ### Comparison Operators (Flag bit 0 = 1)
-| Code | Operator | Meaning |
-|------|----------|---------|
-| 0 | < | Less than |
-| 1 | <= | Less or equal |
-| 2 | == | Equal |
-| 3 | >= | Greater or equal |
-| 4 | > | Greater than |
-| 5 | != | Not equal |
+
+| Code | Operator | Meaning          |
+| ---- | -------- | ---------------- |
+| 0    | <        | Less than        |
+| 1    | <=       | Less or equal    |
+| 2    | ==       | Equal            |
+| 3    | >=       | Greater or equal |
+| 4    | >        | Greater than     |
+| 5    | !=       | Not equal        |
 
 ### Variable Scopes
-| Code | Scope | Writable | Description |
-|------|-------|----------|-------------|
-| 0 | My | Yes | Object's attributes |
-| 1 | Stack Object's | Yes | Target's attributes |
-| 2 | My (Person) | Yes | Sim's person data |
-| 3 | Stack Object's (Person) | Yes | Target sim's person data |
-| 4 | Global | Yes | Global simulation variables |
-| 5 | Literal | No | Constant value (data = value) |
-| 6 | Local | Yes | BHAV local variable |
-| 7 | Temp | Yes | Temporary variable |
-| 8 | Parameter | Yes | Function parameter |
-| 9 | BCON | No | Named constant |
-| 10 | Attribute Array | Yes | Indexed attribute |
-| 11 | Temps Array | Yes | Indexed temp |
+
+| Code | Scope                   | Writable | Description                   |
+| ---- | ----------------------- | -------- | ----------------------------- |
+| 0    | My                      | Yes      | Object's attributes           |
+| 1    | Stack Object's          | Yes      | Target's attributes           |
+| 2    | My (Person)             | Yes      | Sim's person data             |
+| 3    | Stack Object's (Person) | Yes      | Target sim's person data      |
+| 4    | Global                  | Yes      | Global simulation variables   |
+| 5    | Literal                 | No       | Constant value (data = value) |
+| 6    | Local                   | Yes      | BHAV local variable           |
+| 7    | Temp                    | Yes      | Temporary variable            |
+| 8    | Parameter               | Yes      | Function parameter            |
+| 9    | BCON                    | No       | Named constant                |
+| 10   | Attribute Array         | Yes      | Indexed attribute             |
+| 11   | Temps Array             | Yes      | Indexed temp                  |
 
 ### Examples
+
 ```
 temp:0 := literal:5     -> Set temp 0 to 5
 local:1 += param:0      -> Add parameter 0 to local 1
@@ -123,6 +132,7 @@ temp:0 == literal:10    -> Compare temp 0 to 10 (returns T/F)
 Calls another BHAV and returns.
 
 ### Operand Format
+
 ```
 [0-1]: BHAV ID (uint16)
 [2]:   Parameter 0
@@ -133,13 +143,15 @@ Calls another BHAV and returns.
 ```
 
 ### BHAV ID Ranges
-| Range | Scope |
-|-------|-------|
-| 256-4095 | Global (Behavior.iff) |
-| 4096-8191 | Local (object's IFF) |
+
+| Range      | Scope                      |
+| ---------- | -------------------------- |
+| 256-4095   | Global (Behavior.iff)      |
+| 4096-8191  | Local (object's IFF)       |
 | 8192-12287 | Semi-global (shared group) |
 
 ### Behavior
+
 - Pushes return address to call stack
 - Called BHAV's return value becomes this primitive's return
 - Parameters accessible via scope 8 in callee
@@ -151,12 +163,14 @@ Calls another BHAV and returns.
 Unconditionally jumps to another instruction.
 
 ### Operand Format
+
 ```
 [0]: Target instruction index
 [1-7]: Unused
 ```
 
 ### Behavior
+
 - Always jumps (ignores true/false branch)
 - Used for loop constructs
 
@@ -167,6 +181,7 @@ Unconditionally jumps to another instruction.
 Ends current tree execution with a result.
 
 ### Operand Format
+
 ```
 [0]: Return value
        0 = False
@@ -181,6 +196,7 @@ Ends current tree execution with a result.
 Creates a new object in the world.
 
 ### Operand Format
+
 ```
 [0-3]: GUID of object to create (uint32)
 [4]:   Placement mode
@@ -191,6 +207,7 @@ Creates a new object in the world.
 ```
 
 ### Behavior
+
 - Created object becomes new Stack Object
 - Returns false if creation fails
 
@@ -201,6 +218,7 @@ Creates a new object in the world.
 Routes sim to a slot on the target object.
 
 ### Operand Format
+
 ```
 [0]: Slot index
 [1]: Flags
@@ -210,6 +228,7 @@ Routes sim to a slot on the target object.
 ```
 
 ### Behavior
+
 - Blocking until routing completes
 - Returns false if routing fails
 
@@ -220,6 +239,7 @@ Routes sim to a slot on the target object.
 Changes a sim's outfit or accessory.
 
 ### Operand Format
+
 ```
 [0]: Suit source
        0 = Body Strings (STR# chunk)
@@ -235,12 +255,12 @@ Changes a sim's outfit or accessory.
 
 All primitives return one of:
 
-| Value | Constant | Meaning |
-|-------|----------|---------|
-| 0-252 | (instruction) | Jump to that instruction |
-| 253 | Error | Error condition |
-| 254 | True | Success/condition met |
-| 255 | False | Failure/condition not met |
+| Value | Constant      | Meaning                   |
+| ----- | ------------- | ------------------------- |
+| 0-252 | (instruction) | Jump to that instruction  |
+| 253   | Error         | Error condition           |
+| 254   | True          | Success/condition met     |
+| 255   | False         | Failure/condition not met |
 
 ---
 
@@ -253,4 +273,4 @@ All primitives return one of:
 
 ---
 
-*Reference based on analysis of Behavior.iff and game object files.*
+_Reference based on analysis of Behavior.iff and game object files._
