@@ -4,7 +4,7 @@
 
 This document maps discovered capabilities across tools to inform integration into the Suite.
 
-> 📋 **See Also**: [ACTION_SURFACE.md](ACTION_SURFACE.md) — Canonical action definitions (143 actions, 71 write, 36 high-risk)
+> 📋 **See Also**: [ACTION_SURFACE.md](ACTION_SURFACE.md) — Canonical action definitions (161 actions, 79 write, 37 high-risk)
 
 ---
 

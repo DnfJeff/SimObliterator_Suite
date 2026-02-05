@@ -283,6 +283,15 @@ class ActionRegistry:
             ("ModifyTime", RiskLevel.MEDIUM),
             ("ModifyLotState", RiskLevel.HIGH),
             ("ModifyNeighborhoodState", RiskLevel.HIGH),
+            # Granular binary-level actions (v1.0.3)
+            ("SetSimSkill", RiskLevel.MEDIUM),
+            ("SetSimMotive", RiskLevel.MEDIUM),
+            ("SetSimPersonality", RiskLevel.MEDIUM),
+            ("SetSimCareer", RiskLevel.MEDIUM),
+            ("MaxAllSkills", RiskLevel.MEDIUM),
+            ("MaxAllMotives", RiskLevel.MEDIUM),
+            ("SetRelationship", RiskLevel.HIGH),
+            ("SetFamilyMoney", RiskLevel.MEDIUM),
         ]
         
         for name, risk in save_actions:

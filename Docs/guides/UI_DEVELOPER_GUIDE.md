@@ -42,7 +42,7 @@ Reference for completing the GUI implementation using Dear PyGui.
 | `src/Tools/gui/events.py`           | EventBus pub/sub + Events constants    |
 | `src/Tools/gui/theme.py`            | Dear PyGui theme (colors, fonts)       |
 | `src/Tools/gui/panels/*.py`         | Individual panel implementations       |
-| `src/Tools/core/action_registry.py` | 110 canonical actions with safety tags |
+| `src/Tools/core/action_registry.py` | 161 canonical actions with safety tags |
 
 ---
 
@@ -351,3 +351,14 @@ from Tools.gui.state import AppState
 from Tools.core.action_registry import ActionRegistry
 from Tools.core.mutation_pipeline import MutationPipeline, MutationMode
 ```
+
+---
+
+## Cross-References
+
+| Document | Purpose |
+|----------|--------|
+| [ACTION_MAP.md](../ACTION_MAP.md) | Maps all 161 actions to implementing modules |
+| [ACTION_SURFACE.md](../ACTION_SURFACE.md) | Complete action reference with properties |
+| [UI_API_REFERENCE.md](UI_API_REFERENCE.md) | Headless API quickstart for UI integration |
+| [headless_examples.py](../../dev/headless_examples.py) | Runnable code demonstrating all API patterns |
