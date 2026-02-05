@@ -37,7 +37,7 @@ python tests.py
 # Run only API tests (no game files required)
 python tests.py --api
 
-# Run only game file tests  
+# Run only game file tests
 python tests.py --game
 
 # Quick mode (fast subset)
@@ -71,10 +71,10 @@ Tests skip gracefully if paths aren't configured.
 
 ### Test Modules
 
-| Module        | Tests | Description                                        |
-| ------------- | ----- | -------------------------------------------------- |
-| `test_api.py` | 174   | API/module tests - verifies classes and interfaces |
-| `test_game.py`| 73    | Real game file tests - parsers, exports, analysis  |
+| Module         | Tests | Description                                        |
+| -------------- | ----- | -------------------------------------------------- |
+| `test_api.py`  | 174   | API/module tests - verifies classes and interfaces |
+| `test_game.py` | 73    | Real game file tests - parsers, exports, analysis  |
 
 ### Game Test Categories
 

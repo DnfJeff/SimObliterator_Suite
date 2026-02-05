@@ -165,19 +165,22 @@ SimObliterator_Suite/
 │   └── execution_model.json      # BHAV execution patterns
 │
 ├── Docs/                  # Documentation
-│   ├── ACTION_MAP.md             # Feature inventory & architecture
-│   ├── ACTION_SURFACE.md         # 110 canonical actions with safety tags
-│   ├── TECHNICAL_REFERENCE.md    # IFF, BHAV, SLOT, TTAB formats
-│   ├── PRIMITIVE_REFERENCE.md    # SimAntics opcode operands
-│   ├── UI_DEVELOPER_GUIDE.md     # Panel architecture & event system
-│   ├── INTEGRATION_GAPS.md       # Research integration status
-│   ├── DEFINITIVE_BHAV_REFERENCE.md      # Complete BHAV technical guide
-│   ├── FREESO_BEHAVIORAL_ARCHITECTURE.md # FreeSO engine analysis
-│   ├── BHAV_OPCODE_REFERENCE.md  # Opcode documentation
-│   ├── ENGINE_PRIMITIVES.md      # Primitive classifications
-│   ├── RESOURCE_GRAPH_USAGE_GUIDE.md     # Graph infrastructure
-│   ├── VALIDATION_TRUST_GUIDE.md # Trust/validation system
-│   └── CYCLE_PATTERNS_GUIDE.md   # Behavioral cycle patterns
+│   ├── guides/                   # User & Developer guides
+│   │   ├── USER_GUIDE.md         # End-user documentation
+│   │   ├── QUICK_REFERENCE.md    # Cheat sheet for common tasks
+│   │   ├── UI_DEVELOPER_GUIDE.md # Panel architecture & events
+│   │   └── ARCHIVER_GUIDE.md     # Archiver tool usage
+│   ├── technical/                # Technical references
+│   │   ├── ACTION_MAP.md         # Feature inventory
+│   │   ├── ACTION_SURFACE.md     # 110 canonical actions
+│   │   ├── TECHNICAL_REFERENCE.md# IFF/BHAV/SLOT/TTAB formats
+│   │   └── PRIMITIVE_REFERENCE.md# SimAntics operands
+│   ├── research/                 # Deep research docs
+│   │   ├── DEFINITIVE_BHAV_REFERENCE.md
+│   │   ├── FREESO_BEHAVIORAL_ARCHITECTURE.md
+│   │   ├── BHAV_OPCODE_REFERENCE.md
+│   │   └── ...                   # More research docs
+│   └── INTEGRATION_GAPS.md       # Integration status
 │
 ├── Examples/              # Sample files for testing
 │   ├── IFF_Files/
@@ -209,7 +212,20 @@ SimObliterator_Suite/
 
 ---
 
-## 🔧 Development
+## � Documentation
+
+| Guide | Audience | Description |
+| ----- | -------- | ----------- |
+| [USER_GUIDE.md](Docs/guides/USER_GUIDE.md) | End Users | Complete walkthrough of all features |
+| [QUICK_REFERENCE.md](Docs/guides/QUICK_REFERENCE.md) | Modders | Cheat sheet for chunk types, opcodes, shortcuts |
+| [ARCHIVER_GUIDE.md](Docs/guides/ARCHIVER_GUIDE.md) | Users | Archiver tool for bulk scanning |
+| [UI_DEVELOPER_GUIDE.md](Docs/guides/UI_DEVELOPER_GUIDE.md) | Developers | Panel architecture, events, extending the GUI |
+| [TECHNICAL_REFERENCE.md](Docs/technical/TECHNICAL_REFERENCE.md) | Researchers | IFF, BHAV, SLOT, TTAB format specs |
+| [DEFINITIVE_BHAV_REFERENCE.md](Docs/research/DEFINITIVE_BHAV_REFERENCE.md) | Researchers | Deep BHAV execution model analysis |
+
+---
+
+## �🔧 Development
 
 ### Prerequisites
 

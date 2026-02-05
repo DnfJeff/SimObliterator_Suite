@@ -22,6 +22,12 @@ Unified and modularized the test infrastructure for better maintainability.
 - All modules can run standalone or via unified runner
 - Total: 247 tests passing
 
+#### Added
+
+- **USER_GUIDE.md** - Complete end-user documentation (keyboard shortcuts, common tasks, troubleshooting)
+- **QUICK_REFERENCE.md** - Cheat sheet for modders (chunk types, opcodes, GUID ranges, CLI usage)
+- Updated UI_DEVELOPER_GUIDE.md with new test commands
+
 #### Removed
 
 - `test_suite.py` - Merged into `test_api.py`

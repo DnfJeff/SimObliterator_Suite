@@ -288,16 +288,19 @@ All parsing is done - just needs UI wiring.
 ## Testing Your Changes
 
 ```bash
-cd dev
+cd dev/tests
 
 # Run all tests to verify nothing broke
-python real_game_tests.py
+python tests.py
+
+# Run only API tests (no game files needed)
+python tests.py --api
 
 # Run quick subset during development
-python real_game_tests.py --quick
+python tests.py --quick
 
-# Test specific category
-python real_game_tests.py --category formats
+# Verbose output
+python tests.py --verbose
 ```
 
 ---
