@@ -475,13 +475,13 @@ class SaveManager:
         if len(data) < 16:
             return
         
-        # Find chunk offset
-        nbrs_offset = 64
+        # Find chunk data offset in file
+        nbrs_offset = 64  # File header
         for c in self.neighborhood.chunks:
             if c is chunk:
                 break
-            nbrs_offset += 76 + c.chunk_size
-        nbrs_data_offset = nbrs_offset + 76
+            nbrs_offset += c.chunk_size
+        nbrs_data_offset = nbrs_offset + 76  # After chunk header
         
         try:
             buf = IoBuffer.from_bytes(data, ByteOrder.LITTLE_ENDIAN)
@@ -495,17 +495,24 @@ class SaveManager:
                 if not buf.has_more:
                     break
                 
-                neigh = self._read_neighbor(buf)
+                neigh = self._read_neighbor(buf, nbrs_data_offset)
                 if neigh and neigh.neighbor_id > 0:
                     self.neighbors[neigh.neighbor_id] = neigh
                     
         except Exception as e:
             print(f"Error parsing NBRS: {e}")
     
-    def _read_neighbor(self, buf: IoBuffer) -> Optional[NeighborData]:
-        """Read a single neighbor entry."""
+    def _read_neighbor(self, buf: IoBuffer, base_offset: int = 0) -> Optional[NeighborData]:
+        """Read a single neighbor entry.
+        
+        Args:
+            buf: Buffer positioned at start of neighbor entry
+            base_offset: File offset where NBRS chunk data begins (for offset tracking)
+        """
         try:
             neigh = NeighborData()
+            entry_start = buf.pos
+            neigh.offset_in_file = base_offset + entry_start
             
             unknown1 = buf.read_int32()
             if unknown1 != 1:
@@ -532,8 +539,9 @@ class SaveManager:
             _mystery_zero = buf.read_int32()
             neigh.person_mode = buf.read_int32()
             
-            # Person data
+            # Person data - track offset before reading
             if neigh.person_mode > 0:
+                neigh.person_data_offset = base_offset + buf.pos  # Track file offset!
                 size = 0xA0 if version == 0x4 else 0x200
                 neigh.person_data = []
                 bytes_read = 0
@@ -587,6 +595,272 @@ class SaveManager:
         if family_id not in self.families:
             return None
         return self.families[family_id].budget
+    
+    # ========================================================================
+    # Sim Attribute Edit Operations (Skills, Motives, Personality, Career)
+    # ========================================================================
+    
+    def _get_person_data_offset(self, neighbor_id: int, index: int) -> Optional[int]:
+        """Get the file offset for a specific person_data index (each is 2 bytes)."""
+        if neighbor_id not in self.neighbors:
+            return None
+        neigh = self.neighbors[neighbor_id]
+        if neigh.person_data_offset == 0:
+            return None
+        if index < 0 or index >= 88:
+            return None
+        return neigh.person_data_offset + (index * 2)
+    
+    def set_sim_skill(self, neighbor_id: int, skill: str, level: int) -> bool:
+        """
+        Set a Sim's skill level.
+        
+        Args:
+            neighbor_id: The Sim's neighbor ID
+            skill: Skill name (cooking, mechanical, charisma, logic, body, creativity)
+            level: Skill level (0-1000, where 1000 = max)
+        """
+        skill_map = {
+            'cooking': PersonData.COOKING_SKILL,
+            'mechanical': PersonData.MECH_SKILL,
+            'charisma': PersonData.CHARISMA_SKILL,
+            'logic': PersonData.LOGIC_SKILL,
+            'body': PersonData.BODY_SKILL,
+            'creativity': PersonData.CREATIVITY_SKILL,
+        }
+        
+        skill_lower = skill.lower()
+        if skill_lower not in skill_map:
+            print(f"Unknown skill: {skill}")
+            return False
+        
+        index = skill_map[skill_lower]
+        offset = self._get_person_data_offset(neighbor_id, index)
+        if offset is None:
+            print(f"Neighbor {neighbor_id} not found or has no person_data")
+            return False
+        
+        # Clamp value
+        level = max(0, min(level, 1000))
+        
+        # Update in memory
+        neigh = self.neighbors[neighbor_id]
+        if len(neigh.person_data) > index:
+            neigh.person_data[index] = level
+        
+        # Update in file
+        self.neighborhood.write_int16_le(offset, level)
+        print(f"Set {neigh.name}'s {skill} to {level}")
+        return True
+    
+    def set_sim_motive(self, neighbor_id: int, motive: str, value: int) -> bool:
+        """
+        Set a Sim's motive value.
+        
+        Args:
+            neighbor_id: The Sim's neighbor ID
+            motive: Motive name (hunger, comfort, hygiene, bladder, energy, fun, social, room)
+            value: Motive value (-100 to 100, where 100 = full)
+        """
+        motive_map = {
+            'hunger': PersonData.HUNGER_MOTIVE,
+            'comfort': PersonData.COMFORT_MOTIVE,
+            'hygiene': PersonData.HYGIENE_MOTIVE,
+            'bladder': PersonData.BLADDER_MOTIVE,
+            'energy': PersonData.ENERGY_MOTIVE,
+            'fun': PersonData.FUN_MOTIVE,
+            'social': PersonData.SOCIAL_MOTIVE,
+            'room': PersonData.ROOM_MOTIVE,
+        }
+        
+        motive_lower = motive.lower()
+        if motive_lower not in motive_map:
+            print(f"Unknown motive: {motive}")
+            return False
+        
+        index = motive_map[motive_lower]
+        offset = self._get_person_data_offset(neighbor_id, index)
+        if offset is None:
+            print(f"Neighbor {neighbor_id} not found or has no person_data")
+            return False
+        
+        # Clamp value (motives are typically -100 to 100 scaled)
+        value = max(-100, min(value, 100))
+        
+        # Update in memory
+        neigh = self.neighbors[neighbor_id]
+        if len(neigh.person_data) > index:
+            neigh.person_data[index] = value
+        
+        # Update in file
+        self.neighborhood.write_int16_le(offset, value)
+        print(f"Set {neigh.name}'s {motive} to {value}")
+        return True
+    
+    def set_sim_personality(self, neighbor_id: int, trait: str, value: int) -> bool:
+        """
+        Set a Sim's personality trait.
+        
+        Args:
+            neighbor_id: The Sim's neighbor ID
+            trait: Trait name (nice, active, generous, playful, outgoing, neat)
+            value: Trait value (0-1000)
+        """
+        trait_map = {
+            'nice': PersonData.NICE_PERSONALITY,
+            'active': PersonData.ACTIVE_PERSONALITY,
+            'generous': PersonData.GENEROUS_PERSONALITY,
+            'playful': PersonData.PLAYFUL_PERSONALITY,
+            'outgoing': PersonData.OUTGOING_PERSONALITY,
+            'neat': PersonData.NEAT_PERSONALITY,
+        }
+        
+        trait_lower = trait.lower()
+        if trait_lower not in trait_map:
+            print(f"Unknown personality trait: {trait}")
+            return False
+        
+        index = trait_map[trait_lower]
+        offset = self._get_person_data_offset(neighbor_id, index)
+        if offset is None:
+            print(f"Neighbor {neighbor_id} not found or has no person_data")
+            return False
+        
+        # Clamp value
+        value = max(0, min(value, 1000))
+        
+        # Update in memory
+        neigh = self.neighbors[neighbor_id]
+        if len(neigh.person_data) > index:
+            neigh.person_data[index] = value
+        
+        # Update in file
+        self.neighborhood.write_int16_le(offset, value)
+        print(f"Set {neigh.name}'s {trait} to {value}")
+        return True
+    
+    def set_sim_career(self, neighbor_id: int, job_type: int = None, 
+                       job_level: int = None, job_exp: int = None,
+                       job_performance: int = None) -> bool:
+        """
+        Set a Sim's career/job data.
+        
+        Args:
+            neighbor_id: The Sim's neighbor ID
+            job_type: Job type ID (None to keep current)
+            job_level: Job level 1-10 (None to keep current)
+            job_exp: Job experience points (None to keep current)
+            job_performance: Job performance (None to keep current)
+        """
+        if neighbor_id not in self.neighbors:
+            print(f"Neighbor {neighbor_id} not found")
+            return False
+        
+        neigh = self.neighbors[neighbor_id]
+        
+        if job_type is not None:
+            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_TYPE)
+            if offset:
+                neigh.person_data[PersonData.JOB_TYPE] = job_type
+                self.neighborhood.write_int16_le(offset, job_type)
+        
+        if job_level is not None:
+            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_LEVEL)
+            if offset:
+                level = max(1, min(job_level, 10))
+                neigh.person_data[PersonData.JOB_LEVEL] = level
+                self.neighborhood.write_int16_le(offset, level)
+        
+        if job_exp is not None:
+            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_EXPERIENCE)
+            if offset:
+                neigh.person_data[PersonData.JOB_EXPERIENCE] = job_exp
+                self.neighborhood.write_int16_le(offset, job_exp)
+        
+        if job_performance is not None:
+            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_PERFORMANCE)
+            if offset:
+                neigh.person_data[PersonData.JOB_PERFORMANCE] = job_performance
+                self.neighborhood.write_int16_le(offset, job_performance)
+        
+        print(f"Updated {neigh.name}'s career data")
+        return True
+    
+    def max_all_skills(self, neighbor_id: int) -> bool:
+        """Set all of a Sim's skills to maximum (1000)."""
+        success = True
+        for skill_name, _ in PersonData.get_skill_indices():
+            if not self.set_sim_skill(neighbor_id, skill_name, 1000):
+                success = False
+        return success
+    
+    def max_all_motives(self, neighbor_id: int) -> bool:
+        """Set all of a Sim's motives to maximum (100)."""
+        success = True
+        for motive_name, _ in PersonData.get_motive_indices():
+            if not self.set_sim_motive(neighbor_id, motive_name, 100):
+                success = False
+        return success
+    
+    # ========================================================================
+    # Relationship Operations
+    # Note: Relationships are variable-length in NBRS, so modifications here
+    # are in-memory only. Call rebuild_nbrs_chunk() to persist changes.
+    # ========================================================================
+    
+    def get_relationship(self, neighbor_id: int, target_id: int) -> Optional[List[int]]:
+        """Get relationship values between two sims.
+        
+        Returns list of [daily, lifetime] or None if no relationship.
+        """
+        if neighbor_id not in self.neighbors:
+            return None
+        neigh = self.neighbors[neighbor_id]
+        return neigh.relationships.get(target_id)
+    
+    def set_relationship(self, neighbor_id: int, target_id: int, 
+                         daily: int = None, lifetime: int = None) -> bool:
+        """Set relationship values between two sims.
+        
+        Note: Changes are in-memory. Call rebuild_nbrs_chunk() to persist.
+        
+        Args:
+            neighbor_id: Source sim
+            target_id: Target sim
+            daily: Daily relationship value (-100 to 100)
+            lifetime: Lifetime relationship value (-100 to 100)
+        """
+        if neighbor_id not in self.neighbors:
+            print(f"Neighbor {neighbor_id} not found")
+            return False
+        
+        neigh = self.neighbors[neighbor_id]
+        
+        # Get or create relationship entry
+        if target_id not in neigh.relationships:
+            neigh.relationships[target_id] = [0, 0]  # [daily, lifetime]
+        
+        rel = neigh.relationships[target_id]
+        
+        if daily is not None:
+            rel[0] = max(-100, min(daily, 100))
+        if lifetime is not None:
+            if len(rel) > 1:
+                rel[1] = max(-100, min(lifetime, 100))
+            else:
+                rel.append(max(-100, min(lifetime, 100)))
+        
+        print(f"Set {neigh.name}'s relationship with neighbor {target_id}: daily={rel[0]}, lifetime={rel[1] if len(rel) > 1 else 'N/A'}")
+        print("  (Note: Call rebuild_nbrs_chunk() to persist)")
+        return True
+    
+    def make_friends(self, neighbor_id: int, target_id: int) -> bool:
+        """Set a relationship to best friends (100/100)."""
+        return self.set_relationship(neighbor_id, target_id, 100, 100)
+    
+    def make_enemies(self, neighbor_id: int, target_id: int) -> bool:
+        """Set a relationship to enemies (-100/-100)."""
+        return self.set_relationship(neighbor_id, target_id, -100, -100)
     
     def list_families(self) -> List[FamilyData]:
         """Get all families in the neighborhood."""

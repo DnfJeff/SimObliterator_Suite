@@ -46,11 +46,11 @@ Examples:
     run_api = args.api or args.quick or (not args.api and not args.game)
     run_game = args.game or (not args.api and not args.game and not args.quick)
     
-    # Print header
-    print("╔" + "═"*60 + "╗")
-    print("║  SIMOBLITERATOR SUITE - UNIFIED TEST SYSTEM               ║")
-    print("║  " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "                                        ║")
-    print("╚" + "═"*60 + "╝")
+    # Print header (ASCII-safe for .txt export)
+    print("+" + "="*60 + "+")
+    print("|  SIMOBLITERATOR SUITE - UNIFIED TEST SYSTEM               |")
+    print("|  " + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "                                        |")
+    print("+" + "="*60 + "+")
     
     total_passed = 0
     total_failed = 0
@@ -58,9 +58,9 @@ Examples:
     
     # API Tests
     if run_api:
-        print("\n" + "═"*60)
+        print("\n" + "="*60)
         print("  MODULE: API TESTS (test_api.py)")
-        print("═"*60)
+        print("="*60)
         
         try:
             from test_api import run_all_tests as run_api_tests, TestResults
@@ -71,20 +71,20 @@ Examples:
             total_failed += results.failed
             total_skipped += results.skipped
             
-            print(f"\n  📊 API: {results.passed} passed, {results.failed} failed, {results.skipped} skipped")
+            print(f"\n  -- API: {results.passed} passed, {results.failed} failed, {results.skipped} skipped")
             
         except ImportError as e:
-            print(f"  ❌ Failed to import test_api: {e}")
+            print(f"  [FAIL] Failed to import test_api: {e}")
             total_failed += 1
         except Exception as e:
-            print(f"  ❌ API tests error: {e}")
+            print(f"  [FAIL] API tests error: {e}")
             total_failed += 1
     
     # Game File Tests
     if run_game:
-        print("\n" + "═"*60)
+        print("\n" + "="*60)
         print("  MODULE: GAME FILE TESTS (test_game.py)")
-        print("═"*60)
+        print("="*60)
         
         try:
             from test_game import run_all_tests as run_game_tests
@@ -94,30 +94,30 @@ Examples:
             total_failed += failed
             total_skipped += skipped
             
-            print(f"\n  📊 Game: {passed} passed, {failed} failed, {skipped} skipped")
+            print(f"\n  -- Game: {passed} passed, {failed} failed, {skipped} skipped")
             
         except ImportError as e:
-            print(f"  ❌ Failed to import test_game: {e}")
+            print(f"  [FAIL] Failed to import test_game: {e}")
             total_failed += 1
         except Exception as e:
-            print(f"  ❌ Game tests error: {e}")
+            print(f"  [FAIL] Game tests error: {e}")
             total_failed += 1
     
     # Final Summary
     total = total_passed + total_failed + total_skipped
-    print("\n" + "═"*60)
+    print("\n" + "="*60)
     print("FINAL SUMMARY")
-    print("═"*60)
+    print("="*60)
     print(f"Total:   {total}")
-    print(f"Passed:  {total_passed} ✅")
-    print(f"Failed:  {total_failed} ❌")
-    print(f"Skipped: {total_skipped} ⏭️")
+    print(f"Passed:  {total_passed} [OK]")
+    print(f"Failed:  {total_failed} [FAIL]")
+    print(f"Skipped: {total_skipped} [SKIP]")
     
     if total_failed == 0:
-        print("\n🎉 ALL TESTS PASSED!")
+        print("\n*** ALL TESTS PASSED! ***")
         return 0
     else:
-        print(f"\n⚠️  {total_failed} TESTS FAILED")
+        print(f"\n(!!) {total_failed} TESTS FAILED")
         return 1
 
 

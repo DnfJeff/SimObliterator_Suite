@@ -11,10 +11,10 @@ dev/
 │   ├── pyproject.toml      # Python package config
 │   ├── version_info.txt    # Windows EXE metadata
 │   └── BUILD.md            # Build instructions
-├── tests/                  # Test suite (247 tests)
+├── tests/                  # Test suite (276 tests)
 │   ├── tests.py            # Main runner
 │   ├── test_api.py         # API tests (174 tests)
-│   ├── test_game.py        # Game file tests (73 tests)
+│   ├── test_game.py        # Game file tests (102 tests)
 │   ├── action_coverage.py  # Coverage analysis
 │   └── test_paths.txt      # Configure your game paths
 └── README.md               # This file
@@ -24,7 +24,7 @@ dev/
 
 ## Test Suite
 
-The test suite is modular with 247 tests across two modules.
+The test suite is modular with 276 tests across two modules.
 
 ### Running Tests
 
@@ -74,7 +74,7 @@ Tests skip gracefully if paths aren't configured.
 | Module         | Tests | Description                                        |
 | -------------- | ----- | -------------------------------------------------- |
 | `test_api.py`  | 174   | API/module tests - verifies classes and interfaces |
-| `test_game.py` | 73    | Real game file tests - parsers, exports, analysis  |
+| `test_game.py` | 102   | Real game file tests - parsers, exports, analysis  |
 
 ### Game Test Categories
 
@@ -89,28 +89,34 @@ Tests skip gracefully if paths aren't configured.
 | `lots`      | Lot IFF analysis, terrain, ambient sounds      |
 | `saves`     | Save file parsing, sim extraction              |
 | `export`    | Sprite/mesh export                             |
-| `conflicts` | ID conflict detection                          |
+| `save_edit` | Binary save editing (skills, motives, etc.)    |
+| `bhav_mut`  | BHAV editing with undo/redo                    |
 | `forensic`  | Deep pattern analysis                          |
+| `graph`     | Call graph generation                          |
+| `advanced`  | Core module availability tests                 |
 
 ### Expected Output
 
 ```
-════════════════════════════════════════════════════════════════════════════════
-SIMOBLITERATOR SUITE - UNIFIED TEST RUNNER
-════════════════════════════════════════════════════════════════════════════════
++============================================================+
+|  SIMOBLITERATOR SUITE - UNIFIED TEST SYSTEM               |
++============================================================+
 
 Running API tests...
   API Tests: 174 passed, 0 failed
 
 Running Game tests...
-  Game Tests: 73 passed, 0 failed
+  Game Tests: 102 passed, 0 failed
 
-════════════════════════════════════════════════════════════════════════════════
-FINAL RESULTS
-────────────────────────────────────────────────────────────────────────────────
-Total Passed:  247
-Total Failed:  0
-────────────────────────────────────────────────────────────────────────────────
+============================================================
+FINAL SUMMARY
+============================================================
+Total:   276
+Passed:  276 [OK]
+Failed:  0 [FAIL]
+Skipped: 0 [SKIP]
+
+*** ALL TESTS PASSED! ***
 ```
 
 ---

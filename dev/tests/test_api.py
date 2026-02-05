@@ -39,15 +39,15 @@ class TestResults:
     def record(self, name: str, passed: bool, reason: str = ""):
         if passed:
             self.passed += 1
-            print(f"  ✅ {name}")
+            print(f"  [OK] {name}")
         else:
             self.failed += 1
             self.errors.append(f"{name}: {reason}")
-            print(f"  ❌ {name}: {reason}")
+            print(f"  [FAIL] {name}: {reason}")
     
     def skip(self, name: str, reason: str):
         self.skipped += 1
-        print(f"  ⏭️  {name}: {reason}")
+        print(f"  [SKIP] {name}: {reason}")
     
     def summary(self):
         total = self.passed + self.failed + self.skipped
@@ -55,9 +55,9 @@ class TestResults:
         print(f"API TEST SUMMARY")
         print(f"{'='*60}")
         print(f"Total:   {total}")
-        print(f"Passed:  {self.passed} ✅")
-        print(f"Failed:  {self.failed} ❌")
-        print(f"Skipped: {self.skipped} ⏭️")
+        print(f"Passed:  {self.passed} [OK]")
+        print(f"Failed:  {self.failed} [FAIL]")
+        print(f"Skipped: {self.skipped} [SKIP]")
         return self.failed == 0
 
 
@@ -101,7 +101,7 @@ def test_action_registry():
         })
         results.record("WriteSave allows in MUTATE", valid, reason)
         
-        print(f"\n  📊 Registry: {summary['total']} actions, {summary['write_actions']} write, {summary['high_risk']} high-risk")
+        print(f"\n  -- Registry: {summary['total']} actions, {summary['write_actions']} write, {summary['high_risk']} high-risk")
         
     except ImportError as e:
         results.skip("Action Registry", f"Import failed: {e}")
@@ -136,7 +136,7 @@ def test_mutation_pipeline():
         diff = MutationDiff(field_path='objd.price', old_value=100, new_value=200)
         results.record("MutationDiff created", diff.old_value == 100, "")
         
-        print(f"\n  📊 Pipeline mode: {pipeline.mode.value}")
+        print(f"\n  -- Pipeline mode: {pipeline.mode.value}")
         
     except ImportError as e:
         results.skip("Mutation Pipeline", f"Import failed: {e}")
@@ -165,7 +165,7 @@ def test_provenance():
         retrieved = registry.get("BHAV", 0x1234)
         results.record("Registry stores/retrieves", retrieved is not None and retrieved.confidence == ConfidenceLevel.HIGH, "")
         
-        print(f"\n  📊 Provenance system functional")
+        print(f"\n  -- Provenance system functional")
         
     except ImportError as e:
         results.skip("Provenance", f"Import failed: {e}")
@@ -191,7 +191,7 @@ def test_safety():
         results.record("Scope enum exists", Scope.GLOBAL is not None, "")
         results.record("ResourceOwner enum exists", ResourceOwner.EA_EXPANSION is not None, "")
         
-        print(f"\n  📊 Safety levels: {[s.value for s in SafetyLevel]}")
+        print(f"\n  -- Safety levels: {[s.value for s in SafetyLevel]}")
         
     except ImportError as e:
         results.skip("Safety API", f"Import failed: {e}")
@@ -223,7 +223,7 @@ def test_bhav_executor():
         results.record("format_summary works", "BHAV" in summary, f"Got: {summary[:50]}")
         results.record("BHAVExecutor class exists", BHAVExecutor is not None, "")
         
-        print(f"\n  📊 Exit codes: {len(VMPrimitiveExitCode)}")
+        print(f"\n  -- Exit codes: {len(VMPrimitiveExitCode)}")
         
     except ImportError as e:
         results.skip("BHAV Executor", f"Import failed: {e}")
@@ -248,7 +248,7 @@ def test_bhav_operations():
         result = BHAVOpResult(True, "Test", bhav_id=1234)
         results.record("BHAVOpResult created", result.bhav_id == 1234, "")
         
-        print(f"\n  📊 BHAV operations module loaded")
+        print(f"\n  -- BHAV operations module loaded")
         
     except ImportError as e:
         results.skip("BHAV Operations", f"Import failed: {e}")
@@ -288,7 +288,7 @@ def test_bhav_patching():
         results.record("BHAVPatchResult created", result.patches_applied == 5, "")
         results.record("BHAVPatchResult has id_map", len(result.id_map) == 1, "")
         
-        print(f"\n  📊 BHAV patching module loaded")
+        print(f"\n  -- BHAV patching module loaded")
         
     except ImportError as e:
         results.skip("BHAV Patching", f"Import failed: {e}")
@@ -315,7 +315,7 @@ def test_iff_parser():
         iff = IffFile(filename="test.iff")
         results.record("IffFile instantiation", iff.filename == "test.iff", "")
         
-        print(f"\n  📊 IFF parser available")
+        print(f"\n  -- IFF parser available")
         
     except ImportError as e:
         results.skip("IFF Parser", f"Import failed: {e}")
@@ -338,7 +338,7 @@ def test_far_parser():
         entry = FarEntry(filename="test.dat", data_length=1024)
         results.record("FarEntry instantiation", entry.data_length == 1024, "")
         
-        print(f"\n  📊 FAR parser available")
+        print(f"\n  -- FAR parser available")
         
     except ImportError as e:
         results.skip("FAR Parser", f"Import failed: {e}")
@@ -359,7 +359,7 @@ def test_dbpf_parser():
         results.record("OBJD type ID", DBPFTypeID.OBJD == 0xC0C0C001, f"Got {hex(DBPFTypeID.OBJD)}")
         results.record("BHAV type ID", DBPFTypeID.BHAV == 0xC0C0C002, f"Got {hex(DBPFTypeID.BHAV)}")
         
-        print(f"\n  📊 DBPF parser available, {len(list(DBPFTypeID))} type IDs defined")
+        print(f"\n  -- DBPF parser available, {len(list(DBPFTypeID))} type IDs defined")
         
     except ImportError as e:
         results.skip("DBPF Parser", f"Import failed: {e}")
@@ -383,7 +383,7 @@ def test_chunk_parsers():
         exists = chunk in chunk_names
         results.record(f"Chunk: {chunk}", exists, "" if exists else "Missing")
     
-    print(f"\n  📊 Total chunk parsers: {len(chunk_names)}")
+    print(f"\n  -- Total chunk parsers: {len(chunk_names)}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -427,7 +427,7 @@ def test_entities():
     except ImportError as e:
         results.skip("RelationshipGraph", str(e))
     
-    print(f"\n  📊 Entities: {', '.join(entities_found)}")
+    print(f"\n  -- Entities: {', '.join(entities_found)}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -452,7 +452,7 @@ def test_file_operations():
         result = FileOpResult(True, "Test message")
         results.record("FileOpResult created", result.success, "")
         
-        print(f"\n  📊 File operations module loaded")
+        print(f"\n  -- File operations module loaded")
         
     except ImportError as e:
         results.skip("File Operations", f"Import failed: {e}")
@@ -477,7 +477,7 @@ def test_import_operations():
         result = ImportResult(True, "Test", imported_count=5)
         results.record("ImportResult created", result.imported_count == 5, "")
         
-        print(f"\n  📊 Import operations module loaded")
+        print(f"\n  -- Import operations module loaded")
         
     except ImportError as e:
         results.skip("Import Operations", f"Import failed: {e}")
@@ -515,7 +515,7 @@ def test_container_operations():
         result = ContainerOpResult(True, "Test", affected_chunks=10)
         results.record("ContainerOpResult created", result.affected_chunks == 10, "")
         
-        print(f"\n  📊 Container operations module loaded")
+        print(f"\n  -- Container operations module loaded")
         
     except ImportError as e:
         results.skip("Container Operations", f"Import failed: {e}")
@@ -552,7 +552,7 @@ def test_save_mutations():
         result = SaveMutationResult(True, "Test", sim_id=123)
         results.record("SaveMutationResult created", result.sim_id == 123, "")
         
-        print(f"\n  📊 Save mutations module loaded")
+        print(f"\n  -- Save mutations module loaded")
         
     except ImportError as e:
         results.skip("Save Mutations", f"Import failed: {e}")
@@ -608,7 +608,7 @@ def test_mesh_export():
         result = MeshExportResult(True, "Test", vertex_count=100, face_count=50)
         results.record("MeshExportResult created", result.vertex_count == 100, "")
         
-        print(f"\n  📊 Mesh export module loaded")
+        print(f"\n  -- Mesh export module loaded")
         
     except ImportError as e:
         results.skip("Mesh Export", f"Import failed: {e}")
@@ -640,7 +640,7 @@ def test_focus_coordinator():
         results.record("Scope.ALL exists", Scope.ALL is not None, "")
         results.record("Context.FILE exists", Context.FILE is not None, "")
         
-        print(f"\n  📊 Scopes: {[s.name for s in Scope]}")
+        print(f"\n  -- Scopes: {[s.name for s in Scope]}")
         
     except ImportError as e:
         results.skip("Focus Coordinator", f"Import failed: {e}")
@@ -686,7 +686,7 @@ def test_panels_exist():
         else:
             results.record(f"{panel_name}", False, f"Missing: {filename}")
     
-    print(f"\n  📊 Panels found: {found}/{len(expected_panels)}")
+    print(f"\n  -- Panels found: {found}/{len(expected_panels)}")
 
 
 def test_engine_toolkit():
@@ -701,7 +701,7 @@ def test_engine_toolkit():
         toolkit = EngineToolkit()
         results.record("EngineToolkit created", toolkit is not None, "")
         
-        print(f"\n  📊 Engine toolkit functional")
+        print(f"\n  -- Engine toolkit functional")
         
     except ImportError as e:
         results.skip("Engine Toolkit", f"Import failed: {e}")
@@ -766,7 +766,7 @@ def test_data_files():
         except Exception as e:
             results.record("GBD structure", False, str(e))
     
-    print(f"\n  📊 Data directory: {DATA_DIR}")
+    print(f"\n  -- Data directory: {DATA_DIR}")
 
 
 def test_research_docs():
@@ -797,7 +797,7 @@ def test_research_docs():
         else:
             results.record(f"{rel_path}", False, "Not found")
     
-    print(f"\n  📊 Docs directory: {DOCS_DIR}")
+    print(f"\n  -- Docs directory: {DOCS_DIR}")
 
 
 def test_webviewer():
@@ -843,7 +843,7 @@ def test_webviewer():
     except SyntaxError as e:
         results.record("export_server.py syntax", False, str(e))
     
-    print(f"\n  📊 Webviewer directory: {webviewer_dir}")
+    print(f"\n  -- Webviewer directory: {webviewer_dir}")
 
 
 def test_freeso_gap_analyzer():
@@ -880,7 +880,7 @@ def test_freeso_gap_analyzer():
     results.record("Has ParityGap dataclass", has_gap_class, "")
     results.record("Has FreeSoGapAnalyzer class", has_analyzer, "")
     
-    print(f"\n  📊 FreeSO analyzer ready for use")
+    print(f"\n  -- FreeSO analyzer ready for use")
 
 
 def test_semantic_globals():
@@ -909,7 +909,7 @@ def test_semantic_globals():
     results.record("Has base game ID range (256-511)", "256" in source and "511" in source, "")
     results.record("Has expansion ID ranges", "512" in source or "768" in source, "")
     
-    print(f"\n  📊 Semantic globals provides expansion-aware BHAV labeling")
+    print(f"\n  -- Semantic globals provides expansion-aware BHAV labeling")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

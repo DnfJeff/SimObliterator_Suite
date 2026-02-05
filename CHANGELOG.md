@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-02-04
+
+### Binary Save Editing & Test System Expansion
+
+Implemented true binary-level save editing and expanded test coverage.
+
+#### Added
+
+- **Binary Save Editor Methods** (`SaveManager`):
+  - `set_sim_skill()` - Edit any skill value at binary offset
+  - `set_sim_motive()` - Edit any motive value at binary offset
+  - `set_sim_personality()` - Edit personality traits at binary offset
+  - `set_sim_career()` - Edit career data at binary offset  
+  - `max_all_skills()` / `max_all_motives()` - Utility methods for bulk editing
+  - `get_relationship()` / `set_relationship()` - Relationship editing (in-memory)
+
+- **BHAV Undo Support** (`BHAVEditor._deserialize_into()`) - Full implementation for edit/undo cycle
+
+- **New Test Categories** (29 new tests):
+  - `save_edit` - Tests for skill, motive, personality, career, relationship operations
+  - `bhav_mut` - Tests for BHAV edit/undo, disassembly, serialization
+  - `advanced` - Module availability tests for core tooling
+
+#### Changed
+
+- Test output uses ASCII-safe characters for clean `.txt` export
+- Total tests: 276 (up from 247)
+- Sims 2 managers (AspirationManager, MemoryManager) marked with deprecation notes
+
+---
+
 ## [1.0.2] - 2026-02-04
 
 ### Test System Overhaul

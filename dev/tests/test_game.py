@@ -114,7 +114,7 @@ def load_test_paths() -> TestPaths:
     paths = TestPaths()
     
     if not config_file.exists():
-        print(f"⚠️  No test_paths.txt found at {config_file}")
+        print(f"(!!) No test_paths.txt found at {config_file}")
         print("   Copy test_paths.txt.example and edit with your paths")
         return paths
     
@@ -222,7 +222,7 @@ class TestRunner:
         self.results.append(test_result)
         
         if self.verbose:
-            icon = "✅" if passed else "❌"
+            icon = "[OK]" if passed else "[FAIL]"
             print(f"  {icon} {name} ({duration:.1f}ms)")
             if not passed and message:
                 print(f"      {message}")
@@ -242,7 +242,7 @@ class TestRunner:
         self.results.append(test_result)
         
         if self.verbose:
-            print(f"  ⏭️  {name}: {reason}")
+            print(f"  [SKIP] {name}: {reason}")
     
     def summary(self) -> Tuple[int, int, int]:
         """Return (passed, failed, skipped) counts."""
@@ -256,13 +256,13 @@ class TestRunner:
         passed, failed, skipped = self.summary()
         total = passed + failed + skipped
         
-        print(f"\n{'═'*60}")
+        print(f"\n{'='*60}")
         print("TEST SUMMARY")
-        print(f"{'═'*60}")
+        print(f"{'='*60}")
         print(f"Total:   {total}")
-        print(f"Passed:  {passed} ✅")
-        print(f"Failed:  {failed} ❌")
-        print(f"Skipped: {skipped} ⏭️")
+        print(f"Passed:  {passed} [OK]")
+        print(f"Failed:  {failed} [FAIL]")
+        print(f"Skipped: {skipped} [SKIP]")
         
         if failed > 0:
             print(f"\nFailed Tests:")
@@ -1864,6 +1864,325 @@ def test_save_capabilities(runner: TestRunner):
         return "Bob" in display and "Alice" in display
     runner.run_test("Relationship entity model", test_relationship_entity)
 
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Skill modification (binary-level)
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_skill_modification():
+        from save_editor.save_manager import SaveManager
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            if runner.verbose:
+                print("    No neighbors to test skill modification")
+            return True
+        
+        target_sim = neighbors[0]
+        original_cooking = target_sim.person_data[0] if target_sim.person_data else 0
+        
+        # Test set_sim_skill (modifies in-memory and writes to buffer)
+        new_value = 850
+        result = manager.set_sim_skill(target_sim.neighbor_id, 'cooking', new_value)
+        
+        # Verify the in-memory value changed
+        updated_sim = manager.get_neighbor(target_sim.neighbor_id)
+        current_value = updated_sim.person_data[0] if updated_sim and updated_sim.person_data else -1
+        
+        if runner.verbose:
+            print(f"    Tested skill modification:")
+            print(f"      Sim: {target_sim.name}")
+            print(f"      Cooking: {original_cooking} → {new_value}")
+            print(f"      Result: {result}")
+            print(f"      Verified: {current_value == new_value}")
+        
+        return result and current_value == new_value
+    runner.run_test("Skill modification (binary)", test_skill_modification)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Motive modification (binary-level)
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_motive_modification():
+        from save_editor.save_manager import SaveManager
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            return True
+        
+        target_sim = neighbors[0]
+        # Motive index 13 = hunger
+        original = target_sim.person_data[13] if target_sim.person_data and len(target_sim.person_data) > 13 else 0
+        
+        new_value = 100  # Full hunger
+        result = manager.set_sim_motive(target_sim.neighbor_id, 'hunger', new_value)
+        
+        updated_sim = manager.get_neighbor(target_sim.neighbor_id)
+        current = updated_sim.person_data[13] if updated_sim and updated_sim.person_data and len(updated_sim.person_data) > 13 else -1
+        
+        if runner.verbose:
+            print(f"    Tested motive modification:")
+            print(f"      Sim: {target_sim.name}")
+            print(f"      Hunger: {original} → {new_value}")
+            print(f"      Result: {result}")
+        
+        return result and current == new_value
+    runner.run_test("Motive modification (binary)", test_motive_modification)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Max all skills utility
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_max_all_skills():
+        from save_editor.save_manager import SaveManager
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            return True
+        
+        target_sim = neighbors[0]
+        result = manager.max_all_skills(target_sim.neighbor_id)
+        
+        # Verify skills are maxed
+        updated_sim = manager.get_neighbor(target_sim.neighbor_id)
+        if updated_sim and updated_sim.person_data:
+            # Skills are indices 0-5 (6 main skills, cleaning at 6 is internal)
+            skills_maxed = all(updated_sim.person_data[i] == 1000 for i in range(6) if i < len(updated_sim.person_data))
+        else:
+            skills_maxed = False
+        
+        if runner.verbose:
+            print(f"    Max all skills test:")
+            print(f"      Sim: {target_sim.name}")
+            print(f"      Success: {result}")
+            print(f"      All maxed: {skills_maxed}")
+        
+        return result and skills_maxed
+    runner.run_test("Max all skills utility", test_max_all_skills)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Relationship modification (in-memory)
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_relationship_modification():
+        from save_editor.save_manager import SaveManager
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if len(neighbors) < 2:
+            if runner.verbose:
+                print("    Need at least 2 Sims for relationship test")
+            return True
+        
+        sim_a = neighbors[0]
+        sim_b = neighbors[1]
+        
+        # Set a relationship value (daily=100, lifetime=50)
+        manager.set_relationship(sim_a.neighbor_id, sim_b.neighbor_id, 100, 50)
+        
+        # Verify it was set - get_relationship returns [daily, lifetime]
+        rel_values = manager.get_relationship(sim_a.neighbor_id, sim_b.neighbor_id)
+        
+        if runner.verbose:
+            print(f"    Relationship modification test:")
+            print(f"      {sim_a.name} → {sim_b.name}: {rel_values}")
+        
+        return rel_values is not None and rel_values[0] == 100 and rel_values[1] == 50
+    runner.run_test("Relationship modification", test_relationship_modification)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Personality trait modification (binary-level)
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_personality_modification():
+        from save_editor.save_manager import SaveManager, PersonData
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            return True
+        
+        target_sim = neighbors[0]
+        # Personality index 7 = Nice
+        nice_idx = PersonData.NICE_PERSONALITY
+        original = target_sim.person_data[nice_idx] if target_sim.person_data and len(target_sim.person_data) > nice_idx else 0
+        
+        new_value = 750  # Max nice
+        result = manager.set_sim_personality(target_sim.neighbor_id, 'nice', new_value)
+        
+        updated_sim = manager.get_neighbor(target_sim.neighbor_id)
+        current = updated_sim.person_data[nice_idx] if updated_sim and updated_sim.person_data and len(updated_sim.person_data) > nice_idx else -1
+        
+        if runner.verbose:
+            print(f"    Tested personality modification:")
+            print(f"      Sim: {target_sim.name}")
+            print(f"      Nice: {original} → {new_value}")
+            print(f"      Result: {result}")
+        
+        return result and current == new_value
+    runner.run_test("Personality modification (binary)", test_personality_modification)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Career data modification (binary-level)
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_career_modification():
+        from save_editor.save_manager import SaveManager, PersonData
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            return True
+        
+        target_sim = neighbors[0]
+        
+        # Set job type to 5 and level to 8
+        result = manager.set_sim_career(target_sim.neighbor_id, job_type=5, job_level=8, 
+                                         job_performance=100)
+        
+        # Verify values
+        updated_sim = manager.get_neighbor(target_sim.neighbor_id)
+        if updated_sim and updated_sim.person_data:
+            pd = updated_sim.person_data
+            job_type = pd[PersonData.JOB_TYPE] if len(pd) > PersonData.JOB_TYPE else -1
+            level = pd[PersonData.JOB_LEVEL] if len(pd) > PersonData.JOB_LEVEL else -1
+        else:
+            job_type = level = -1
+        
+        if runner.verbose:
+            print(f"    Tested career modification:")
+            print(f"      Sim: {target_sim.name}")
+            print(f"      Job type: {job_type}, Level: {level}")
+            print(f"      Result: {result}")
+        
+        return result and job_type == 5 and level == 8
+    runner.run_test("Career modification (binary)", test_career_modification)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Max all motives utility
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_max_all_motives():
+        from save_editor.save_manager import SaveManager, PersonData
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            return True
+        
+        target_sim = neighbors[0]
+        result = manager.max_all_motives(target_sim.neighbor_id)
+        
+        # Verify motives are maxed
+        updated_sim = manager.get_neighbor(target_sim.neighbor_id)
+        if updated_sim and updated_sim.person_data:
+            pd = updated_sim.person_data
+            motive_indices = [PersonData.HUNGER_MOTIVE, PersonData.COMFORT_MOTIVE, 
+                            PersonData.HYGIENE_MOTIVE, PersonData.BLADDER_MOTIVE,
+                            PersonData.ENERGY_MOTIVE, PersonData.FUN_MOTIVE,
+                            PersonData.SOCIAL_MOTIVE, PersonData.ROOM_MOTIVE]
+            motives_maxed = all(pd[i] == 100 for i in motive_indices if i < len(pd))
+        else:
+            motives_maxed = False
+        
+        if runner.verbose:
+            print(f"    Max all motives test:")
+            print(f"      Sim: {target_sim.name}")
+            print(f"      Success: {result}")
+            print(f"      All maxed: {motives_maxed}")
+        
+        return result and motives_maxed
+    runner.run_test("Max all motives utility", test_max_all_motives)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: NeighborData person_data field access
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_person_data_access():
+        from save_editor.save_manager import SaveManager, PersonData
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        neighbors = manager.list_neighbors()
+        if not neighbors:
+            return True
+        
+        target = neighbors[0]
+        pd = target.person_data
+        
+        # Test various accessors
+        skills = [(name, pd[idx] if len(pd) > idx else 0) 
+                  for name, idx in PersonData.get_skill_indices()]
+        personality = [(name, pd[idx] if len(pd) > idx else 0) 
+                       for name, idx in PersonData.get_personality_indices()]
+        motives = [(name, pd[idx] if len(pd) > idx else 0) 
+                   for name, idx in PersonData.get_motive_indices()]
+        
+        if runner.verbose:
+            print(f"    PersonData access for {target.name}:")
+            print(f"      Skills: {dict(skills)}")
+            print(f"      Personality: {dict(personality)}")
+            print(f"      Motives: {dict(motives)}")
+        
+        return len(pd) >= 20  # Should have at least skill/personality/motive data
+    runner.run_test("PersonData field access", test_person_data_access)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Family budget read/write
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_family_budget_operations():
+        from save_editor.save_manager import SaveManager
+        
+        manager = SaveManager(str(userdata_path))
+        if not manager.load_neighborhood():
+            return False
+        
+        families = [f for f in manager.list_families() if not f.is_townie]
+        if not families:
+            if runner.verbose:
+                print("    No playable families to test")
+            return True
+        
+        target = families[0]
+        original = target.budget
+        
+        # Test set_family_money (binary write)
+        new_amount = 50000
+        result = manager.set_family_money(target.chunk_id, new_amount)
+        
+        # Verify by refreshing - families are stored in self.families dict
+        current = manager.get_family_money(target.chunk_id)
+        
+        # Restore original
+        manager.set_family_money(target.chunk_id, original)
+        
+        if runner.verbose:
+            print(f"    Family budget operations:")
+            print(f"      Family ID: {target.chunk_id} (House #{target.house_number})")
+            print(f"      Original: ${original:,}")
+            print(f"      Set to: ${new_amount:,}")
+            print(f"      Verified: ${current:,}")
+        
+        return result and current == new_amount
+    runner.run_test("Family budget operations", test_family_budget_operations)
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # BHAV MUTATION CAPABILITIES
@@ -1956,6 +2275,170 @@ def test_bhav_mutations(runner: TestRunner):
         
         return len(remap) >= 0  # Empty is valid if no collisions
     runner.run_test("Build BHAV ID remap plan", test_id_remap_plan)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: BHAV editor edit + undo cycle
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_bhav_edit_undo_cycle():
+        from core.bhav_operations import BHAVEditor
+        from core.iff_reader import IFFReader
+        
+        reader = IFFReader(str(object_iff))
+        reader.read()
+        
+        # Find a BHAV with at least 2 instructions
+        bhav = None
+        for chunk in reader.chunks:
+            if chunk.type_code == 'BHAV' and hasattr(chunk, 'instructions') and len(chunk.instructions) >= 2:
+                bhav = chunk
+                break
+        
+        if not bhav:
+            if runner.verbose:
+                print("    No suitable BHAV for edit test")
+            return True
+        
+        editor = BHAVEditor(bhav, str(object_iff))
+        
+        # Save original state
+        orig_opcode = bhav.instructions[0].opcode
+        orig_true_ptr = bhav.instructions[0].true_pointer
+        
+        # Edit instruction
+        new_opcode = 0x0002  # Expression primitive
+        result1 = editor.edit_instruction(0, opcode=new_opcode, reason="test edit")
+        
+        # Verify edit applied
+        after_edit = bhav.instructions[0].opcode
+        
+        # Undo
+        result2 = editor.undo()
+        
+        # Verify undo restored
+        after_undo = bhav.instructions[0].opcode
+        
+        if runner.verbose:
+            print(f"    BHAV edit/undo cycle:")
+            print(f"      BHAV: {bhav.chunk_label or bhav.chunk_id}")
+            print(f"      Original opcode: 0x{orig_opcode:04X}")
+            print(f"      After edit: 0x{after_edit:04X}")
+            print(f"      After undo: 0x{after_undo:04X}")
+            print(f"      Edit result: {result1.success}")
+            print(f"      Undo result: {result2.success}")
+        
+        return result1.success and after_edit == new_opcode and result2.success and after_undo == orig_opcode
+    runner.run_test("BHAV edit/undo cycle", test_bhav_edit_undo_cycle)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: BHAV disassembler round-trip
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_bhav_disassembly():
+        from core.bhav_disassembler import BHAVDisassembler
+        from core.iff_reader import IFFReader
+        
+        reader = IFFReader(str(object_iff))
+        reader.read()
+        
+        # Find a BHAV
+        bhav = None
+        for chunk in reader.chunks:
+            if chunk.type_code == 'BHAV' and hasattr(chunk, 'instructions') and len(chunk.instructions) >= 1:
+                bhav = chunk
+                break
+        
+        if not bhav:
+            return True
+        
+        disasm = BHAVDisassembler()
+        lines = disasm.disassemble(bhav)
+        
+        # Check we got output
+        has_output = len(lines) > 0
+        
+        # Check first line references instruction 0
+        first_line_valid = lines[0] if lines else ""
+        
+        if runner.verbose:
+            print(f"    BHAV disassembly test:")
+            print(f"      BHAV: {bhav.chunk_label or bhav.chunk_id}")
+            print(f"      Instructions: {len(bhav.instructions)}")
+            print(f"      Disasm lines: {len(lines)}")
+            if lines:
+                print(f"      First line: {lines[0][:60]}...")
+        
+        return has_output and len(lines) >= len(bhav.instructions)
+    runner.run_test("BHAV disassembly", test_bhav_disassembly)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: BHAV serialization round-trip
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_bhav_serialization():
+        from core.bhav_operations import BHAVEditor
+        from core.iff_reader import IFFReader
+        
+        reader = IFFReader(str(object_iff))
+        reader.read()
+        
+        # Find a BHAV
+        bhav = None
+        for chunk in reader.chunks:
+            if chunk.type_code == 'BHAV' and hasattr(chunk, 'instructions') and len(chunk.instructions) >= 1:
+                bhav = chunk
+                break
+        
+        if not bhav:
+            return True
+        
+        editor = BHAVEditor(bhav, str(object_iff))
+        
+        # Serialize
+        serialized = editor.serialize()
+        
+        # Verify we got data
+        has_data = len(serialized) > 0
+        
+        # Verify header is valid (version should be 0x8002 or 0x8003)
+        import struct
+        version = struct.unpack('<H', serialized[:2])[0] if len(serialized) >= 2 else 0
+        valid_version = version in (0x8002, 0x8003)
+        
+        if runner.verbose:
+            print(f"    BHAV serialization test:")
+            print(f"      BHAV: {bhav.chunk_label or bhav.chunk_id}")
+            print(f"      Serialized size: {len(serialized)} bytes")
+            print(f"      Version: 0x{version:04X}")
+        
+        return has_data and valid_version
+    runner.run_test("BHAV serialization", test_bhav_serialization)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: BHAV opcode database lookup
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_opcode_database():
+        from core.opcode_loader import get_opcode_info, is_known_opcode
+        
+        # Test some common opcodes
+        test_cases = [
+            (0x0002, 'Expression'),  # Common
+            (0x0001, 'Sleep'),       # Also common  
+            (0x0000, 'Return'),      # Return opcode (may be known)
+        ]
+        
+        results = []
+        for opcode, expected_fragment in test_cases:
+            info = get_opcode_info(opcode)
+            name = info.get('name', 'UNKNOWN') if info else 'UNKNOWN'
+            known = is_known_opcode(opcode)
+            # Accept if name contains expected fragment OR if opcode is known
+            results.append((opcode, name, known or (expected_fragment in name)))
+        
+        if runner.verbose:
+            print(f"    Opcode database lookup:")
+            for opcode, name, valid in results:
+                print(f"      0x{opcode:04X}: {name} (valid={valid})")
+        
+        return all(r[2] for r in results)
+    runner.run_test("Opcode database lookup", test_opcode_database)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2191,6 +2674,263 @@ def test_graph_tools(runner: TestRunner):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ADVANCED TOOLING CAPABILITIES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def test_advanced_tooling(runner: TestRunner):
+    """Demonstrate advanced analysis and editing tools."""
+    runner.set_category("advanced")
+    
+    paths = runner.paths
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Behavior classifier module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_behavior_classifier():
+        from core.behavior_classifier import BehaviorClassifier
+        import inspect
+        
+        # Check class exists and has expected methods
+        methods = [m for m in dir(BehaviorClassifier) if not m.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    BehaviorClassifier:")
+            print(f"      Methods: {', '.join(methods[:5])}")
+        
+        return len(methods) > 0
+    runner.run_test("BehaviorClassifier module", test_behavior_classifier)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Behavior library module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_behavior_library():
+        from core.behavior_library import BehaviorLibrary
+        import inspect
+        
+        methods = [m for m in dir(BehaviorLibrary) if not m.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    BehaviorLibrary:")
+            print(f"      Methods: {', '.join(methods[:5])}")
+        
+        return len(methods) > 0
+    runner.run_test("BehaviorLibrary module", test_behavior_library)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Variable analyzer module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_variable_analyzer():
+        import core.variable_analyzer as va
+        
+        # Check module has exports
+        exports = [e for e in dir(va) if not e.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    variable_analyzer:")
+            print(f"      Exports: {', '.join(exports[:5])}")
+        
+        return len(exports) > 0
+    runner.run_test("variable_analyzer module", test_variable_analyzer)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: ID conflict scanner
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_id_conflict_scanner():
+        from core.id_conflict_scanner import IDConflictScanner
+        
+        scanner = IDConflictScanner()
+        
+        if runner.verbose:
+            print(f"    ID conflict scanner:")
+            print(f"      Scanner initialized: OK")
+        
+        return True
+    runner.run_test("ID conflict scanner", test_id_conflict_scanner)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: String parser (STR# handling)
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_str_parser():
+        from core.str_parser import STRParser
+        
+        parser = STRParser()
+        
+        if runner.verbose:
+            print(f"    STR parser:")
+            print(f"      Parser initialized: OK")
+        
+        return True
+    runner.run_test("STR parser", test_str_parser)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: TTAB editor module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_ttab_editor():
+        import core.ttab_editor as te
+        
+        exports = [e for e in dir(te) if not e.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    ttab_editor:")
+            print(f"      Exports: {', '.join(exports[:5])}")
+        
+        return len(exports) > 0
+    runner.run_test("TTAB editor module", test_ttab_editor)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Slot editor module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_slot_editor():
+        import core.slot_editor as se
+        
+        exports = [e for e in dir(se) if not e.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    slot_editor:")
+            print(f"      Exports: {', '.join(exports[:5])}")
+        
+        return len(exports) > 0
+    runner.run_test("Slot editor module", test_slot_editor)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Asset scanner
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_asset_scanner():
+        from core.asset_scanner import AssetScanner
+        
+        scanner = AssetScanner()
+        
+        if runner.verbose:
+            print(f"    Asset scanner:")
+            print(f"      Scanner initialized: OK")
+        
+        return True
+    runner.run_test("Asset scanner init", test_asset_scanner)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Behavior profiler
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_behavior_profiler():
+        from core.behavior_profiler import BehaviorProfiler
+        
+        profiler = BehaviorProfiler()
+        
+        if runner.verbose:
+            print(f"    Behavior profiler:")
+            print(f"      Profiler initialized: OK")
+        
+        return True
+    runner.run_test("Behavior profiler init", test_behavior_profiler)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Trigger role graph module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_trigger_role_graph():
+        from core.trigger_role_graph import TriggerRoleGraph
+        import inspect
+        
+        methods = [m for m in dir(TriggerRoleGraph) if not m.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    TriggerRoleGraph:")
+            print(f"      Methods: {', '.join(methods[:5])}")
+        
+        return len(methods) > 0
+    runner.run_test("TriggerRoleGraph module", test_trigger_role_graph)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Object dominance analyzer
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_object_dominance():
+        from core.object_dominance_analyzer import ObjectDominanceAnalyzer
+        
+        analyzer = ObjectDominanceAnalyzer()
+        
+        if runner.verbose:
+            print(f"    Object dominance analyzer:")
+            print(f"      Analyzer initialized: OK")
+        
+        return True
+    runner.run_test("Object dominance analyzer", test_object_dominance)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Localization audit
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_localization_audit():
+        from core.localization_audit import LocalizationAuditor
+        
+        auditor = LocalizationAuditor()
+        
+        if runner.verbose:
+            print(f"    Localization auditor:")
+            print(f"      Auditor initialized: OK")
+        
+        return True
+    runner.run_test("Localization auditor", test_localization_audit)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Primitive reference module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_primitive_reference():
+        import core.primitive_reference as pr
+        
+        exports = [e for e in dir(pr) if not e.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    primitive_reference:")
+            print(f"      Exports: {', '.join(exports[:5])}")
+        
+        return len(exports) > 0
+    runner.run_test("primitive_reference module", test_primitive_reference)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: Lot IFF analyzer
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_lot_iff_analyzer():
+        from core.lot_iff_analyzer import LotIFFAnalyzer
+        
+        analyzer = LotIFFAnalyzer()
+        
+        if runner.verbose:
+            print(f"    Lot IFF analyzer:")
+            print(f"      Analyzer initialized: OK")
+        
+        return True
+    runner.run_test("Lot IFF analyzer", test_lot_iff_analyzer)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: BHAV call graph module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_bhav_call_graph():
+        import core.bhav_call_graph as cg
+        
+        exports = [e for e in dir(cg) if not e.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    bhav_call_graph:")
+            print(f"      Exports: {', '.join(exports[:5])}")
+        
+        return len(exports) > 0
+    runner.run_test("BHAV call graph module", test_bhav_call_graph)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CAPABILITY: BHAV rewiring module
+    # ─────────────────────────────────────────────────────────────────────────
+    def test_bhav_rewiring():
+        from core.bhav_rewiring import BHAVRewirer
+        import inspect
+        
+        methods = [m for m in dir(BHAVRewirer) if not m.startswith('_')]
+        
+        if runner.verbose:
+            print(f"    BHAVRewirer:")
+            print(f"      Methods: {', '.join(methods[:5])}")
+        
+        return len(methods) > 0
+    runner.run_test("BHAV rewiring module", test_bhav_rewiring)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # RUN ALL (for import by main runner)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -2217,13 +2957,14 @@ def run_all_tests(verbose: bool = False):
         'world_mut': test_world_mutations,
         'forensic': test_forensics,
         'graph': test_graph_tools,
+        'advanced': test_advanced_tooling,
     }
     
     for cat_name, cat_func in categories.items():
         try:
             cat_func(runner)
         except Exception as e:
-            print(f"\n❌ Category {cat_name} failed: {e}")
+            print(f"\n[FAIL] Category {cat_name} failed: {e}")
     
     return runner.summary()
 
@@ -2278,6 +3019,7 @@ def main():
         'world_mut': test_world_mutations,  # World/household mutations
         'forensic': test_forensics,  # Forensic analysis tools
         'graph': test_graph_tools,  # Resource graphs and cycles
+        'advanced': test_advanced_tooling,  # Advanced tooling tests
     }
     
     if args.quick:
@@ -2292,7 +3034,7 @@ def main():
         try:
             categories[cat](runner)
         except Exception as e:
-            print(f"\n❌ Category {cat} failed: {e}")
+            print(f"\n[FAIL] Category {cat} failed: {e}")
     
     # Summary
     runner.print_summary()

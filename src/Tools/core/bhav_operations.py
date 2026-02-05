@@ -382,10 +382,68 @@ class BHAVEditor:
         self._undo_stack.append(self.serialize())
     
     def _deserialize_into(self, data: bytes):
-        """Restore BHAV state from serialized data."""
-        # This would re-parse the BHAV from bytes
-        # For now, just clear - full implementation would use IoBuffer
-        pass
+        """
+        Restore BHAV state from serialized data.
+        
+        Parses the same format produced by BHAVSerializer.serialize().
+        """
+        if len(data) < 2:
+            return
+        
+        pos = 0
+        version = struct.unpack('<H', data[pos:pos+2])[0]
+        pos += 2
+        
+        count = 0
+        if version == 0x8002:
+            count = struct.unpack('<H', data[pos:pos+2])[0]
+            pos += 2
+            self.bhav.type = data[pos]
+            pos += 1
+            self.bhav.args = data[pos]
+            pos += 1
+            self.bhav.locals = struct.unpack('<H', data[pos:pos+2])[0]
+            pos += 2
+            self.bhav.version = struct.unpack('<H', data[pos:pos+2])[0]
+            pos += 2
+            pos += 2  # Reserved
+            
+        elif version == 0x8003:
+            self.bhav.type = data[pos]
+            pos += 1
+            self.bhav.args = data[pos]
+            pos += 1
+            self.bhav.locals = data[pos]
+            pos += 1
+            pos += 2  # Reserved
+            self.bhav.version = struct.unpack('<H', data[pos:pos+2])[0]
+            pos += 2
+            count = struct.unpack('<I', data[pos:pos+4])[0]
+            pos += 4
+        
+        # Read instructions
+        self.bhav.instructions = []
+        for _ in range(count):
+            if pos + 12 > len(data):
+                break
+            opcode = struct.unpack('<H', data[pos:pos+2])[0]
+            pos += 2
+            true_ptr = data[pos]
+            pos += 1
+            false_ptr = data[pos]
+            pos += 1
+            operand = data[pos:pos+8]
+            pos += 8
+            
+            # Import BHAVInstruction if needed
+            from formats.iff.chunks.bhav import BHAVInstruction
+            inst = BHAVInstruction(
+                opcode=opcode,
+                true_pointer=true_ptr,
+                false_pointer=false_ptr,
+                operand=operand
+            )
+            self.bhav.instructions.append(inst)
     
     def _adjust_pointers_after_insert(self, at_index: int):
         """Adjust all pointers after an insertion."""

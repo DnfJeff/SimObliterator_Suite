@@ -22,12 +22,12 @@ Complete guide to using SimObliterator for exploring, analyzing, and editing The
 
 ## Supported File Types
 
-| Format | Extension | Description                        |
-| ------ | --------- | ---------------------------------- |
-| IFF    | `.iff`    | Game objects, sprites, behaviors   |
-| FAR    | `.far`    | Archive containing multiple IFFs   |
-| DBPF   | `.package`| Sims 2/3 package (limited support) |
-| Saves  | User*.iff | Save game files                    |
+| Format | Extension  | Description                        |
+| ------ | ---------- | ---------------------------------- |
+| IFF    | `.iff`     | Game objects, sprites, behaviors   |
+| FAR    | `.far`     | Archive containing multiple IFFs   |
+| DBPF   | `.package` | Sims 2/3 package (limited support) |
+| Saves  | User\*.iff | Save game files                    |
 
 ---
 
@@ -55,16 +55,16 @@ Complete guide to using SimObliterator for exploring, analyzing, and editing The
 
 ### Panels
 
-| Panel              | Purpose                                        |
-| ------------------ | ---------------------------------------------- |
-| File Tree          | Browse loaded files and archives               |
-| Chunk Inspector    | View chunk properties and raw data             |
-| BHAV Editor        | Disassemble and edit behavior scripts          |
-| Object Inspector   | View object properties (price, name, GUIDs)    |
-| Graph Canvas       | Visualize behavior call graphs                 |
-| Character Viewer   | Browse sims from save files                    |
-| Save Editor        | Edit save game data (money, skills, etc.)      |
-| Sprite Export      | Export sprites to PNG                          |
+| Panel            | Purpose                                     |
+| ---------------- | ------------------------------------------- |
+| File Tree        | Browse loaded files and archives            |
+| Chunk Inspector  | View chunk properties and raw data          |
+| BHAV Editor      | Disassemble and edit behavior scripts       |
+| Object Inspector | View object properties (price, name, GUIDs) |
+| Graph Canvas     | Visualize behavior call graphs              |
+| Character Viewer | Browse sims from save files                 |
+| Save Editor      | Edit save game data (money, skills, etc.)   |
+| Sprite Export    | Export sprites to PNG                       |
 
 ---
 
@@ -73,15 +73,18 @@ Complete guide to using SimObliterator for exploring, analyzing, and editing The
 ### Opening Files
 
 **Single File:**
+
 - File → Open (Ctrl+O)
 - Drag-drop onto window
 
 **FAR Archives:**
+
 - Open the `.far` file
 - Browse contents in tree
 - Double-click to extract IFFs
 
 **Entire Game:**
+
 - File → Open Folder
 - Point to `GameData` directory
 - All files indexed for browsing
@@ -196,19 +199,19 @@ Discover undocumented behavior instructions:
 
 ## Keyboard Shortcuts
 
-| Action            | Shortcut       |
-| ----------------- | -------------- |
-| Open File         | Ctrl+O         |
-| Save              | Ctrl+S         |
-| Close             | Ctrl+W         |
-| Find              | Ctrl+F         |
-| Find in Files     | Ctrl+Shift+F   |
-| Previous Chunk    | ↑ or Ctrl+[    |
-| Next Chunk        | ↓ or Ctrl+]    |
-| Go to Definition  | Ctrl+Click     |
-| Show Call Graph   | Ctrl+G         |
-| Toggle Hex View   | Ctrl+H         |
-| Export Selection  | Ctrl+E         |
+| Action           | Shortcut     |
+| ---------------- | ------------ |
+| Open File        | Ctrl+O       |
+| Save             | Ctrl+S       |
+| Close            | Ctrl+W       |
+| Find             | Ctrl+F       |
+| Find in Files    | Ctrl+Shift+F |
+| Previous Chunk   | ↑ or Ctrl+[  |
+| Next Chunk       | ↓ or Ctrl+]  |
+| Go to Definition | Ctrl+Click   |
+| Show Call Graph  | Ctrl+G       |
+| Toggle Hex View  | Ctrl+H       |
+| Export Selection | Ctrl+E       |
 
 ---
 
@@ -266,11 +269,11 @@ Discover undocumented behavior instructions:
 
 ### Windows
 
-| Data Type   | Location                                              |
-| ----------- | ----------------------------------------------------- |
-| Game Files  | `C:\Games\The Sims Legacy Collection\GameData\`       |
-| User Saves  | `Documents\EA Games\The Sims\UserData\`               |
-| Legacy Save | `C:\Users\You\Saved Games\Electronic Arts\The Sims 25`|
+| Data Type   | Location                                               |
+| ----------- | ------------------------------------------------------ |
+| Game Files  | `C:\Games\The Sims Legacy Collection\GameData\`        |
+| User Saves  | `Documents\EA Games\The Sims\UserData\`                |
+| Legacy Save | `C:\Users\You\Saved Games\Electronic Arts\The Sims 25` |
 
 ### Finding Custom Content
 
@@ -299,4 +302,4 @@ SimObliterator can modify game files. Always:
 
 ---
 
-*SimObliterator Suite - Explore, Analyze, Create*
+_SimObliterator Suite - Explore, Analyze, Create_

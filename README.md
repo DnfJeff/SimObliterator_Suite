@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.0.3-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-green.svg" alt="Platform">
   <img src="https://img.shields.io/badge/python-3.9+-yellow.svg" alt="Python">
   <img src="https://img.shields.io/badge/license-MIT-purple.svg" alt="License">
@@ -214,14 +214,14 @@ SimObliterator_Suite/
 
 ## � Documentation
 
-| Guide | Audience | Description |
-| ----- | -------- | ----------- |
-| [USER_GUIDE.md](Docs/guides/USER_GUIDE.md) | End Users | Complete walkthrough of all features |
-| [QUICK_REFERENCE.md](Docs/guides/QUICK_REFERENCE.md) | Modders | Cheat sheet for chunk types, opcodes, shortcuts |
-| [ARCHIVER_GUIDE.md](Docs/guides/ARCHIVER_GUIDE.md) | Users | Archiver tool for bulk scanning |
-| [UI_DEVELOPER_GUIDE.md](Docs/guides/UI_DEVELOPER_GUIDE.md) | Developers | Panel architecture, events, extending the GUI |
-| [TECHNICAL_REFERENCE.md](Docs/technical/TECHNICAL_REFERENCE.md) | Researchers | IFF, BHAV, SLOT, TTAB format specs |
-| [DEFINITIVE_BHAV_REFERENCE.md](Docs/research/DEFINITIVE_BHAV_REFERENCE.md) | Researchers | Deep BHAV execution model analysis |
+| Guide                                                                      | Audience    | Description                                     |
+| -------------------------------------------------------------------------- | ----------- | ----------------------------------------------- |
+| [USER_GUIDE.md](Docs/guides/USER_GUIDE.md)                                 | End Users   | Complete walkthrough of all features            |
+| [QUICK_REFERENCE.md](Docs/guides/QUICK_REFERENCE.md)                       | Modders     | Cheat sheet for chunk types, opcodes, shortcuts |
+| [ARCHIVER_GUIDE.md](Docs/guides/ARCHIVER_GUIDE.md)                         | Users       | Archiver tool for bulk scanning                 |
+| [UI_DEVELOPER_GUIDE.md](Docs/guides/UI_DEVELOPER_GUIDE.md)                 | Developers  | Panel architecture, events, extending the GUI   |
+| [TECHNICAL_REFERENCE.md](Docs/technical/TECHNICAL_REFERENCE.md)            | Researchers | IFF, BHAV, SLOT, TTAB format specs              |
+| [DEFINITIVE_BHAV_REFERENCE.md](Docs/research/DEFINITIVE_BHAV_REFERENCE.md) | Researchers | Deep BHAV execution model analysis              |
 
 ---
 

@@ -699,9 +699,13 @@ class AspirationManager:
     Manage sim aspirations in save files.
     
     Implements ModifyAspirations action.
+    
+    NOTE: Aspirations are a SIMS 2 feature. The Sims 1 Legacy Collection
+    does not have aspirations. This manager is included for future Sims 2
+    support but will not affect Sims 1 save files.
     """
     
-    # Aspiration types (Sims 2)
+    # Aspiration types (Sims 2 only - not in Sims 1)
     ASPIRATION_TYPES = {
         0: 'Romance',
         1: 'Family',
@@ -848,6 +852,10 @@ class MemoryManager:
     Manage sim memories in save files.
     
     Implements ModifyMemories action.
+    
+    NOTE: Memories are a SIMS 2 feature. The Sims 1 Legacy Collection
+    does not have a memories system. This manager is included for future
+    Sims 2 support but will not affect Sims 1 save files.
     """
     
     def __init__(self, save_manager):
@@ -1025,11 +1033,29 @@ class CareerManager:
     
     Implements ModifyCareer action.
     
-    Career tracks in The Sims 2:
-    - Business, Criminal, Culinary, Law Enforcement, Medical, Military,
-    - Politics, Science, Slacker, Athletic, Entertainment, Education
+    SIMS 1 Career Tracks (stored in person_data[JOB_TYPE]):
+    - Cooking, Entertainment, Law Enforcement, Medicine, Military,
+    - Politics, Pro Athlete, Science, Xtreme
+    
+    For Sims 1, use the SaveManager.set_sim_career() method directly for
+    binary-level modifications. This manager provides high-level API.
     """
     
+    # Sims 1 Career Tracks (from person_data values)
+    CAREER_TRACKS_SIMS1 = {
+        0: 'Unemployed',
+        1: 'Cooking',
+        2: 'Entertainment', 
+        3: 'Law Enforcement',
+        4: 'Medicine',
+        5: 'Military',
+        6: 'Politics',
+        7: 'Pro Athlete',
+        8: 'Science',
+        9: 'Xtreme',
+    }
+    
+    # Legacy Sims 2 tracks (kept for compatibility)
     CAREER_TRACKS = {
         0: 'Unemployed',
         1: 'Business', 2: 'Criminal', 3: 'Culinary', 
@@ -1641,12 +1667,17 @@ class RelationshipManager:
     
     Implements ModifyRelationships action.
     
-    Relationships have:
-    - Daily relationship (-100 to 100)
-    - Lifetime relationship (-100 to 100)
-    - Relationship bits (friend, best friend, enemy, crush, love, engaged, married, etc.)
+    SIMS 1 Relationships (stored in NBRS):
+    - Simple daily/lifetime values (-100 to 100)
+    - No relationship bits (that's Sims 2)
+    - Use SaveManager.set_relationship() for binary-level modifications
+    
+    SIMS 2 Relationships (for future support):
+    - Daily and lifetime relationship values
+    - Relationship bits (friend, best friend, enemy, crush, etc.)
     """
     
+    # Relationship bits (Sims 2 only - not used in Sims 1)
     RELATIONSHIP_BITS = {
         'acquaintance': 0x0001,
         'friend': 0x0002,
