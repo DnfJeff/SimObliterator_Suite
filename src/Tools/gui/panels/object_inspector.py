@@ -23,7 +23,7 @@ from ..state import STATE
 
 # Import safety API
 try:
-    from Tools.safety import is_safe_to_edit
+    from Tools.core.safety import is_safe_to_edit
     _safety_available = True
 except ImportError:
     def is_safe_to_edit(chunk, path): return None

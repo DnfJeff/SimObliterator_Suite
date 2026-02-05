@@ -84,6 +84,7 @@ Thumbs.db
 mutation_log.json
 
 # Test outputs
+dev/tests/test_output/
 Examples/IFF_Files/*
 Examples/SaveGames/*
 !Examples/IFF_Files/.gitkeep

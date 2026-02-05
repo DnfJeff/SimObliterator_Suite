@@ -5,14 +5,15 @@ Comprehensive test suite that validates all tools work correctly against actual
 game files from The Sims Legacy Collection (or Complete Collection).
 
 CONFIGURATION:
-  Edit dev/test_paths.txt to set your game installation, save folder, etc.
+  Edit dev/tests/test_paths.txt to set your game installation, save folder, etc.
   Tests will skip gracefully if paths aren't configured.
 
 RUN:
-  python dev/real_game_tests.py
-  python dev/real_game_tests.py --verbose
-  python dev/real_game_tests.py --category formats
-  python dev/real_game_tests.py --quick  # Fast subset only
+  cd dev/tests
+  python real_game_tests.py
+  python real_game_tests.py --verbose
+  python real_game_tests.py --category formats
+  python real_game_tests.py --quick  # Fast subset only
 
 CATEGORIES:
   - paths: Verify configured paths exist
@@ -47,8 +48,9 @@ from dataclasses import dataclass, field
 # PATH SETUP
 # ═══════════════════════════════════════════════════════════════════════════════
 
-DEV_DIR = Path(__file__).parent
-SUITE_DIR = DEV_DIR.parent
+TESTS_DIR = Path(__file__).parent          # dev/tests/
+DEV_DIR = TESTS_DIR.parent                  # dev/
+SUITE_DIR = DEV_DIR.parent                  # SimObliterator_Suite/
 SRC_DIR = SUITE_DIR / "src"
 
 # Add paths for imports
@@ -75,7 +77,7 @@ class TestPaths:
     good_save: Optional[Path] = None
     freeso_source: Optional[Path] = None
     tech_doc: Optional[Path] = None
-    test_output: Path = field(default_factory=lambda: DEV_DIR / "test_output")
+    test_output: Path = field(default_factory=lambda: TESTS_DIR / "test_output")
     
     # Derived paths (auto-discovered from game_install)
     gamedata_dir: Optional[Path] = None
@@ -108,7 +110,7 @@ class TestPaths:
 
 def load_test_paths() -> TestPaths:
     """Load paths from test_paths.txt"""
-    config_file = DEV_DIR / "test_paths.txt"
+    config_file = TESTS_DIR / "test_paths.txt"
     paths = TestPaths()
     
     if not config_file.exists():

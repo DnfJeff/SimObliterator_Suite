@@ -140,28 +140,39 @@ SimObliterator_Suite/
 │   └── splash.png
 │
 ├── data/                  # Runtime databases
-│   ├── opcodes_db.json
-│   ├── unknowns_db.json
+│   ├── opcodes_db.json    # 143 opcode definitions
+│   ├── unknowns_db.json   # Unmapped opcode research
 │   └── global_behaviors.json
 │
 ├── Docs/                  # Documentation
-│   ├── ACTION_MAP.md
-│   └── ACTION_SURFACE.md
+│   ├── ACTION_MAP.md      # Feature inventory & architecture
+│   ├── ACTION_SURFACE.md  # 110 canonical actions with safety tags
+│   ├── TECHNICAL_REFERENCE.md  # IFF, BHAV, SLOT, TTAB formats
+│   ├── PRIMITIVE_REFERENCE.md  # SimAntics opcode operands
+│   └── UI_DEVELOPER_GUIDE.md   # Panel architecture & event system
 │
 ├── Examples/              # Sample files for testing
 │   ├── IFF_Files/
 │   └── SaveGames/
 │
 ├── src/                   # Source code
-│   ├── main_app.py        # Main window
+│   ├── main_app.py        # Main window (Dear PyGui)
 │   ├── formats/           # File parsers (IFF, FAR, DBPF)
-│   ├── Tools/             # Core analysis & GUI
-│   └── utils/             # Utilities
+│   ├── Tools/core/        # Parsers, analyzers, editors
+│   ├── Tools/gui/         # Panel implementations (incomplete)
+│   ├── Tools/save_editor/ # Save file editing
+│   └── utils/             # Binary utilities
 │
-└── dev/                   # Development tools (not needed for users)
-    ├── test_suite.py
-    ├── action_coverage.py
-    └── BUILD.md
+└── dev/                   # Development tools
+    ├── tests/             # Test suite
+    │   ├── real_game_tests.py
+    │   ├── test_suite.py
+    │   ├── action_coverage.py
+    │   └── test_paths.txt
+    └── build/             # Build configuration
+        ├── SimObliterator.spec
+        ├── pyproject.toml
+        └── BUILD.md
 ```
 
 ---
@@ -189,16 +200,33 @@ pip install -r requirements.txt
 
 ### Running Tests
 
+The primary test suite validates parsers against real game files:
+
 ```bash
-cd dev
-python test_suite.py
+cd dev/tests
+
+# Configure your game paths first
+# Edit test_paths.txt with your installation paths
+
+# Run all 73 tests across 17 categories
+python real_game_tests.py
+
+# Quick mode (fast subset)
+python real_game_tests.py --quick
+
+# Run specific category
+python real_game_tests.py --category formats
+python real_game_tests.py --category bhav
+python real_game_tests.py --category saves
 ```
+
+See [dev/README.md](dev/README.md) for full test configuration options.
 
 ### Building Standalone EXE
 
 ```bash
 pip install pyinstaller
-pyinstaller dev/SimObliterator.spec
+pyinstaller dev/build/SimObliterator.spec
 ```
 
 Or simple build:

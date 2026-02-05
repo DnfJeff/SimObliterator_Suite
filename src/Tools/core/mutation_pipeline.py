@@ -99,7 +99,7 @@ class MutationPipeline:
         
         # Load safety API if available
         try:
-            from Tools.safety import is_safe_to_edit, SafetyLevel
+            from Tools.core.safety import is_safe_to_edit, SafetyLevel
             self._safety_check = is_safe_to_edit
             self._safety_available = True
         except ImportError:
