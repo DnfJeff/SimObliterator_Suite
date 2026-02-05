@@ -1,0 +1,58 @@
+What this test run really proves
+
+1. Core contract is stable
+- Action Registry + Safety API + Mutation Pipeline passing together
+- Clear separation: intent -> permission -> execution
+- INSPECT / PREVIEW / MUTATE enforcement is real
+- High-risk actions are detectable, categorizable, and gateable
+- This is the line between a toy editor and a tool safe for real saves
+- FreeSO never had to formalize this because it was runtime-only; this does
+
+2. BHAV is no longer a black box
+- Executor
+- Trace
+- Validator
+- Importer
+- Editor (read-only)
+- Global / semi-global / object-local patching
+- Full BHAV lifecycle is represented
+- Most tools stop at "here's a BHAV dump"
+- This enables semantic reasoning, not just byte editing
+- BHAV patching + ID remapping + call rewiring loading cleanly is a major stability win
+
+3. Containers are solved
+- IFF, FAR, DBPF
+- Split / merge
+- Reindex
+- Normalize
+- Write-back
+- Safe round-tripping of assets
+- Archive restructuring without corruption
+- Enables mass fixes, migrations, cross-expansion reconciliation
+- This is engine tooling, not a modding UI
+
+4. Save editing is real
+- Game file tests validate real persistence
+- Mutations tested:
+  - Skills
+  - Motives
+  - Relationships
+  - Money
+- Changes apply cleanly
+- Persistence boundaries are respected
+- Loads do not crash
+- Results match in-game expectations (e.g. neighbor rebuild behavior)
+- Difference between hex-editing and something shippable
+
+5. GUI is a shell by design
+- All panels detected, but that’s not the point
+- Action mapping exists
+- Focus coordination exists
+- Headless testing exists
+- UI is not the authority
+- Engine can support:
+  - Full GUI replacement
+  - CLI
+  - Web frontend
+  - Scripting
+- Core logic does not care

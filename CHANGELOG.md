@@ -19,7 +19,7 @@ Implemented true binary-level save editing and expanded test coverage.
   - `set_sim_skill()` - Edit any skill value at binary offset
   - `set_sim_motive()` - Edit any motive value at binary offset
   - `set_sim_personality()` - Edit personality traits at binary offset
-  - `set_sim_career()` - Edit career data at binary offset  
+  - `set_sim_career()` - Edit career data at binary offset
   - `max_all_skills()` / `max_all_motives()` - Utility methods for bulk editing
   - `get_relationship()` / `set_relationship()` - Relationship editing (in-memory)
 
