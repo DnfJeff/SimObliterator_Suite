@@ -49,7 +49,7 @@ pip install -r requirements.txt
 python launch.py
 ```
 
-### Option 2: Standalone EXE
+### Option 2: Standalone EXE (Not ready)
 
 Download the latest release and run `SimObliterator.exe` - no installation required!
 
