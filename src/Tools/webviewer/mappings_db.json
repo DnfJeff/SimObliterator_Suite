@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Game structure maps - behaviors, objects, relationships",
+    "created": "2026-02-03",
+    "last_full_scan": null,
+    "game_path": null
+  },
+  "behaviors": {},
+  "objects": {},
+  "chunk_distributions": {},
+  "cross_references": {},
+  "global_behaviors": {},
+  "semi_global_libraries": {}
+}

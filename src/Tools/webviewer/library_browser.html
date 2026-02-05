@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimObliterator Asset Library</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+      }
+
+      header {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border-bottom: 1px solid #4a4a6a;
+      }
+
+      h1 {
+        color: #00d4ff;
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+
+      .stats {
+        display: flex;
+        gap: 30px;
+        margin-top: 10px;
+      }
+
+      .stat {
+        background: rgba(0, 212, 255, 0.1);
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+      }
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #00d4ff;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #888;
+      }
+
+      .container {
+        display: flex;
+        height: calc(100vh - 120px);
+      }
+
+      .sidebar {
+        width: 250px;
+        background: rgba(0, 0, 0, 0.2);
+        border-right: 1px solid #4a4a6a;
+        padding: 20px;
+      }
+
+      .sidebar h3 {
+        color: #00d4ff;
+        margin-bottom: 15px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .nav-item {
+        padding: 12px 15px;
+        cursor: pointer;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        transition: all 0.2s;
+      }
+
+      .nav-item:hover {
+        background: rgba(0, 212, 255, 0.1);
+      }
+
+      .nav-item.active {
+        background: rgba(0, 212, 255, 0.2);
+        border-left: 3px solid #00d4ff;
+      }
+
+      .nav-count {
+        float: right;
+        background: rgba(0, 212, 255, 0.2);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .main-content {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .search-bar {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .search-bar input {
+        flex: 1;
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: 1px solid #4a4a6a;
+        background: rgba(0, 0, 0, 0.3);
+        color: #e0e0e0;
+        font-size: 16px;
+      }
+
+      .search-bar input:focus {
+        outline: none;
+        border-color: #00d4ff;
+      }
+
+      .filter-btn {
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: 1px solid #4a4a6a;
+        background: rgba(0, 0, 0, 0.3);
+        color: #e0e0e0;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .filter-btn:hover {
+        border-color: #00d4ff;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        border: 1px solid #4a4a6a;
+        overflow: hidden;
+        transition: all 0.2s;
+      }
+
+      .card:hover {
+        border-color: #00d4ff;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 212, 255, 0.1);
+      }
+
+      .card-preview {
+        height: 150px;
+        background: linear-gradient(135deg, #2a2a4a 0%, #1a1a3a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        color: #4a4a6a;
+      }
+
+      .card-body {
+        padding: 15px;
+      }
+
+      .card-title {
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #00d4ff;
+        word-break: break-all;
+      }
+
+      .card-meta {
+        font-size: 12px;
+        color: #888;
+        margin-bottom: 5px;
+      }
+
+      .card-guid {
+        font-family: "Consolas", monospace;
+        font-size: 11px;
+        color: #666;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px 8px;
+        border-radius: 4px;
+        display: inline-block;
+      }
+
+      .tag {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        margin-right: 5px;
+        margin-top: 5px;
+      }
+
+      .tag-body {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+      }
+      .tag-head {
+        background: rgba(33, 150, 243, 0.2);
+        color: #2196f3;
+      }
+      .tag-hand {
+        background: rgba(255, 152, 0, 0.2);
+        color: #ff9800;
+      }
+      .tag-male {
+        background: rgba(100, 181, 246, 0.2);
+        color: #64b5f6;
+      }
+      .tag-female {
+        background: rgba(244, 143, 177, 0.2);
+        color: #f48fb1;
+      }
+      .tag-adult {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ccc;
+      }
+      .tag-child {
+        background: rgba(255, 213, 79, 0.2);
+        color: #ffd54f;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .btn {
+        padding: 8px 15px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+      }
+
+      .btn-primary {
+        background: #00d4ff;
+        color: #000;
+      }
+
+      .btn-primary:hover {
+        background: #00b8e0;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #e0e0e0;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .table-view {
+        width: 100%;
+        border-collapse: collapse;
+        display: none;
+      }
+
+      .table-view th,
+      .table-view td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #4a4a6a;
+      }
+
+      .table-view th {
+        background: rgba(0, 0, 0, 0.3);
+        color: #00d4ff;
+        font-weight: 600;
+      }
+
+      .table-view tr:hover {
+        background: rgba(0, 212, 255, 0.05);
+      }
+
+      .view-toggle {
+        display: flex;
+        gap: 5px;
+      }
+
+      .view-btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #4a4a6a;
+        background: transparent;
+        color: #888;
+        cursor: pointer;
+      }
+
+      .view-btn.active {
+        background: rgba(0, 212, 255, 0.2);
+        border-color: #00d4ff;
+        color: #00d4ff;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px;
+        color: #666;
+      }
+
+      .empty-state h3 {
+        margin-bottom: 10px;
+        color: #888;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #4a4a6a;
+        border-top-color: #00d4ff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Modal styles */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+      }
+
+      .modal {
+        background: #1a1a2e;
+        border-radius: 16px;
+        border: 1px solid #4a4a6a;
+        width: 600px;
+        max-width: 90%;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #4a4a6a;
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .modal-header h2 {
+        color: #00d4ff;
+        font-size: 18px;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px 10px;
+      }
+
+      .modal-close:hover {
+        color: #fff;
+      }
+
+      .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: 60vh;
+      }
+
+      .detail-row {
+        display: flex;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .detail-label {
+        width: 120px;
+        color: #888;
+        font-size: 13px;
+      }
+
+      .detail-value {
+        flex: 1;
+        color: #e0e0e0;
+        font-family: "Consolas", monospace;
+        font-size: 13px;
+        word-break: break-all;
+      }
+
+      .detail-value.highlight {
+        color: #00d4ff;
+      }
+
+      .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid #4a4a6a;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+
+      .preview-placeholder {
+        background: linear-gradient(135deg, #2a2a4a 0%, #1a1a3a 100%);
+        height: 200px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 64px;
+        color: #4a4a6a;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 id="modal-title">Asset Details</h2>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer" id="modal-footer"></div>
+      </div>
+    </div>
+
+    <header>
+      <h1>🎮 SimObliterator Asset Library</h1>
+      <div class="stats" id="stats">
+        <div class="stat">
+          <div class="stat-value" id="stat-objects">-</div>
+          <div class="stat-label">Objects</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-meshes">-</div>
+          <div class="stat-label">Meshes</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-characters">-</div>
+          <div class="stat-label">Characters</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container">
+      <div class="sidebar">
+        <h3>Categories</h3>
+        <div class="nav-item active" data-view="objects">
+          📦 Objects <span class="nav-count" id="nav-objects">0</span>
+        </div>
+        <div class="nav-item" data-view="meshes">
+          🧍 Meshes <span class="nav-count" id="nav-meshes">0</span>
+        </div>
+        <div class="nav-item" data-view="characters">
+          👤 Characters <span class="nav-count" id="nav-characters">0</span>
+        </div>
+
+        <h3 style="margin-top: 30px">Filters</h3>
+        <div class="nav-item" data-filter="male">♂️ Male</div>
+        <div class="nav-item" data-filter="female">♀️ Female</div>
+        <div class="nav-item" data-filter="adult">👨 Adult</div>
+        <div class="nav-item" data-filter="child">👶 Child</div>
+        <div class="nav-item" data-filter="body">🦺 Body</div>
+        <div class="nav-item" data-filter="head">🗣️ Head</div>
+      </div>
+
+      <div class="main-content">
+        <div class="search-bar">
+          <input
+            type="text"
+            id="search"
+            placeholder="Search by name, GUID, or mesh..."
+          />
+          <div class="view-toggle">
+            <button class="view-btn active" data-mode="grid">Grid</button>
+            <button class="view-btn" data-mode="table">Table</button>
+          </div>
+        </div>
+
+        <div id="content" class="grid">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading assets...</p>
+          </div>
+        </div>
+
+        <table class="table-view" id="table-view">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>GUID</th>
+              <th>Source</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      // Data storage
+      let data = {
+        objects: [],
+        meshes: [],
+        characters: [],
+      };
+
+      let currentView = "objects";
+      let currentFilter = null;
+      let viewMode = "grid";
+
+      // Load JSON data
+      async function loadData() {
+        try {
+          const [objects, meshes, characters] = await Promise.all([
+            fetch("objects.json")
+              .then((r) => r.json())
+              .catch(() => []),
+            fetch("meshes.json")
+              .then((r) => r.json())
+              .catch(() => []),
+            fetch("characters.json")
+              .then((r) => r.json())
+              .catch(() => []),
+          ]);
+
+          data.objects = objects;
+          data.meshes = meshes;
+          data.characters = characters;
+
+          updateStats();
+          renderContent();
+        } catch (e) {
+          document.getElementById("content").innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Data Found</h3>
+                        <p>Run the asset scanner first to generate JSON files.</p>
+                        <code>python Program/scripts/run_full_scan.py</code>
+                    </div>
+                `;
+        }
+      }
+
+      function updateStats() {
+        document.getElementById("stat-objects").textContent =
+          data.objects.length.toLocaleString();
+        document.getElementById("stat-meshes").textContent =
+          data.meshes.length.toLocaleString();
+        document.getElementById("stat-characters").textContent =
+          data.characters.length.toLocaleString();
+
+        document.getElementById("nav-objects").textContent =
+          data.objects.length;
+        document.getElementById("nav-meshes").textContent = data.meshes.length;
+        document.getElementById("nav-characters").textContent =
+          data.characters.length;
+      }
+
+      function filterData(items) {
+        const search = document.getElementById("search").value.toLowerCase();
+
+        return items.filter((item) => {
+          // Search filter
+          const searchMatch =
+            !search ||
+            (item.name || "").toLowerCase().includes(search) ||
+            (item.guid_hex || "").toLowerCase().includes(search) ||
+            (item.mesh_name || "").toLowerCase().includes(search) ||
+            (item.body_mesh || "").toLowerCase().includes(search) ||
+            (item.head_mesh || "").toLowerCase().includes(search) ||
+            (item.source_file || "").toLowerCase().includes(search);
+
+          // Category filter
+          let categoryMatch = true;
+          if (currentFilter) {
+            switch (currentFilter) {
+              case "male":
+                categoryMatch = item.gender === "male";
+                break;
+              case "female":
+                categoryMatch = item.gender === "female";
+                break;
+              case "adult":
+                categoryMatch = item.age === "adult";
+                break;
+              case "child":
+                categoryMatch = item.age === "child";
+                break;
+              case "body":
+                categoryMatch = item.mesh_type === "body";
+                break;
+              case "head":
+                categoryMatch = item.mesh_type === "head";
+                break;
+            }
+          }
+
+          return searchMatch && categoryMatch;
+        });
+      }
+
+      function renderContent() {
+        const items = data[currentView] || [];
+        const filtered = filterData(items);
+        const container = document.getElementById("content");
+        const table = document.getElementById("table-view");
+
+        if (viewMode === "table") {
+          container.style.display = "none";
+          table.style.display = "table";
+          renderTable(filtered);
+        } else {
+          container.style.display = "grid";
+          table.style.display = "none";
+          renderGrid(filtered);
+        }
+      }
+
+      function renderGrid(items) {
+        const container = document.getElementById("content");
+
+        if (items.length === 0) {
+          container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Results</h3>
+                        <p>Try adjusting your search or filters.</p>
+                    </div>
+                `;
+          return;
+        }
+
+        container.innerHTML = items
+          .slice(0, 100)
+          .map((item) => {
+            if (currentView === "objects") {
+              return renderObjectCard(item);
+            } else if (currentView === "meshes") {
+              return renderMeshCard(item);
+            } else {
+              return renderCharacterCard(item);
+            }
+          })
+          .join("");
+      }
+
+      function renderObjectCard(item) {
+        return `
+                <div class="card">
+                    <div class="card-preview">📦</div>
+                    <div class="card-body">
+                        <div class="card-title">${item.name || "Unknown"}</div>
+                        <div class="card-meta">${item.source_file}</div>
+                        <div class="card-guid">${item.guid_hex}</div>
+                        <div class="actions">
+                            <button class="btn btn-primary" onclick="viewObject('${item.guid}')">🪑 View Sprites</button>
+                            <button class="btn btn-secondary" onclick="viewObjectDetails('${item.guid}')">ℹ️ Info</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      function renderMeshCard(item) {
+        const typeTag = item.mesh_type
+          ? `<span class="tag tag-${item.mesh_type}">${item.mesh_type}</span>`
+          : "";
+        const genderTag = item.gender
+          ? `<span class="tag tag-${item.gender}">${item.gender}</span>`
+          : "";
+        const ageTag = item.age
+          ? `<span class="tag tag-${item.age}">${item.age}</span>`
+          : "";
+        const bodyTag = item.body_type
+          ? `<span class="tag">${item.body_type}</span>`
+          : "";
+
+        return `
+                <div class="card">
+                    <div class="card-preview">🧍</div>
+                    <div class="card-body">
+                        <div class="card-title">${item.mesh_name}</div>
+                        <div class="card-meta">${item.source_file}</div>
+                        <div>${typeTag}${genderTag}${ageTag}${bodyTag}</div>
+                        <div class="actions">
+                            <button class="btn btn-primary" onclick="viewMesh('${item.mesh_name}')">View 3D</button>
+                            <button class="btn btn-secondary" onclick="exportMesh('${item.mesh_name}')">Export</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      function renderCharacterCard(item) {
+        return `
+                <div class="card">
+                    <div class="card-preview">👤</div>
+                    <div class="card-body">
+                        <div class="card-title">${item.name}</div>
+                        <div class="card-meta">Body: ${item.body_mesh || "None"}</div>
+                        <div class="card-meta">Head: ${item.head_mesh || "None"}</div>
+                        <div class="card-meta">${item.source_file}</div>
+                        <div class="actions">
+                            <button class="btn btn-primary" onclick="viewCharacter('${item.name}')">View 3D</button>
+                            <button class="btn btn-secondary" onclick="exportCharacter('${item.name}')">Export</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+      }
+
+      function renderTable(items) {
+        const tbody = document.getElementById("table-body");
+        tbody.innerHTML = items
+          .slice(0, 200)
+          .map((item) => {
+            const name = item.name || item.mesh_name || "Unknown";
+            const guid = item.guid_hex || "-";
+            const source = item.source_file || "-";
+
+            return `
+                    <tr>
+                        <td>${name}</td>
+                        <td><code>${guid}</code></td>
+                        <td>${source}</td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm">View</button>
+                        </td>
+                    </tr>
+                `;
+          })
+          .join("");
+      }
+
+      // Event handlers
+      function copyGuid(guid) {
+        navigator.clipboard.writeText(guid);
+        alert("GUID copied: " + guid);
+      }
+
+      function closeModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById("modal-overlay").classList.remove("active");
+      }
+
+      function showModal(title, bodyHtml, footerHtml) {
+        document.getElementById("modal-title").textContent = title;
+        document.getElementById("modal-body").innerHTML = bodyHtml;
+        document.getElementById("modal-footer").innerHTML = footerHtml;
+        document.getElementById("modal-overlay").classList.add("active");
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard.writeText(text);
+        alert("Copied to clipboard!");
+      }
+
+      function viewMesh(name) {
+        window.open(
+          `character_viewer.html?mesh=${encodeURIComponent(name)}`,
+          "_blank",
+        );
+      }
+
+      async function exportMesh(name) {
+        try {
+          const response = await fetch("/api/export/mesh", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mesh_name: name, include_skeleton: true }),
+          });
+          const result = await response.json();
+          if (result.success) {
+            alert(
+              `✓ Exported: ${result.output_file}\nVertices: ${result.vertices}\nFaces: ${result.faces}\nSkeleton: ${result.has_skeleton ? "Yes" : "No"}\nTexture: ${result.has_texture ? "Yes" : "No"}`,
+            );
+          } else {
+            alert(`✗ Export failed: ${result.error}`);
+          }
+        } catch (e) {
+          alert(
+            `Export failed: ${e.message}\n\nMake sure export_server.py is running:\npython Program/webviewer/export_server.py`,
+          );
+        }
+      }
+
+      function viewCharacter(name) {
+        window.open(
+          `character_viewer.html?char=${encodeURIComponent(name)}`,
+          "_blank",
+        );
+      }
+
+      async function exportCharacter(name) {
+        // Get character data
+        const char = data.characters.find((c) => c.name === name);
+        if (!char) {
+          alert("Character not found");
+          return;
+        }
+
+        const cleanValue = (v) => (v ? v.replace(/\u0000/g, "").trim() : "");
+
+        try {
+          const response = await fetch("/api/export/character", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: name,
+              body_mesh: cleanValue(char.body_mesh),
+              head_mesh: cleanValue(char.head_mesh),
+            }),
+          });
+          const result = await response.json();
+          if (result.success) {
+            const exports = result.exports.map((e) => e.file).join(", ");
+            alert(`✓ Exported: ${exports}`);
+          } else {
+            alert(`✗ Export failed: ${result.error}`);
+          }
+        } catch (e) {
+          alert(
+            `Export failed: ${e.message}\n\nMake sure export_server.py is running:\npython Program/webviewer/export_server.py`,
+          );
+        }
+      }
+
+      function viewObject(guid) {
+        const obj = data.objects.find(
+          (o) => o.guid === guid || o.guid_hex === guid,
+        );
+        if (!obj) {
+          alert("Object not found: " + guid);
+          return;
+        }
+
+        // Open object viewer with URL params
+        const params = new URLSearchParams({
+          guid: obj.guid,
+          name: obj.name || "Unknown",
+          source: obj.source_file || "",
+          archive: obj.source_archive || "",
+          price: obj.price || 0,
+        });
+        window.open(`object_viewer.html?${params.toString()}`, "_blank");
+      }
+
+      function viewObjectDetails(guid) {
+        // Show detailed modal (for additional info)
+        const obj = data.objects.find(
+          (o) => o.guid === guid || o.guid_hex === guid,
+        );
+        if (!obj) {
+          alert("Object not found: " + guid);
+          return;
+        }
+
+        const bodyHtml = `
+                <div class="preview-placeholder">📦</div>
+                <div class="detail-row">
+                    <div class="detail-label">Name</div>
+                    <div class="detail-value highlight">${obj.name || "Unknown"}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">GUID (Hex)</div>
+                    <div class="detail-value">${obj.guid_hex || obj.guid || "Unknown"}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">GUID (Dec)</div>
+                    <div class="detail-value">${obj.guid || "Unknown"}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Source File</div>
+                    <div class="detail-value">${obj.source_file || "Unknown"}</div>
+                </div>
+            `;
+
+        const footerHtml = `
+                <button class="btn btn-primary" onclick="viewObject('${obj.guid}')">🪑 View Sprites</button>
+                <button class="btn btn-secondary" onclick="copyToClipboard('${obj.guid_hex || obj.guid}')">📋 Copy GUID</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+            `;
+
+        showModal("Object: " + (obj.name || "Unknown"), bodyHtml, footerHtml);
+      }
+
+      // Initialize
+      document.querySelectorAll(".nav-item[data-view]").forEach((item) => {
+        item.addEventListener("click", () => {
+          document
+            .querySelectorAll(".nav-item[data-view]")
+            .forEach((i) => i.classList.remove("active"));
+          item.classList.add("active");
+          currentView = item.dataset.view;
+          currentFilter = null;
+          renderContent();
+        });
+      });
+
+      document.querySelectorAll(".nav-item[data-filter]").forEach((item) => {
+        item.addEventListener("click", () => {
+          if (currentFilter === item.dataset.filter) {
+            currentFilter = null;
+            item.classList.remove("active");
+          } else {
+            document
+              .querySelectorAll(".nav-item[data-filter]")
+              .forEach((i) => i.classList.remove("active"));
+            item.classList.add("active");
+            currentFilter = item.dataset.filter;
+          }
+          renderContent();
+        });
+      });
+
+      document.querySelectorAll(".view-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".view-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          viewMode = btn.dataset.mode;
+          renderContent();
+        });
+      });
+
+      document.getElementById("search").addEventListener("input", () => {
+        renderContent();
+      });
+
+      // Load data on start
+      loadData();
+    </script>
+  </body>
+</html>

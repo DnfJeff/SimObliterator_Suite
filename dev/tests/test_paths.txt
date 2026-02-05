@@ -52,10 +52,18 @@ GOOD_SAVE=C:/Users/jeffe/Desktop/File Compare/Works/User00088.iff
 # ─────────────────────────────────────────────────────────────────────────────
 
 # FreeSO source code (for cross-reference validation)
-# FREESO_SOURCE=S:/Repositorys_New/SimObliterator_Private_Versions/Iff_Study/FreeSO
+# FREESO_SOURCE=path/to/FreeSO
 
 # TheSimsOpenTechDoc path
-# TECH_DOC=S:/Repositorys_New/SimObliterator_Private_Versions/Iff_Study/TheSimsOpenTechDoc
+# TECH_DOC=path/to/TheSimsOpenTechDoc
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RESEARCH DATA (Additional research from private development)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Path to private research versions (contains additional tools and data)
+# Only needed if running FreeSO parity analysis or other advanced research
+# PRIVATE_RESEARCH=S:/Repositorys_New/SimObliterator_Private_Versions/Iff_Study
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEST OUTPUT (Where to write test artifacts)
@@ -63,6 +71,19 @@ GOOD_SAVE=C:/Users/jeffe/Desktop/File Compare/Works/User00088.iff
 
 # Directory for test output files (will be created if missing)
 TEST_OUTPUT=./test_output
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DATA FILES (Built-in data - no config needed)
+# ─────────────────────────────────────────────────────────────────────────────
+# The following data files are bundled with SimObliterator Suite in data/:
+#   - global_behavior_database.json  (251 base game globals + expansion ranges)
+#   - characters.json                (2MB extracted character data)
+#   - objects.json                   (3MB extracted object data)
+#   - meshes.json                    (mesh metadata)
+#   - opcodes_db.json                (143 documented opcodes)
+#   - unknowns_db.json               (research database)
+#   - execution_model.json           (BHAV execution patterns)
+#   - global_behaviors.json          (behavior library)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # EXPANSION PACK PATHS (Optional - for EP-specific tests)

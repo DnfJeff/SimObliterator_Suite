@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimObliterator - Character Viewer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #1a1a2e;
+        color: #eee;
+        overflow: hidden;
+      }
+
+      #container {
+        display: flex;
+        height: 100vh;
+      }
+
+      #sidebar {
+        width: 300px;
+        background: #16213e;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid #0f3460;
+      }
+
+      #viewer {
+        flex: 1;
+        position: relative;
+      }
+
+      #canvas {
+        width: 100%;
+        height: 100%;
+      }
+
+      h1 {
+        font-size: 1.4em;
+        margin-bottom: 20px;
+        color: #e94560;
+      }
+
+      h2 {
+        font-size: 1em;
+        margin: 15px 0 10px;
+        color: #94b3fd;
+      }
+
+      .panel {
+        background: #0f3460;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .panel-title {
+        font-size: 0.9em;
+        color: #aaa;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      label {
+        display: block;
+        margin: 10px 0 5px;
+        font-size: 0.85em;
+        color: #94b3fd;
+      }
+
+      select,
+      input[type="file"],
+      button {
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        background: #1a1a2e;
+        color: #eee;
+        font-size: 0.9em;
+      }
+
+      select:focus,
+      input:focus {
+        outline: 2px solid #e94560;
+      }
+
+      button {
+        background: #e94560;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: #ff6b6b;
+      }
+
+      button.secondary {
+        background: #0f3460;
+        border: 1px solid #94b3fd;
+      }
+
+      button.secondary:hover {
+        background: #1a3a5c;
+      }
+
+      #character-info {
+        font-size: 0.85em;
+        line-height: 1.6;
+      }
+
+      #character-info .label {
+        color: #94b3fd;
+      }
+
+      #character-info .value {
+        color: #eee;
+      }
+
+      .mesh-list {
+        max-height: 200px;
+        overflow-y: auto;
+        font-size: 0.8em;
+      }
+
+      .mesh-item {
+        padding: 5px;
+        margin: 2px 0;
+        background: #1a1a2e;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .mesh-item:hover {
+        background: #2a2a4e;
+      }
+
+      .mesh-item.selected {
+        background: #e94560;
+      }
+
+      #loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #94b3fd;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #0f3460;
+        border-top-color: #e94560;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      #stats {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        font-size: 0.75em;
+        color: #666;
+      }
+
+      #controls-help {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        font-size: 0.75em;
+        color: #666;
+        text-align: right;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="sidebar">
+        <h1>🎮 SimObliterator</h1>
+        <p style="font-size: 0.85em; color: #888; margin-bottom: 20px">
+          Character Viewer
+        </p>
+
+        <div class="panel">
+          <div class="panel-title">Load Model</div>
+          <label>glTF File (.gltf, .glb)</label>
+          <input type="file" id="gltf-input" accept=".gltf,.glb" />
+
+          <button id="load-demo" class="secondary" style="margin-top: 15px">
+            Load Demo Cube
+          </button>
+        </div>
+
+        <div class="panel" id="character-panel" style="display: none">
+          <div class="panel-title">Character Info</div>
+          <div id="character-info">
+            <p>
+              <span class="label">Name:</span>
+              <span class="value" id="char-name">-</span>
+            </p>
+            <p>
+              <span class="label">Bones:</span>
+              <span class="value" id="char-bones">-</span>
+            </p>
+            <p>
+              <span class="label">Vertices:</span>
+              <span class="value" id="char-verts">-</span>
+            </p>
+            <p>
+              <span class="label">Triangles:</span>
+              <span class="value" id="char-tris">-</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="panel" id="animation-panel" style="display: none">
+          <div class="panel-title">Animations</div>
+          <select id="animation-select">
+            <option value="">-- No Animation --</option>
+          </select>
+          <button id="play-btn" class="secondary">▶ Play</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Display Options</div>
+          <label>
+            <input type="checkbox" id="show-skeleton" checked /> Show Skeleton
+          </label>
+          <label>
+            <input type="checkbox" id="show-wireframe" /> Wireframe
+          </label>
+          <label>
+            <input type="checkbox" id="show-normals" /> Show Normals
+          </label>
+          <label>Background Color</label>
+          <input
+            type="color"
+            id="bg-color"
+            value="#1a1a2e"
+            style="width: 60px; height: 30px"
+          />
+        </div>
+      </div>
+
+      <div id="viewer">
+        <canvas id="canvas"></canvas>
+        <div id="loading" style="display: none">
+          <div class="spinner"></div>
+          <p>Loading model...</p>
+        </div>
+        <div id="stats"></div>
+        <div id="controls-help">
+          Left-click + drag: Rotate<br />
+          Right-click + drag: Pan<br />
+          Scroll: Zoom
+        </div>
+      </div>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+      // Scene setup
+      const canvas = document.getElementById("canvas");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+      // Controls
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040, 2);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(5, 10, 7.5);
+      scene.add(directionalLight);
+
+      const backLight = new THREE.DirectionalLight(0x4466ff, 0.5);
+      backLight.position.set(-5, 5, -5);
+      scene.add(backLight);
+
+      // Grid helper
+      const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+      scene.add(gridHelper);
+
+      // Current model
+      let currentModel = null;
+      let currentMixer = null;
+      let skeletonHelper = null;
+
+      // Persistence keys
+      const PERSIST_KEYS = {
+        showSkeleton: "characterViewerShowSkeleton",
+        showWireframe: "characterViewerShowWireframe",
+        bgColor: "characterViewerBgColor",
+        lastCharacter: "characterViewerLastCharacter",
+      };
+
+      // Animation
+      const clock = new THREE.Clock();
+
+      function resize() {
+        const container = document.getElementById("viewer");
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        const delta = clock.getDelta();
+        if (currentMixer) {
+          currentMixer.update(delta);
+        }
+
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      function updateBackgroundColor(color) {
+        scene.background = new THREE.Color(color);
+        localStorage.setItem(PERSIST_KEYS.bgColor, color);
+      }
+
+      // Persistence helper functions
+      function loadPersistentState() {
+        const savedShowSkeleton = localStorage.getItem(
+          PERSIST_KEYS.showSkeleton,
+        );
+        const savedShowWireframe = localStorage.getItem(
+          PERSIST_KEYS.showWireframe,
+        );
+        const savedBgColor = localStorage.getItem(PERSIST_KEYS.bgColor);
+
+        if (savedShowSkeleton === "false") {
+          document.getElementById("show-skeleton").checked = false;
+        } else if (savedShowSkeleton === "true") {
+          document.getElementById("show-skeleton").checked = true;
+        }
+
+        if (savedShowWireframe === "true") {
+          document.getElementById("show-wireframe").checked = true;
+        } else if (savedShowWireframe === "false") {
+          document.getElementById("show-wireframe").checked = false;
+        }
+
+        if (savedBgColor) {
+          document.getElementById("bg-color").value = savedBgColor;
+          updateBackgroundColor(savedBgColor);
+        }
+      }
+
+      function savePersistentState() {
+        localStorage.setItem(
+          PERSIST_KEYS.showSkeleton,
+          document.getElementById("show-skeleton").checked,
+        );
+        localStorage.setItem(
+          PERSIST_KEYS.showWireframe,
+          document.getElementById("show-wireframe").checked,
+        );
+      }
+
+      // Analytics helper function
+      function logAnalytics(event, details) {
+        if (!window.analyticsLog) window.analyticsLog = [];
+        window.analyticsLog.push({ ts: Date.now(), event, details });
+      }
+
+      function clearModel() {
+        if (currentModel) {
+          scene.remove(currentModel);
+          currentModel = null;
+        }
+        if (skeletonHelper) {
+          scene.remove(skeletonHelper);
+          skeletonHelper = null;
+        }
+        currentMixer = null;
+      }
+
+      function loadGLTF(url) {
+        const loading = document.getElementById("loading");
+        loading.style.display = "block";
+
+        clearModel();
+
+        const loader = new GLTFLoader();
+        loader.load(
+          url,
+          (gltf) => {
+            loading.style.display = "none";
+            currentModel = gltf.scene;
+            scene.add(currentModel);
+
+            // Center and fit model
+            const box = new THREE.Box3().setFromObject(currentModel);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+
+            currentModel.position.sub(center);
+            camera.position.set(0, size.y * 0.5, maxDim * 2);
+            controls.target.set(0, size.y * 0.3, 0);
+            controls.update();
+
+            // Setup skeleton helper
+            currentModel.traverse((child) => {
+              if (child.isSkinnedMesh && child.skeleton) {
+                skeletonHelper = new THREE.SkeletonHelper(currentModel);
+                skeletonHelper.visible =
+                  document.getElementById("show-skeleton").checked;
+                scene.add(skeletonHelper);
+              }
+            });
+
+            // Count stats
+            let boneCount = 0;
+            let vertCount = 0;
+            let triCount = 0;
+            currentModel.traverse((child) => {
+              if (child.isBone) boneCount++;
+              if (child.geometry) {
+                if (child.geometry.attributes.position) {
+                  vertCount += child.geometry.attributes.position.count;
+                }
+                if (child.geometry.index) {
+                  triCount += child.geometry.index.count / 3;
+                }
+              }
+            });
+
+            // Update UI
+            document.getElementById("character-panel").style.display = "block";
+            document.getElementById("char-name").textContent =
+              gltf.scene.name || "Unnamed";
+            document.getElementById("char-bones").textContent = boneCount;
+            document.getElementById("char-verts").textContent = vertCount;
+            document.getElementById("char-tris").textContent =
+              Math.floor(triCount);
+
+            // Setup animations
+            if (gltf.animations && gltf.animations.length > 0) {
+              document.getElementById("animation-panel").style.display =
+                "block";
+              const select = document.getElementById("animation-select");
+              select.innerHTML = '<option value="">-- No Animation --</option>';
+
+              currentMixer = new THREE.AnimationMixer(currentModel);
+
+              gltf.animations.forEach((anim, i) => {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = anim.name || `Animation ${i + 1}`;
+                select.appendChild(option);
+              });
+
+              // Store animations for later
+              currentModel.userData.animations = gltf.animations;
+            } else {
+              document.getElementById("animation-panel").style.display = "none";
+            }
+          },
+          (progress) => {
+            // Progress callback
+          },
+          (error) => {
+            loading.style.display = "none";
+            console.error("Error loading GLTF:", error);
+            alert("Error loading model: " + error.message);
+          },
+        );
+      }
+
+      function createDemoCube() {
+        clearModel();
+
+        const geometry = new THREE.BoxGeometry(1, 2, 1);
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xe94560,
+          metalness: 0.3,
+          roughness: 0.7,
+        });
+        const cube = new THREE.Mesh(geometry, material);
+        cube.position.y = 1;
+
+        currentModel = new THREE.Group();
+        currentModel.add(cube);
+        scene.add(currentModel);
+
+        camera.position.set(3, 3, 3);
+        controls.target.set(0, 1, 0);
+        controls.update();
+
+        document.getElementById("character-panel").style.display = "block";
+        document.getElementById("char-name").textContent = "Demo Cube";
+        document.getElementById("char-bones").textContent = 0;
+        document.getElementById("char-verts").textContent = 24;
+        document.getElementById("char-tris").textContent = 12;
+      }
+
+      // Event listeners
+      window.addEventListener("resize", resize);
+
+      document.getElementById("gltf-input").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          loadGLTF(url);
+        }
+      });
+
+      document
+        .getElementById("load-demo")
+        .addEventListener("click", createDemoCube);
+
+      document
+        .getElementById("show-skeleton")
+        .addEventListener("change", (e) => {
+          if (skeletonHelper) {
+            skeletonHelper.visible = e.target.checked;
+          }
+          logAnalytics("skeletonVisibilityChanged", {
+            visible: e.target.checked,
+          });
+          savePersistentState();
+        });
+
+      document
+        .getElementById("show-wireframe")
+        .addEventListener("change", (e) => {
+          if (currentModel) {
+            currentModel.traverse((child) => {
+              if (child.material) {
+                child.material.wireframe = e.target.checked;
+              }
+            });
+          }
+          logAnalytics("wireframeChanged", { enabled: e.target.checked });
+          savePersistentState();
+        });
+
+      document.getElementById("bg-color").addEventListener("input", (e) => {
+        updateBackgroundColor(e.target.value);
+      });
+
+      document
+        .getElementById("animation-select")
+        .addEventListener("change", (e) => {
+          if (
+            currentMixer &&
+            currentModel &&
+            currentModel.userData.animations
+          ) {
+            currentMixer.stopAllAction();
+            const idx = parseInt(e.target.value);
+            if (!isNaN(idx)) {
+              const anim = currentModel.userData.animations[idx];
+              logAnalytics("animationSelected", {
+                index: idx,
+                name: anim.name,
+              });
+              const action = currentMixer.clipAction(anim);
+              action.play();
+            }
+          }
+        });
+
+      document.getElementById("play-btn").addEventListener("click", () => {
+        const select = document.getElementById("animation-select");
+        if (select.value) {
+          // Toggle play state
+          const btn = document.getElementById("play-btn");
+          if (btn.textContent.includes("▶")) {
+            btn.textContent = "⏸ Pause";
+            // Animation already playing from select change
+          } else {
+            btn.textContent = "▶ Play";
+            if (currentMixer) {
+              currentMixer.stopAllAction();
+            }
+          }
+        }
+      });
+
+      // Parse URL parameters
+      function getUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+          mesh: params.get("mesh"),
+          char: params.get("char"),
+          body: params.get("body"),
+          head: params.get("head"),
+        };
+      }
+
+      // Load character/mesh data from JSON
+      async function loadAssetData() {
+        const params = getUrlParams();
+
+        if (params.char) {
+          // Load character from characters.json
+          try {
+            const response = await fetch("characters.json");
+            const characters = await response.json();
+            const char = characters.find((c) => c.name === params.char);
+            if (char) {
+              displayCharacterInfo(char);
+              return;
+            }
+          } catch (e) {
+            console.log("Could not load characters.json");
+          }
+        }
+
+        if (params.mesh) {
+          // Load mesh from meshes.json
+          try {
+            const response = await fetch("meshes.json");
+            const meshes = await response.json();
+            const mesh = meshes.find((m) => m.mesh_name === params.mesh);
+            if (mesh) {
+              displayMeshInfo(mesh);
+              return;
+            }
+          } catch (e) {
+            console.log("Could not load meshes.json");
+          }
+        }
+
+        // No URL params - show demo
+        createDemoCube();
+      }
+
+      // HTML escape helper for debug output
+      function htmlEscape(text) {
+        return String(text).replace(/[&<>"']/g, function (c) {
+          return {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          }[c];
+        });
+      }
+
+      // Debug modal for failed mesh/texture loads with enhanced context
+      function showDebugModal(error, debug, suggestions) {
+        let html = `<div style='margin-bottom:10px;'><b style='color:#f44336;'>Error:</b> ${htmlEscape(error) || "Unknown error"}</div>`;
+
+        // Provide context-specific suggestions based on error type
+        let contextSuggestions = [];
+        if (
+          (error && error.includes("skeleton")) ||
+          error.includes("rigging")
+        ) {
+          contextSuggestions.push("• This mesh may not have skeletal rig data");
+          contextSuggestions.push(
+            "• Try a different mesh with rigging support",
+          );
+          contextSuggestions.push("• Check export_server.py logs for details");
+        } else if (error && error.includes("texture")) {
+          contextSuggestions.push(
+            "• Textures may not be embedded in the source file",
+          );
+          contextSuggestions.push("• Try disabling texture mapping");
+          contextSuggestions.push("• Verify the mesh has texture coordinates");
+        } else if (
+          (error && error.includes("load")) ||
+          error.includes("glTF")
+        ) {
+          contextSuggestions.push(
+            "• The exported glTF format may be incompatible",
+          );
+          contextSuggestions.push("• Try a different THREE.js version");
+          contextSuggestions.push(
+            "• Check browser console (F12) for graphics errors",
+          );
+        }
+
+        if (contextSuggestions.length > 0) {
+          html += `<div style='margin-bottom:10px;padding:8px;background:#1a3a3a;border-left:3px solid #e94560;border-radius:2px;'><b>Troubleshooting:</b><div style='margin-top:4px;color:#a8d5ff;font-size:0.9em;'>${contextSuggestions.join("<br>")}</div></div>`;
+        }
+
+        if (debug && debug.length) {
+          html += `<div style='margin-bottom:10px;'><b>Debug Log:</b><pre style='background:#222;padding:8px;border-radius:4px;color:#94b3fd;font-size:11px;max-height:150px;overflow-y:auto;'>${debug.map((d) => htmlEscape(d)).join("\n")}</pre></div>`;
+        }
+        if (suggestions && suggestions.length) {
+          html += `<div><b>Similar Meshes to Try:</b><ul style='margin:6px 0 0 18px;font-size:0.9em;'>`;
+          for (const s of suggestions) {
+            html += `<li>${htmlEscape(s.name || "(no name)")} <span style='color:#888'>(Mesh: ${htmlEscape(s.mesh_name || s.mesh)})</span></li>`;
+          }
+          html += `</ul></div>`;
+        }
+        html += `<div style='margin-top:12px;font-size:0.85em;color:#888;'>💡 <b>Tip:</b> Press F12 to open developer tools and check the Console tab for more details.</div>`;
+        html += `<div style='margin-top:18px;'><button onclick='closeModal()' class='btn btn-secondary'>Close</button></div>`;
+        showModal("Mesh Export Error", html);
+      }
+
+      // Modal logic (reuse existing pattern)
+      function showModal(title, bodyHtml) {
+        let modal = document.getElementById("debug-modal");
+        if (!modal) {
+          modal = document.createElement("div");
+          modal.id = "debug-modal";
+          modal.style.position = "fixed";
+          modal.style.top = "0";
+          modal.style.left = "0";
+          modal.style.width = "100vw";
+          modal.style.height = "100vh";
+          modal.style.background = "rgba(0,0,0,0.7)";
+          modal.style.zIndex = "9999";
+          modal.style.display = "flex";
+          modal.style.alignItems = "center";
+          modal.style.justifyContent = "center";
+          modal.innerHTML = `<div id='debug-modal-content' style='background:#16213e;padding:30px 30px 20px 30px;border-radius:10px;max-width:500px;width:90vw;box-shadow:0 8px 32px #000;'>
+            <h2 style='color:#e94560;margin-bottom:18px;'>${title}</h2>
+            <div>${bodyHtml}</div>
+          </div>`;
+          document.body.appendChild(modal);
+        } else {
+          modal.querySelector("#debug-modal-content h2").textContent = title;
+          modal.querySelector("#debug-modal-content div").innerHTML = bodyHtml;
+          modal.style.display = "flex";
+        }
+        modal.onclick = (e) => {
+          if (e.target === modal) closeModal();
+        };
+      }
+      function closeModal() {
+        const modal = document.getElementById("debug-modal");
+        if (modal) modal.style.display = "none";
+      }
+
+      function displayCharacterInfo(char) {
+        const cleanValue = (v) =>
+          v ? v.replace(/\u0000/g, "").trim() : "Unknown";
+        const bodyMesh = cleanValue(char.body_mesh);
+        const headMesh = cleanValue(char.head_mesh);
+
+        document.getElementById("character-panel").style.display = "block";
+        document.getElementById("char-name").textContent =
+          char.name || "Unknown";
+        document.getElementById("char-bones").textContent = "N/A (not loaded)";
+        document.getElementById("char-verts").textContent = "N/A (not loaded)";
+        document.getElementById("char-tris").textContent = "N/A (not loaded)";
+
+        // Add more info to the panel
+        const infoDiv = document.getElementById("character-info");
+        infoDiv.innerHTML = `
+                <p><span class="label">Name:</span> <span class="value">${char.name}</span></p>
+                <p><span class="label">Body Mesh:</span> <span class="value">${bodyMesh}</span></p>
+                <p><span class="label">Head Mesh:</span> <span class="value">${headMesh}</span></p>
+                <p><span class="label">Skin Tone:</span> <span class="value">${cleanValue(char.skin_tone)}</span></p>
+                <p><span class="label">Source:</span> <span class="value">${char.source_file || "Unknown"}</span></p>
+                <hr style="border-color: #333; margin: 10px 0;">
+                <button id="export-char-btn" style="width:100%; margin-top:10px;" onclick="exportCharacter('${char.name}', '${bodyMesh}', '${headMesh}')">
+                    🚀 Export to glTF
+                </button>
+                <div id="export-status" style="margin-top:10px; font-size:0.8em; color:#888;"></div>
+            `;
+
+        // Try to auto-load existing export
+        tryLoadExistingExport(char.name, "character");
+      }
+
+      function displayMeshInfo(mesh) {
+        document.getElementById("character-panel").style.display = "block";
+        document.getElementById("char-name").textContent =
+          mesh.mesh_name || "Unknown";
+        document.getElementById("char-bones").textContent = "N/A (not loaded)";
+        document.getElementById("char-verts").textContent = "N/A (not loaded)";
+        document.getElementById("char-tris").textContent = "N/A (not loaded)";
+
+        const infoDiv = document.getElementById("character-info");
+        infoDiv.innerHTML = `
+                <p><span class="label">Mesh Name:</span> <span class="value">${mesh.mesh_name}</span></p>
+                <p><span class="label">Type:</span> <span class="value">${mesh.mesh_type || "Unknown"}</span></p>
+                <p><span class="label">Gender:</span> <span class="value">${mesh.gender || "Unknown"}</span></p>
+                <p><span class="label">Age:</span> <span class="value">${mesh.age || "Unknown"}</span></p>
+                <p><span class="label">Body Type:</span> <span class="value">${mesh.body_type || "N/A"}</span></p>
+                <p><span class="label">Source:</span> <span class="value">${mesh.source_file || "Unknown"}</span></p>
+                <hr style="border-color: #333; margin: 10px 0;">
+                <button id="export-mesh-btn" style="width:100%; margin-top:10px;" onclick="exportMesh('${mesh.mesh_name}')">
+                    🚀 Export to glTF
+                </button>
+                <div id="export-status" style="margin-top:10px; font-size:0.8em; color:#888;"></div>
+            `;
+
+        // Try to auto-load existing export
+        tryLoadExistingExport(mesh.mesh_name, "mesh");
+      }
+
+      async function tryLoadExistingExport(name, type) {
+        // Check if a glTF already exists for this asset
+        const exportUrl = `/exports/${name}.gltf`;
+        try {
+          const response = await fetch(exportUrl, { method: "HEAD" });
+          if (response.ok) {
+            document.getElementById("export-status").innerHTML =
+              '<span style="color:#4CAF50;">✓ Found existing export - loading...</span>';
+            loadGLTF(exportUrl);
+          } else {
+            // For characters, try body mesh
+            if (type === "character") {
+              const bodyUrl = `/exports/${name}_body.gltf`;
+              const bodyResp = await fetch(bodyUrl, { method: "HEAD" });
+              if (bodyResp.ok) {
+                document.getElementById("export-status").innerHTML =
+                  '<span style="color:#4CAF50;">✓ Found body export - loading...</span>';
+                loadGLTF(bodyUrl);
+              } else {
+                createDemoCube();
+              }
+            } else {
+              createDemoCube();
+            }
+          }
+        } catch (e) {
+          console.log("No existing export found:", e);
+          createDemoCube();
+        }
+      }
+
+      async function exportMesh(meshName) {
+        const statusDiv = document.getElementById("export-status");
+        statusDiv.innerHTML =
+          '<span style="color:#FFC107;">⏳ Exporting mesh...</span>';
+
+        try {
+          const response = await fetch("/api/export/mesh", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mesh_name: meshName,
+              include_skeleton: true,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            statusDiv.innerHTML = `
+                        <span style="color:#4CAF50;">✓ Exported successfully!</span><br>
+                        <span>Vertices: ${result.vertices}, Faces: ${result.faces}</span><br>
+                        <span>Skeleton: ${result.has_skeleton ? "Yes" : "No"}</span><br>
+                        <span>Texture: ${result.has_texture ? "Yes" : "No"}</span>
+                    `;
+            logAnalytics("meshExported", {
+              meshName: meshName,
+              vertices: result.vertices,
+              faces: result.faces,
+              hasSkeleton: result.has_skeleton,
+            });
+            // Load the exported glTF
+            loadGLTF(result.output_url);
+          } else {
+            statusDiv.innerHTML = `<span style="color:#f44336;">✗ Error: ${result.error}</span>`;
+            logAnalytics("meshExportFailed", {
+              meshName: meshName,
+              error: result.error,
+            });
+          }
+        } catch (e) {
+          statusDiv.innerHTML = `<span style="color:#f44336;">✗ Export failed: ${e.message}</span><br>
+                    <span style="color:#888;">Make sure export_server.py is running!</span>`;
+          logAnalytics("meshExportFailed", {
+            meshName: meshName,
+            error: e.message,
+          });
+        }
+      }
+
+      async function exportCharacter(charName, bodyMesh, headMesh) {
+        const statusDiv = document.getElementById("export-status");
+        statusDiv.innerHTML =
+          '<span style="color:#FFC107;">⏳ Exporting character...</span>';
+
+        try {
+          const response = await fetch("/api/export/character", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: charName,
+              body_mesh: bodyMesh,
+              head_mesh: headMesh,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success && result.exports.length > 0) {
+            let exportInfo = result.exports
+              .map((e) => `${e.type}: ${e.file}`)
+              .join("<br>");
+            statusDiv.innerHTML = `
+                        <span style="color:#4CAF50;">✓ Exported successfully!</span><br>
+                        ${exportInfo}
+                    `;
+            logAnalytics("characterExported", {
+              charName: charName,
+              bodyMesh: bodyMesh,
+              headMesh: headMesh,
+              exportCount: result.exports.length,
+            });
+            // Load the first exported glTF (usually body)
+            loadGLTF(result.exports[0].url);
+          } else {
+            statusDiv.innerHTML = `<span style="color:#f44336;">✗ Error: ${result.error}</span>`;
+            logAnalytics("characterExportFailed", {
+              charName: charName,
+              error: result.error,
+            });
+          }
+        } catch (e) {
+          statusDiv.innerHTML = `<span style="color:#f44336;">✗ Export failed: ${e.message}</span><br>
+                    <span style="color:#888;">Make sure export_server.py is running!</span>`;
+          logAnalytics("characterExportFailed", {
+            charName: charName,
+            error: e.message,
+          });
+        }
+      }
+
+      // Initialize
+      loadPersistentState();
+      resize();
+      updateBackgroundColor("#1a1a2e");
+      camera.position.set(3, 3, 3);
+      controls.target.set(0, 1, 0);
+      animate();
+
+      // Load asset data from URL params or show demo
+      loadAssetData();
+    </script>
+  </body>
+</html>

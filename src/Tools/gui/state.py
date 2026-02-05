@@ -32,9 +32,9 @@ class AppState:
     # Logs (append-only)
     logs: list = field(default_factory=list)
     
-    # Paths
-    game_path: str = r"G:\SteamLibrary\steamapps\common\The Sims Legacy Collection"
-    save_path: str = r"C:\Users\jeffe\Saved Games\Electronic Arts\The Sims 25"
+    # Paths (will be auto-detected or set by user)
+    game_path: str = ""  # Set via File > Settings or auto-detected
+    save_path: str = ""  # Set via File > Settings or auto-detected
     current_far_path: Optional[str] = None
     current_iff_name: Optional[str] = None
     

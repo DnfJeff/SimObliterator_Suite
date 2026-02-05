@@ -123,7 +123,7 @@ class ScannerConfig:
             enabled=True
         ),
         ScanPath(
-            path=r"C:\Users\jeffe\Saved Games\Electronic Arts",
+            path=str(Path.home() / "Saved Games" / "Electronic Arts"),
             label="Game Saves",
             enabled=True
         ),

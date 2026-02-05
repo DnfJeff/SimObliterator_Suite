@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Database of discovered unknowns from game analysis - opcodes, chunks, patterns",
+    "created": "2026-02-03",
+    "last_scan": null,
+    "total_entries": 0
+  },
+  "unknown_opcodes": {},
+  "unknown_chunks": {},
+  "unknown_patterns": {},
+  "scan_history": []
+}

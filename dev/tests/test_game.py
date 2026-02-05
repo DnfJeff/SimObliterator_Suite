@@ -2191,6 +2191,44 @@ def test_graph_tools(runner: TestRunner):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# RUN ALL (for import by main runner)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def run_all_tests(verbose: bool = False):
+    """Run all game file tests. Returns (passed, failed, skipped)."""
+    paths = load_test_paths()
+    runner = TestRunner(paths, verbose=verbose)
+    
+    categories = {
+        'paths': test_paths,
+        'formats': test_formats,
+        'core': test_core,
+        'strings': test_strings,
+        'bhav': test_bhav,
+        'objects': test_objects,
+        'lots': test_lots,
+        'saves': test_saves,
+        'export': test_export,
+        'far_deep': test_far_deep,
+        'cc_folder': test_cc_folder,
+        'capabilities': test_capabilities,
+        'save_edit': test_save_capabilities,
+        'bhav_mut': test_bhav_mutations,
+        'world_mut': test_world_mutations,
+        'forensic': test_forensics,
+        'graph': test_graph_tools,
+    }
+    
+    for cat_name, cat_func in categories.items():
+        try:
+            cat_func(runner)
+        except Exception as e:
+            print(f"\n❌ Category {cat_name} failed: {e}")
+    
+    return runner.summary()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 

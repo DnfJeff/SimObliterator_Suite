@@ -246,9 +246,9 @@ class SaveEditorPanel:
         """Load save from Steam default location."""
         # Try common Steam save paths
         paths = [
-            Path(r"C:\Users\jeffe\Saved Games\Electronic Arts\The Sims 25"),
-            Path(r"C:\Program Files (x86)\Steam\steamapps\common\The Sims Legacy Collection\UserData7"),
             Path.home() / "Saved Games" / "Electronic Arts" / "The Sims 25",
+            Path(r"C:\Program Files (x86)\Steam\steamapps\common\The Sims Legacy Collection\UserData7"),
+            Path.home() / "Documents" / "EA Games" / "The Sims",
         ]
         
         for path in paths:

@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimObliterator - Object Viewer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #1a1a2e;
+        color: #eee;
+        overflow: hidden;
+      }
+
+      #container {
+        display: flex;
+        height: 100vh;
+      }
+
+      #sidebar {
+        width: 320px;
+        background: #16213e;
+        padding: 20px;
+        overflow-y: auto;
+        border-right: 1px solid #0f3460;
+      }
+
+      #viewer {
+        flex: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+
+      #sprite-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d0d1a;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #sprite-canvas {
+        background: repeating-conic-gradient(#2a2a4a 0% 25%, #1a1a2e 0% 50%)
+          50% / 20px 20px;
+        image-rendering: pixelated;
+        cursor: grab;
+      }
+
+      #sprite-canvas:active {
+        cursor: grabbing;
+      }
+
+      h1 {
+        font-size: 1.4em;
+        margin-bottom: 20px;
+        color: #e94560;
+      }
+
+      h2 {
+        font-size: 1em;
+        margin: 15px 0 10px;
+        color: #94b3fd;
+      }
+
+      .panel {
+        background: #0f3460;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .panel-title {
+        font-size: 0.9em;
+        color: #aaa;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      label {
+        display: block;
+        margin: 10px 0 5px;
+        font-size: 0.85em;
+        color: #94b3fd;
+      }
+
+      select,
+      input[type="text"],
+      button {
+        width: 100%;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        background: #1a1a2e;
+        color: #eee;
+        font-size: 0.9em;
+      }
+
+      select:focus,
+      input:focus {
+        outline: 2px solid #e94560;
+      }
+
+      button {
+        background: #e94560;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 10px;
+        transition: background 0.2s;
+      }
+
+      button:hover {
+        background: #ff6b8a;
+      }
+
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+
+      button.secondary {
+        background: #0f3460;
+        border: 1px solid #94b3fd;
+      }
+
+      button.secondary:hover {
+        background: #1a4a7a;
+      }
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid #1a1a2e;
+        font-size: 0.85em;
+      }
+
+      .info-label {
+        color: #888;
+      }
+
+      .info-value {
+        color: #94b3fd;
+        font-family: monospace;
+      }
+
+      #status {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-size: 0.85em;
+      }
+
+      /* Direction selector */
+      .direction-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+        margin: 10px 0;
+      }
+
+      .direction-btn {
+        padding: 10px;
+        font-size: 0.8em;
+        margin: 0;
+      }
+
+      .direction-btn.active {
+        background: #94b3fd;
+        color: #1a1a2e;
+      }
+
+      .direction-btn.empty {
+        visibility: hidden;
+      }
+
+      /* Zoom selector */
+      .zoom-selector {
+        display: flex;
+        gap: 5px;
+        margin: 10px 0;
+      }
+
+      .zoom-btn {
+        flex: 1;
+        margin: 0;
+      }
+
+      .zoom-btn.active {
+        background: #94b3fd;
+        color: #1a1a2e;
+      }
+
+      /* Rotation controls */
+      #rotation-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 10px 0;
+      }
+
+      #rotation-controls button {
+        width: auto;
+        padding: 8px 15px;
+        margin: 0;
+      }
+
+      #rotation-controls span {
+        flex: 1;
+        text-align: center;
+        font-size: 0.9em;
+      }
+
+      /* All sprites grid */
+      #all-sprites-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .sprite-thumb {
+        background: #1a1a2e;
+        border-radius: 4px;
+        padding: 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .sprite-thumb:hover {
+        background: #2a2a4a;
+      }
+
+      .sprite-thumb.active {
+        background: #0f3460;
+        border: 2px solid #e94560;
+      }
+
+      .sprite-thumb img {
+        max-width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+      }
+
+      .sprite-thumb .label {
+        font-size: 0.7em;
+        color: #888;
+        margin-top: 3px;
+      }
+
+      /* Loading overlay */
+      #loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(26, 26, 46, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 100;
+      }
+
+      #loading.hidden {
+        display: none;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #0f3460;
+        border-top-color: #e94560;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Back button */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 15px;
+        color: #94b3fd;
+        text-decoration: none;
+        font-size: 0.9em;
+      }
+
+      .back-link:hover {
+        color: #e94560;
+      }
+
+      /* Toolbar */
+      #toolbar {
+        background: #16213e;
+        padding: 10px 20px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        border-bottom: 1px solid #0f3460;
+      }
+
+      #toolbar label {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      #toolbar input[type="range"] {
+        width: 100px;
+      }
+
+      #toolbar .separator {
+        width: 1px;
+        height: 20px;
+        background: #0f3460;
+      }
+
+      #bg-color {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 2px solid #0f3460;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="sidebar">
+        <a href="library_browser.html" class="back-link">← Back to Library</a>
+        <h1>🪑 Object Viewer</h1>
+
+        <!-- Object Info -->
+        <div class="panel">
+          <div class="panel-title">Object Info</div>
+          <div id="object-info">
+            <div class="info-row">
+              <span class="info-label">Name:</span>
+              <span class="info-value" id="obj-name">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">GUID:</span>
+              <span class="info-value" id="obj-guid">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Price:</span>
+              <span class="info-value" id="obj-price">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Source:</span>
+              <span class="info-value" id="obj-source">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Sprites:</span>
+              <span class="info-value" id="obj-sprites">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Direction Selector -->
+        <div class="panel">
+          <div class="panel-title">Direction</div>
+          <div class="direction-grid">
+            <button class="direction-btn empty"></button>
+            <button class="direction-btn" data-dir="nw" title="Northwest">
+              NW
+            </button>
+            <button class="direction-btn empty"></button>
+            <button class="direction-btn" data-dir="sw" title="Southwest">
+              SW
+            </button>
+            <button class="direction-btn empty"></button>
+            <button class="direction-btn" data-dir="ne" title="Northeast">
+              NE
+            </button>
+            <button class="direction-btn empty"></button>
+            <button
+              class="direction-btn active"
+              data-dir="se"
+              title="Southeast (Default)"
+            >
+              SE
+            </button>
+            <button class="direction-btn empty"></button>
+          </div>
+
+          <div id="rotation-controls">
+            <button onclick="rotateLeft()" title="Rotate Left">↺</button>
+            <span id="current-direction">SE</span>
+            <button onclick="rotateRight()" title="Rotate Right">↻</button>
+          </div>
+        </div>
+
+        <!-- Zoom Level -->
+        <div class="panel">
+          <div class="panel-title">Zoom Level</div>
+          <div class="zoom-selector">
+            <button class="zoom-btn" data-zoom="far">Far</button>
+            <button class="zoom-btn active" data-zoom="med">Medium</button>
+            <button class="zoom-btn" data-zoom="near">Near</button>
+          </div>
+        </div>
+
+        <!-- All Sprites Grid -->
+        <div class="panel">
+          <div class="panel-title">All Views (4 × 3)</div>
+          <div id="all-sprites-grid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Export -->
+        <div class="panel">
+          <div class="panel-title">Export</div>
+          <button onclick="exportCurrentSprite()">
+            Export Current View (PNG)
+          </button>
+          <button onclick="exportAllSprites()" class="secondary">
+            Export All Views (ZIP)
+          </button>
+          <button onclick="exportSpriteSheet()" class="secondary">
+            Export Sprite Sheet
+          </button>
+        </div>
+      </div>
+
+      <div id="viewer">
+        <div id="toolbar">
+          <label>
+            Scale:
+            <input
+              type="range"
+              id="scale-slider"
+              min="1"
+              max="8"
+              value="2"
+              step="1"
+            />
+            <span id="scale-value">2x</span>
+          </label>
+          <div class="separator"></div>
+          <label>
+            Background:
+            <input type="color" id="bg-color" value="#0d0d1a" />
+          </label>
+          <label>
+            <input type="checkbox" id="show-grid" />
+            Grid
+          </label>
+        </div>
+
+        <div id="sprite-container">
+          <canvas id="sprite-canvas"></canvas>
+          <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <span>Loading sprites...</span>
+          </div>
+        </div>
+
+        <div id="status">Ready</div>
+      </div>
+    </div>
+
+    <script>
+      // State
+      let currentObject = null;
+      let sprites = {}; // {direction_zoom: imageData}
+      let currentDirection = "se";
+      let currentZoom = "med";
+      let scale = 2;
+      let panX = 0,
+        panY = 0;
+      let isDragging = false;
+      let lastMouseX, lastMouseY;
+
+      const DIRECTIONS = ["ne", "se", "sw", "nw"];
+      const ZOOMS = ["far", "med", "near"];
+
+      // Persistence keys
+      const PERSIST_KEYS = {
+        direction: "objectViewerCurrentDir",
+        zoom: "objectViewerCurrentZoom",
+        scale: "objectViewerScale",
+        bgColor: "objectViewerBgColor",
+        lastObject: "objectViewerLastObject",
+      };
+
+      // DOM elements
+      const canvas = document.getElementById("sprite-canvas");
+      const ctx = canvas.getContext("2d");
+      const statusEl = document.getElementById("status");
+      const loadingEl = document.getElementById("loading");
+
+      // Persistence helper functions
+      function loadPersistentState() {
+        const savedDir = localStorage.getItem(PERSIST_KEYS.direction);
+        const savedZoom = localStorage.getItem(PERSIST_KEYS.zoom);
+        const savedScale = localStorage.getItem(PERSIST_KEYS.scale);
+        const savedBgColor = localStorage.getItem(PERSIST_KEYS.bgColor);
+
+        if (savedDir && DIRECTIONS.includes(savedDir)) {
+          currentDirection = savedDir;
+        }
+        if (savedZoom && ZOOMS.includes(savedZoom)) {
+          currentZoom = savedZoom;
+        }
+        if (savedScale) {
+          const parsedScale = parseInt(savedScale);
+          if (parsedScale >= 1 && parsedScale <= 8) {
+            scale = parsedScale;
+          }
+        }
+        if (savedBgColor) {
+          document.getElementById("sprite-container").style.background =
+            savedBgColor;
+          document.getElementById("bg-color").value = savedBgColor;
+        }
+      }
+
+      function savePersistentState() {
+        localStorage.setItem(PERSIST_KEYS.direction, currentDirection);
+        localStorage.setItem(PERSIST_KEYS.zoom, currentZoom);
+        localStorage.setItem(PERSIST_KEYS.scale, scale.toString());
+        if (currentObject) {
+          localStorage.setItem(PERSIST_KEYS.lastObject, currentObject.guid);
+        }
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        loadPersistentState();
+        setupEventListeners();
+        updateUIFromState();
+        parseUrlParams();
+      });
+
+      function setupEventListeners() {
+        // Direction buttons
+        document.querySelectorAll(".direction-btn[data-dir]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            setDirection(btn.dataset.dir);
+          });
+        });
+
+        // Zoom buttons
+        document.querySelectorAll(".zoom-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            setZoom(btn.dataset.zoom);
+          });
+        });
+
+        // Scale slider
+        document
+          .getElementById("scale-slider")
+          .addEventListener("input", (e) => {
+            scale = parseInt(e.target.value);
+            document.getElementById("scale-value").textContent = scale + "x";
+            savePersistentState();
+            logAnalytics("scaleChanged", { scale: scale });
+            renderSprite();
+          });
+
+        // Background color
+        document.getElementById("bg-color").addEventListener("input", (e) => {
+          const color = e.target.value;
+          document.getElementById("sprite-container").style.background = color;
+          localStorage.setItem(PERSIST_KEYS.bgColor, color);
+        });
+
+        // Pan controls
+        canvas.addEventListener("mousedown", startDrag);
+        canvas.addEventListener("mousemove", drag);
+        canvas.addEventListener("mouseup", endDrag);
+        canvas.addEventListener("mouseleave", endDrag);
+
+        // Keyboard controls
+        document.addEventListener("keydown", handleKeyboard);
+      }
+
+      function updateUIFromState() {
+        // Update direction button
+        document.querySelectorAll(".direction-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.dir === currentDirection);
+        });
+
+        // Update zoom buttons
+        document.querySelectorAll(".zoom-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.zoom === currentZoom);
+        });
+
+        // Update scale slider
+        document.getElementById("scale-slider").value = scale;
+        document.getElementById("scale-value").textContent = scale + "x";
+
+        // Update thumb selection
+        updateThumbSelection();
+      }
+
+      function parseUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const guid = params.get("guid");
+        const name = params.get("name");
+        const source = params.get("source");
+        const archive = params.get("archive");
+
+        if (guid) {
+          loadObject({
+            guid: parseInt(guid),
+            name: name || "Unknown",
+            source_file: source || "",
+            source_archive: archive || "",
+            price: parseInt(params.get("price")) || 0,
+          });
+        } else {
+          setStatus("No object specified. Use ?guid=...");
+        }
+      }
+
+      async function loadObject(obj) {
+        currentObject = obj;
+        showLoading(true);
+        setStatus("Loading object sprites...");
+
+        // Update info panel
+        document.getElementById("obj-name").textContent = obj.name;
+        document.getElementById("obj-guid").textContent =
+          "0x" + obj.guid.toString(16).toUpperCase();
+        document.getElementById("obj-price").textContent =
+          obj.price > 0 ? "§" + obj.price : "-";
+        document.getElementById("obj-source").textContent = obj.source_file;
+
+        try {
+          // Fetch sprites from API
+          const response = await fetch("/api/object/sprites", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              guid: obj.guid,
+              source_file: obj.source_file,
+              source_archive: obj.source_archive,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            sprites = {};
+            let loadedCount = 0;
+
+            // Load all sprite images
+            for (const [key, url] of Object.entries(result.sprites)) {
+              const img = new Image();
+              img.onload = () => {
+                sprites[key] = img;
+                loadedCount++;
+                if (loadedCount === Object.keys(result.sprites).length) {
+                  onSpritesLoaded();
+                }
+              };
+              img.onerror = () => {
+                loadedCount++;
+                if (loadedCount === Object.keys(result.sprites).length) {
+                  onSpritesLoaded();
+                }
+              };
+              img.src = url;
+            }
+
+            if (Object.keys(result.sprites).length === 0) {
+              setStatus("No sprites found for this object");
+              showLoading(false);
+            }
+          } else {
+            let msg = "Error: " + (result.error || "Unknown error");
+            if (result.debug && result.debug.length) {
+              msg += "\nDebug: " + result.debug.join("\n");
+            }
+            if (result.suggestions && result.suggestions.length) {
+              msg += "\nSuggestions:";
+              for (const s of result.suggestions) {
+                msg += `\n- ${s.name || "(no name)"} (GUID: ${s.guid_hex || s.guid})`;
+              }
+            }
+            setStatus(msg);
+            showLoading(false);
+            // Show debug modal for user
+            showDebugModal(result.error, result.debug, result.suggestions);
+          }
+        } catch (e) {
+          setStatus("Failed to load sprites: " + e.message);
+          showLoading(false);
+        }
+        // Debug modal for failed lookups with enhanced context
+        function showDebugModal(error, debug, suggestions) {
+          let html = `<div style='margin-bottom:10px;'><b style='color:#f44336;'>Error:</b> ${error || "Unknown error"}</div>`;
+
+          // Add API status hint
+          html += `<div style='margin:8px 0;padding:8px;background:#1a3a3a;border-left:3px solid #e94560;border-radius:2px;font-size:0.9em;'>`;
+          html += `<b>API Status:</b> Attempting to load sprite data from server...`;
+          html += `</div>`;
+
+          if (debug && debug.length) {
+            html += `<div style='margin-bottom:10px;'><b>Debug Information:</b><pre style='background:#222;padding:8px;border-radius:4px;color:#94b3fd;font-size:11px;max-height:150px;overflow-y:auto;'>${debug.map((d) => htmlEscape(d)).join("\n")}</pre></div>`;
+          }
+          if (suggestions && suggestions.length) {
+            html += `<div><b>Suggested Objects to Try:</b><ul style='margin:6px 0 0 18px;font-size:0.9em;'>`;
+            for (const s of suggestions) {
+              html += `<li>${htmlEscape(s.name || "(no name)")} <span style='color:#888'>(GUID: ${htmlEscape(s.guid_hex || s.guid)})</span></li>`;
+            }
+            html += `</ul></div>`;
+          }
+          html += `<div style='margin-top:12px;font-size:0.85em;color:#888;'>💡 <b>Tip:</b> If this keeps happening, check browser console (F12) for detailed error messages.</div>`;
+          html += `<div style='margin-top:18px;'><button onclick='closeModal()' class='btn btn-secondary'>Close</button></div>`;
+          showModal("Sprite Load Error", html);
+        }
+
+        // HTML escape helper for debug output
+        function htmlEscape(text) {
+          return String(text).replace(/[&<>"']/g, function (c) {
+            return {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c];
+          });
+        }
+
+        // Modal logic (reuse existing pattern)
+        function showModal(title, bodyHtml) {
+          let modal = document.getElementById("debug-modal");
+          if (!modal) {
+            modal = document.createElement("div");
+            modal.id = "debug-modal";
+            modal.style.position = "fixed";
+            modal.style.top = "0";
+            modal.style.left = "0";
+            modal.style.width = "100vw";
+            modal.style.height = "100vh";
+            modal.style.background = "rgba(0,0,0,0.7)";
+            modal.style.zIndex = "9999";
+            modal.style.display = "flex";
+            modal.style.alignItems = "center";
+            modal.style.justifyContent = "center";
+            modal.innerHTML = `<div id='debug-modal-content' style='background:#16213e;padding:30px 30px 20px 30px;border-radius:10px;max-width:500px;width:90vw;box-shadow:0 8px 32px #000;'>
+                  <h2 style='color:#e94560;margin-bottom:18px;'>${title}</h2>
+                  <div>${bodyHtml}</div>
+                </div>`;
+            document.body.appendChild(modal);
+          } else {
+            modal.querySelector("#debug-modal-content h2").textContent = title;
+            modal.querySelector("#debug-modal-content div").innerHTML =
+              bodyHtml;
+            modal.style.display = "flex";
+          }
+          modal.onclick = (e) => {
+            if (e.target === modal) closeModal();
+          };
+        }
+        function closeModal() {
+          const modal = document.getElementById("debug-modal");
+          if (modal) modal.style.display = "none";
+        }
+      }
+
+      function onSpritesLoaded() {
+        showLoading(false);
+        document.getElementById("obj-sprites").textContent =
+          Object.keys(sprites).length;
+        buildSpritesGrid();
+        renderSprite();
+        setStatus("Loaded " + Object.keys(sprites).length + " sprites");
+      }
+
+      function buildSpritesGrid() {
+        const grid = document.getElementById("all-sprites-grid");
+        grid.innerHTML = "";
+
+        for (const dir of DIRECTIONS) {
+          for (const zoom of ZOOMS) {
+            const key = `${dir}_${zoom}`;
+            const thumb = document.createElement("div");
+            thumb.className = "sprite-thumb";
+            thumb.dataset.dir = dir;
+            thumb.dataset.zoom = zoom;
+
+            if (sprites[key]) {
+              const img = document.createElement("img");
+              img.src = sprites[key].src;
+              thumb.appendChild(img);
+            }
+
+            const label = document.createElement("div");
+            label.className = "label";
+            label.textContent = `${dir.toUpperCase()} ${zoom}`;
+            thumb.appendChild(label);
+
+            thumb.addEventListener("click", () => {
+              setDirection(dir);
+              setZoom(zoom);
+            });
+
+            grid.appendChild(thumb);
+          }
+        }
+      }
+
+      function setDirection(dir) {
+        currentDirection = dir;
+        document.querySelectorAll(".direction-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.dir === dir);
+        });
+        document.getElementById("current-direction").textContent =
+          dir.toUpperCase();
+        savePersistentState();
+        logAnalytics("directionChanged", { direction: dir });
+        updateThumbSelection();
+        renderSprite();
+      }
+
+      function setZoom(zoom) {
+        currentZoom = zoom;
+        document.querySelectorAll(".zoom-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.zoom === zoom);
+        });
+        savePersistentState();
+        logAnalytics("zoomChanged", { zoom: zoom });
+        updateThumbSelection();
+        renderSprite();
+      }
+
+      function updateThumbSelection() {
+        document.querySelectorAll(".sprite-thumb").forEach((thumb) => {
+          thumb.classList.toggle(
+            "active",
+            thumb.dataset.dir === currentDirection &&
+              thumb.dataset.zoom === currentZoom,
+          );
+        });
+      }
+
+      function rotateLeft() {
+        const idx = DIRECTIONS.indexOf(currentDirection);
+        setDirection(DIRECTIONS[(idx + 3) % 4]); // -1 with wrap
+      }
+
+      function rotateRight() {
+        const idx = DIRECTIONS.indexOf(currentDirection);
+        setDirection(DIRECTIONS[(idx + 1) % 4]);
+      }
+
+      function renderSprite() {
+        const key = `${currentDirection}_${currentZoom}`;
+        const sprite = sprites[key];
+
+        if (!sprite) {
+          canvas.width = 200;
+          canvas.height = 200;
+          ctx.fillStyle = "#333";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#888";
+          ctx.font = "14px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("No sprite", 100, 100);
+          return;
+        }
+
+        const w = sprite.width * scale;
+        const h = sprite.height * scale;
+
+        canvas.width = w;
+        canvas.height = h;
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite, 0, 0, w, h);
+      }
+
+      // Pan controls
+      function startDrag(e) {
+        isDragging = true;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      }
+
+      function drag(e) {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMouseX;
+        const dy = e.clientY - lastMouseY;
+        panX += dx;
+        panY += dy;
+        canvas.style.transform = `translate(${panX}px, ${panY}px)`;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      }
+
+      function endDrag() {
+        isDragging = false;
+      }
+
+      function handleKeyboard(e) {
+        switch (e.key) {
+          case "ArrowLeft":
+          case "a":
+            rotateLeft();
+            break;
+          case "ArrowRight":
+          case "d":
+            rotateRight();
+            break;
+          case "1":
+            setZoom("far");
+            break;
+          case "2":
+            setZoom("med");
+            break;
+          case "3":
+            setZoom("near");
+            break;
+          case "+":
+          case "=":
+            if (scale < 8) {
+              scale++;
+              document.getElementById("scale-slider").value = scale;
+              document.getElementById("scale-value").textContent = scale + "x";
+              renderSprite();
+            }
+            break;
+          case "-":
+            if (scale > 1) {
+              scale--;
+              document.getElementById("scale-slider").value = scale;
+              document.getElementById("scale-value").textContent = scale + "x";
+              renderSprite();
+            }
+            break;
+        }
+      }
+
+      // Export functions
+      async function exportCurrentSprite() {
+        const key = `${currentDirection}_${currentZoom}`;
+        const sprite = sprites[key];
+        let exportLog = [];
+        if (!sprite) {
+          exportLog.push("No sprite to export");
+          logAnalytics("spriteExportFailed", { reason: "No sprite", key: key });
+          showExportDebugModal("No sprite to export", exportLog);
+          setStatus("No sprite to export");
+          return;
+        }
+        try {
+          // Create download link
+          const link = document.createElement("a");
+          link.download = `${currentObject.name}_${key}.png`;
+          link.href = sprite.src;
+          link.click();
+          setStatus("Exported: " + link.download);
+          exportLog.push("Exported: " + link.download);
+          logAnalytics("spriteExported", {
+            filename: link.download,
+            direction: currentDirection,
+            zoom: currentZoom,
+          });
+        } catch (e) {
+          exportLog.push("Export failed: " + e.message);
+          logAnalytics("spriteExportFailed", { error: e.message });
+          showExportDebugModal("Export failed", exportLog);
+          setStatus("Export failed: " + e.message);
+        }
+        if (!window.assetExportLog) window.assetExportLog = [];
+        window.assetExportLog.push({
+          ts: Date.now(),
+          type: "sprite",
+          log: exportLog,
+        });
+      }
+
+      async function exportAllSprites() {
+        if (!currentObject) return;
+        setStatus("Exporting all sprites...");
+        let exportLog = [];
+        try {
+          const response = await fetch("/api/export/sprites/zip", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              guid: currentObject.guid,
+              source_file: currentObject.source_file,
+              source_archive: currentObject.source_archive,
+            }),
+          });
+          const result = await response.json();
+          if (result.success) {
+            window.open(result.download_url, "_blank");
+            setStatus("ZIP exported: " + result.filename);
+            exportLog.push("ZIP exported: " + result.filename);
+            logAnalytics("allSpritesExported", {
+              filename: result.filename,
+              objectGuid: currentObject.guid,
+            });
+          } else {
+            exportLog.push("Export failed: " + result.error);
+            logAnalytics("allSpritesExportFailed", { error: result.error });
+            showExportDebugModal(result.error, exportLog);
+            setStatus("Export failed: " + result.error);
+          }
+        } catch (e) {
+          exportLog.push("Export failed: " + e.message);
+          logAnalytics("allSpritesExportFailed", { error: e.message });
+          showExportDebugModal("Export failed", exportLog);
+          setStatus("Export failed: " + e.message);
+        }
+        if (!window.assetExportLog) window.assetExportLog = [];
+        window.assetExportLog.push({
+          ts: Date.now(),
+          type: "all_sprites",
+          log: exportLog,
+        });
+      }
+
+      async function exportSpriteSheet() {
+        if (!currentObject) return;
+        setStatus("Creating sprite sheet...");
+        let exportLog = [];
+        try {
+          const response = await fetch("/api/export/sprites/sheet", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              guid: currentObject.guid,
+              source_file: currentObject.source_file,
+              source_archive: currentObject.source_archive,
+            }),
+          });
+          const result = await response.json();
+          if (result.success) {
+            window.open(result.download_url, "_blank");
+            setStatus("Sprite sheet exported");
+            exportLog.push("Sprite sheet exported");
+            logAnalytics("spriteSheetExported", {
+              objectGuid: currentObject.guid,
+            });
+          } else {
+            exportLog.push("Export failed: " + result.error);
+            logAnalytics("spriteSheetExportFailed", { error: result.error });
+            showExportDebugModal(result.error, exportLog);
+            setStatus("Export failed: " + result.error);
+          }
+        } catch (e) {
+          exportLog.push("Export failed: " + e.message);
+          logAnalytics("spriteSheetExportFailed", { error: e.message });
+          showExportDebugModal("Export failed", exportLog);
+          setStatus("Export failed: " + e.message);
+        }
+        if (!window.assetExportLog) window.assetExportLog = [];
+        window.assetExportLog.push({
+          ts: Date.now(),
+          type: "spritesheet",
+          log: exportLog,
+        });
+      }
+      // Export debug modal with enhanced error context
+      function showExportDebugModal(error, debug) {
+        let suggestions = [];
+        let html = `<div style='margin-bottom:10px;'><b>Error:</b> ${error || "Unknown error"}</div>`;
+
+        // Provide context-specific suggestions based on error
+        if (error && error.includes("No sprite")) {
+          suggestions.push(
+            "• Try selecting a different direction or zoom level",
+          );
+          suggestions.push("• Verify the object has loaded correctly");
+          suggestions.push("• Check browser console for import errors (F12)");
+        } else if (
+          (error && error.includes("API")) ||
+          error.includes("failed")
+        ) {
+          suggestions.push(
+            "• Ensure export_server.py is running on localhost:5000",
+          );
+          suggestions.push(
+            "• Check network connection (press F12, Network tab)",
+          );
+          suggestions.push("• Verify the object source files are accessible");
+        } else if (error && error.includes("sprite")) {
+          suggestions.push("• This object may not have sprite data available");
+          suggestions.push("• Try a different object from the library");
+          suggestions.push("• Check that the source IFF/archive is valid");
+        }
+
+        if (debug && debug.length) {
+          html += `<div style='margin-bottom:10px;'><b>Export Log:</b><pre style='background:#222;padding:8px;border-radius:4px;color:#94b3fd;font-size:12px;max-height:200px;overflow-y:auto;'>${debug.join("\n")}</pre></div>`;
+        }
+
+        if (suggestions.length > 0) {
+          html += `<div style='margin-bottom:10px;'><b>Troubleshooting:</b><div style='background:#222;padding:8px;border-radius:4px;color:#a8d5ff;font-size:0.9em;'>${suggestions.join("<br>")}</div></div>`;
+        }
+
+        html += `<div style='margin-top:18px;'><button onclick='closeModal()' class='btn btn-secondary'>Close</button></div>`;
+        showModal("Export Error Details", html);
+      }
+
+      // Helpers
+      function logAnalytics(event, details) {
+        if (!window.analyticsLog) window.analyticsLog = [];
+        window.analyticsLog.push({ ts: Date.now(), event, details });
+      }
+
+      function showLoading(show) {
+        loadingEl.classList.toggle("hidden", !show);
+      }
+
+      function setStatus(msg) {
+        statusEl.textContent = msg;
+      }
+    </script>
+  </body>
+</html>

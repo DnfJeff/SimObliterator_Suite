@@ -11,9 +11,10 @@ dev/
 │   ├── pyproject.toml      # Python package config
 │   ├── version_info.txt    # Windows EXE metadata
 │   └── BUILD.md            # Build instructions
-├── tests/                  # Test suite
-│   ├── real_game_tests.py  # 73 tests against real game files
-│   ├── test_suite.py       # Unit tests (135 tests)
+├── tests/                  # Test suite (247 tests)
+│   ├── tests.py            # Main runner
+│   ├── test_api.py         # API tests (174 tests)
+│   ├── test_game.py        # Game file tests (73 tests)
 │   ├── action_coverage.py  # Coverage analysis
 │   └── test_paths.txt      # Configure your game paths
 └── README.md               # This file
@@ -21,13 +22,38 @@ dev/
 
 ---
 
-## Real Game Tests
+## Test Suite
 
-The primary test suite validates all parsers and tools against actual game files.
+The test suite is modular with 247 tests across two modules.
+
+### Running Tests
+
+```bash
+cd dev/tests
+
+# Run all tests
+python tests.py
+
+# Run only API tests (no game files required)
+python tests.py --api
+
+# Run only game file tests  
+python tests.py --game
+
+# Quick mode (fast subset)
+python tests.py --quick
+
+# Verbose output
+python tests.py --verbose
+
+# Run modules standalone
+python test_api.py
+python test_game.py
+```
 
 ### Configuration
 
-Edit `tests/test_paths.txt` to point to your game installation:
+Edit `tests/test_paths.txt` for game file tests:
 
 ```ini
 # Required - Your game install path
@@ -43,27 +69,14 @@ CC_FOLDER_MAXIS=S:/PCGames/SimsStuff/Official Maxis Objects
 
 Tests skip gracefully if paths aren't configured.
 
-### Running Tests
+### Test Modules
 
-```bash
-cd dev
+| Module        | Tests | Description                                        |
+| ------------- | ----- | -------------------------------------------------- |
+| `test_api.py` | 174   | API/module tests - verifies classes and interfaces |
+| `test_game.py`| 73    | Real game file tests - parsers, exports, analysis  |
 
-# Run all tests
-python real_game_tests.py
-
-# Verbose output (show each test name)
-python real_game_tests.py --verbose
-
-# Quick mode (fast subset only)
-python real_game_tests.py --quick
-
-# Run specific category
-python real_game_tests.py --category formats
-python real_game_tests.py --category bhav
-python real_game_tests.py --category saves
-```
-
-### Test Categories
+### Game Test Categories
 
 | Category    | Tests                                          |
 | ----------- | ---------------------------------------------- |
@@ -78,38 +91,29 @@ python real_game_tests.py --category saves
 | `export`    | Sprite/mesh export                             |
 | `conflicts` | ID conflict detection                          |
 | `forensic`  | Deep pattern analysis                          |
-| `all`       | Run everything (default)                       |
 
 ### Expected Output
 
 ```
 ════════════════════════════════════════════════════════════════════════════════
-SIMOBLITERATOR SUITE - REAL GAME FILE TESTS
+SIMOBLITERATOR SUITE - UNIFIED TEST RUNNER
 ════════════════════════════════════════════════════════════════════════════════
 
-Category: formats ─────────────────────────────────────────────────────────────
-  [PASS] test_iff_basic_parse
-  [PASS] test_far1_extraction
-  [PASS] test_dbpf_read
-  ...
+Running API tests...
+  API Tests: 174 passed, 0 failed
+
+Running Game tests...
+  Game Tests: 73 passed, 0 failed
 
 ════════════════════════════════════════════════════════════════════════════════
 FINAL RESULTS
 ────────────────────────────────────────────────────────────────────────────────
-Passed:  73
-Failed:  0
-Skipped: 0
+Total Passed:  247
+Total Failed:  0
 ────────────────────────────────────────────────────────────────────────────────
 ```
 
 ---
-
-## Unit Tests
-
-```bash
-cd dev/tests
-python test_suite.py
-```
 
 ## Checking Coverage
 

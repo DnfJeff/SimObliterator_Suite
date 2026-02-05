@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimObliterator - Graph Viewer (Embedded)</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #0d0d1a;
+        color: #eee;
+        overflow: hidden;
+      }
+
+      #canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      #status {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 8px 15px;
+        border-radius: 4px;
+        font-size: 0.85em;
+        z-index: 10;
+      }
+
+      .info-tooltip {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.9);
+        padding: 10px 15px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        color: #00d4ff;
+        pointer-events: none;
+        z-index: 20;
+        display: none;
+        max-width: 250px;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="status">Ready</div>
+    <div id="info-tooltip" class="info-tooltip"></div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from "three";
+      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+      // ====================================================================
+      // SCENE SETUP
+      // ====================================================================
+
+      const canvas = document.getElementById("canvas");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 10000);
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x606060, 2);
+      scene.add(ambientLight);
+
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(50, 100, 75);
+      scene.add(directionalLight);
+
+      // Controls
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.autoRotate = false;
+
+      // State
+      let currentGraph = null;
+      let nodeMap = new Map(); // Map of nodeId -> THREE.Mesh
+      let selectedNodeMaterial = null;
+      let normalNodeMaterial = null;
+      let selectedNode = null;
+
+      // ====================================================================
+      // PUBLIC API (Called from Python)
+      // ====================================================================
+
+      /**
+       * Render a graph from JSON.
+       *
+       * Expected JSON format:
+       * {
+       *   "nodes": [
+       *     { "id": "BHAV-1-256", "label": "test_func", "scope": "global", "pos": [x, y, z] },
+       *     ...
+       *   ],
+       *   "edges": [
+       *     { "from": "BHAV-1-256", "to": "BHAV-1-512", "strength": 0.8 },
+       *     ...
+       *   ]
+       * }
+       */
+      window.renderGraph = function (graphJson) {
+        // Parse JSON if string
+        const graph =
+          typeof graphJson === "string" ? JSON.parse(graphJson) : graphJson;
+        currentGraph = graph;
+
+        // Clear scene
+        scene.children.forEach((child) => {
+          if (child !== ambientLight && child !== directionalLight) {
+            scene.remove(child);
+          }
+        });
+        nodeMap.clear();
+
+        if (!graph.nodes || graph.nodes.length === 0) {
+          document.getElementById("status").textContent = "No graph data";
+          return;
+        }
+
+        // Create materials
+        normalNodeMaterial = new THREE.MeshStandardMaterial({
+          color: 0x00d4ff,
+        });
+        selectedNodeMaterial = new THREE.MeshStandardMaterial({
+          color: 0xe94560,
+        });
+
+        // Create nodes
+        graph.nodes.forEach((node) => {
+          const pos = node.pos || [
+            (Math.random() - 0.5) * 100,
+            (Math.random() - 0.5) * 100,
+            (Math.random() - 0.5) * 100,
+          ];
+
+          const geometry = new THREE.SphereGeometry(3, 16, 16);
+          const mesh = new THREE.Mesh(geometry, normalNodeMaterial.clone());
+          mesh.position.set(pos[0], pos[1], pos[2]);
+          mesh.userData.nodeId = node.id;
+          mesh.userData.label = node.label || node.id;
+          mesh.userData.scope = node.scope || "unknown";
+
+          scene.add(mesh);
+          nodeMap.set(node.id, mesh);
+        });
+
+        // Create edges as lines
+        if (graph.edges && graph.edges.length > 0) {
+          const edgeGeometry = new THREE.BufferGeometry();
+          const points = [];
+
+          graph.edges.forEach((edge) => {
+            const fromNode = nodeMap.get(edge.from_id);
+            const toNode = nodeMap.get(edge.to_id);
+
+            if (fromNode && toNode) {
+              points.push(fromNode.position.clone());
+              points.push(toNode.position.clone());
+            }
+          });
+
+          if (points.length > 0) {
+            edgeGeometry.setFromPoints(points);
+            const edgeMaterial = new THREE.LineBasicMaterial({
+              color: 0x444466,
+              linewidth: 1,
+            });
+            const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+            scene.add(edges);
+          }
+        }
+
+        // Fit camera
+        const box = new THREE.Box3().setFromObject(scene);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const fov = camera.fov * (Math.PI / 180);
+        let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+        cameraZ *= 1.5; // Add padding
+
+        camera.position.z = cameraZ;
+        controls.target.copy(box.getCenter(new THREE.Vector3()));
+        controls.update();
+
+        document.getElementById("status").textContent =
+          `Graph: ${graph.nodes.length} nodes, ${graph.edges ? graph.edges.length : 0} edges`;
+      };
+
+      /**
+       * Highlight a specific node.
+       */
+      window.highlightNode = function (nodeId) {
+        const node = nodeMap.get(nodeId);
+        if (node) {
+          node.material.color.set(0xe94560);
+          node.scale.set(1.5, 1.5, 1.5);
+        }
+      };
+
+      /**
+       * Clear all selections and highlights.
+       */
+      window.clearSelection = function () {
+        nodeMap.forEach((mesh) => {
+          mesh.material.color.set(0x00d4ff);
+          mesh.scale.set(1, 1, 1);
+        });
+        selectedNode = null;
+      };
+
+      // ====================================================================
+      // INTERACTION
+      // ====================================================================
+
+      // Raycaster for node selection
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      function onCanvasClick(event) {
+        // Convert mouse position to normalized device coordinates
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        // Raycast to find intersected nodes
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(
+          Array.from(nodeMap.values()),
+        );
+
+        if (intersects.length > 0) {
+          const nodeId = intersects[0].object.userData.nodeId;
+          selectNode(nodeId);
+        } else {
+          clearNodeSelection();
+        }
+      }
+
+      function selectNode(nodeId) {
+        clearNodeSelection();
+
+        const node = nodeMap.get(nodeId);
+        if (node) {
+          selectedNode = nodeId;
+          node.material.color.set(0xe94560);
+          node.scale.set(1.5, 1.5, 1.5);
+
+          // Emit event to Python
+          if (window.onNodeSelected) {
+            window.onNodeSelected(nodeId);
+          }
+
+          // Show info
+          const info = node.userData.label || nodeId;
+          document.getElementById("status").textContent = `Selected: ${info}`;
+        }
+      }
+
+      function clearNodeSelection() {
+        if (selectedNode) {
+          const node = nodeMap.get(selectedNode);
+          if (node) {
+            node.material.color.set(0x00d4ff);
+            node.scale.set(1, 1, 1);
+          }
+        }
+        selectedNode = null;
+      }
+
+      canvas.addEventListener("click", onCanvasClick);
+
+      // ====================================================================
+      // RENDER LOOP
+      // ====================================================================
+
+      function resize() {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      window.addEventListener("resize", resize);
+      resize();
+      animate();
+
+      // Demo graph (for testing)
+      window.renderGraph({
+        nodes: [
+          { id: "node-1", label: "Root", pos: [0, 0, 0] },
+          { id: "node-2", label: "Child A", pos: [-30, -30, 0] },
+          { id: "node-3", label: "Child B", pos: [30, -30, 0] },
+          { id: "node-4", label: "Child C", pos: [0, -60, 0] },
+        ],
+        edges: [
+          { from: "node-1", to: "node-2" },
+          { from: "node-1", to: "node-3" },
+          { from: "node-2", to: "node-4" },
+        ],
+      });
+    </script>
+  </body>
+</html>

@@ -26,11 +26,14 @@ SimObliterator Suite is a comprehensive desktop application for working with The
 
 | Category              | Capabilities                                                  |
 | --------------------- | ------------------------------------------------------------- |
-| **File Formats**      | IFF, FAR1, FAR3, DBPF complete support                        |
-| **Behavior Analysis** | BHAV disassembly, call graphs, execution tracing              |
-| **Visual Assets**     | Sprite extraction, mesh export (glTF/GLB), animation decoding |
-| **Save Editing**      | Sims, households, careers, relationships, motives             |
-| **Safety**            | Backup system, preview mode, undo/redo, audit trail           |
+| **File Formats**      | IFF, FAR1, FAR3, DBPF with 38 chunk type parsers              |
+| **Behavior Analysis** | BHAV disassembly, call graphs, execution tracing, authoring   |
+| **Object Editing**    | SLOT routing, TTAB autonomy, multi-object IFF support         |
+| **Save Editing**      | Money, skills, motives, personality, careers, relationships   |
+| **Visual Assets**     | Sprite export (PNG), mesh export (glTF/GLB), animation frames |
+| **Localization**      | 20-language STR# support, translation audit, batch copy       |
+| **Safety**            | Transaction pipeline, snapshots, rollback, validation, audit  |
+| **Research**          | Unknowns database, opcode documentation, execution model      |
 
 ---
 
@@ -59,35 +62,47 @@ Download the latest release and run `SimObliterator.exe` - no installation requi
 - **IFF Inspector** - Browse chunk structure, view hex data
 - **BHAV Disassembler** - Decode SimAntics bytecode with semantic names
 - **Call Graph Builder** - Visualize behavior relationships
+- **Variable Analyzer** - Track data flow through locals, temps, params
+- **Behavior Classifier** - Categorize as ROLE/ACTION/GUARD/UTILITY
 - **Forensic Analyzer** - Deep pattern analysis for research
 
-### 🎨 Visual Tools
+### 🎨 Visual & Export Tools
 
-- **Sprite Viewer** - View SPR2 sprites with zoom and rotation
-- **Animation Player** - Frame-by-frame animation analysis
-- **Mesh Exporter** - Export 3D models to glTF/GLB
-- **Sprite Extractor** - Batch export to PNG
+- **Sprite Exporter** - SPR2 to PNG with palette handling
+- **Sprite Sheets** - Combine all frames into single image
+- **Mesh Exporter** - 3D models to glTF/GLB format
+- **Chunk Exporter** - Export raw bytes for any chunk
 
 ### 💾 Save Editor
 
-- **Sim Manager** - Skills, interests, personality
-- **Motive Editor** - Hunger, energy, fun, social, etc.
-- **Career Manager** - 24 career tracks, promotions
-- **Household Editor** - Funds, members, lot assignment
-- **Relationship Editor** - Daily/lifetime values
+- **Family Money** - Edit household simoleons
+- **Sim Skills** - Cooking, Mechanical, Charisma, Logic, Body, Creativity
+- **Sim Motives** - Hunger, Comfort, Hygiene, Bladder, Energy, Fun, Social, Room
+- **Personality** - Neat, Outgoing, Active, Playful, Nice
+- **Career Manager** - 24 career tracks with promotions
+- **Relationships** - Daily and lifetime values
+- **Aspirations & Memories** - Modify sim goals and history
+
+### 🪑 Object Editing
+
+- **SLOT Editor** - Routing slots for sit, stand, ground positions
+- **SLOT Templates** - Pre-built chair/counter configurations
+- **SLOT XML** - Export/import for Transmogrifier workflow
+- **TTAB Editor** - Menu interactions, autonomy levels, motive effects
+- **Multi-Object IFF** - Correctly handles multiple objects per file
 
 ### 📦 File Operations
 
 - **FAR Browser** - Browse and extract archives
-- **IFF Merger** - Combine files with conflict resolution
-- **Import/Export** - PNG, glTF, JSON support
-- **Backup System** - Automatic backups before changes
+- **ID Conflict Scanner** - Detect GUID/BHAV/semi-global clashes
+- **Safe ID Finder** - Find unused ID ranges
+- **Content Validation** - Pre-flight checks before edits
 
 ---
 
 ## 🛡️ Safety First
 
-SimObliterator uses a **three-mode safety system**:
+SimObliterator uses a **transaction-based safety system**:
 
 | Mode           | Description                          |
 | -------------- | ------------------------------------ |
@@ -140,16 +155,29 @@ SimObliterator_Suite/
 │   └── splash.png
 │
 ├── data/                  # Runtime databases
-│   ├── opcodes_db.json    # 143 opcode definitions
-│   ├── unknowns_db.json   # Unmapped opcode research
-│   └── global_behaviors.json
+│   ├── opcodes_db.json           # 143 opcode definitions
+│   ├── unknowns_db.json          # Unmapped opcode research
+│   ├── global_behaviors.json     # Behavior library
+│   ├── global_behavior_database.json  # 251 base game globals + expansion ranges
+│   ├── characters.json           # 2MB extracted character data
+│   ├── objects.json              # 3MB extracted object data
+│   ├── meshes.json               # Mesh metadata
+│   └── execution_model.json      # BHAV execution patterns
 │
 ├── Docs/                  # Documentation
-│   ├── ACTION_MAP.md      # Feature inventory & architecture
-│   ├── ACTION_SURFACE.md  # 110 canonical actions with safety tags
-│   ├── TECHNICAL_REFERENCE.md  # IFF, BHAV, SLOT, TTAB formats
-│   ├── PRIMITIVE_REFERENCE.md  # SimAntics opcode operands
-│   └── UI_DEVELOPER_GUIDE.md   # Panel architecture & event system
+│   ├── ACTION_MAP.md             # Feature inventory & architecture
+│   ├── ACTION_SURFACE.md         # 110 canonical actions with safety tags
+│   ├── TECHNICAL_REFERENCE.md    # IFF, BHAV, SLOT, TTAB formats
+│   ├── PRIMITIVE_REFERENCE.md    # SimAntics opcode operands
+│   ├── UI_DEVELOPER_GUIDE.md     # Panel architecture & event system
+│   ├── INTEGRATION_GAPS.md       # Research integration status
+│   ├── DEFINITIVE_BHAV_REFERENCE.md      # Complete BHAV technical guide
+│   ├── FREESO_BEHAVIORAL_ARCHITECTURE.md # FreeSO engine analysis
+│   ├── BHAV_OPCODE_REFERENCE.md  # Opcode documentation
+│   ├── ENGINE_PRIMITIVES.md      # Primitive classifications
+│   ├── RESOURCE_GRAPH_USAGE_GUIDE.md     # Graph infrastructure
+│   ├── VALIDATION_TRUST_GUIDE.md # Trust/validation system
+│   └── CYCLE_PATTERNS_GUIDE.md   # Behavioral cycle patterns
 │
 ├── Examples/              # Sample files for testing
 │   ├── IFF_Files/
@@ -159,14 +187,18 @@ SimObliterator_Suite/
 │   ├── main_app.py        # Main window (Dear PyGui)
 │   ├── formats/           # File parsers (IFF, FAR, DBPF)
 │   ├── Tools/core/        # Parsers, analyzers, editors
+│   ├── Tools/forensic/    # Deep analysis tools
+│   ├── Tools/graph/       # Resource dependency graphs
 │   ├── Tools/gui/         # Panel implementations (incomplete)
 │   ├── Tools/save_editor/ # Save file editing
+│   ├── Tools/webviewer/   # Web-based viewers & export server
 │   └── utils/             # Binary utilities
 │
 └── dev/                   # Development tools
     ├── tests/             # Test suite
-    │   ├── real_game_tests.py
-    │   ├── test_suite.py
+    │   ├── tests.py          # Main runner (--api, --game, --quick, --verbose)
+    │   ├── test_api.py       # API tests (174 tests)
+    │   ├── test_game.py      # Game file tests (73 tests)
     │   ├── action_coverage.py
     │   └── test_paths.txt
     └── build/             # Build configuration
@@ -200,24 +232,28 @@ pip install -r requirements.txt
 
 ### Running Tests
 
-The primary test suite validates parsers against real game files:
+The test suite is modular with 247 tests across two modules:
 
 ```bash
 cd dev/tests
 
-# Configure your game paths first
-# Edit test_paths.txt with your installation paths
+# Run all tests (API + Game)
+python tests.py
 
-# Run all 73 tests across 17 categories
-python real_game_tests.py
+# Run only API tests (no game files needed)
+python tests.py --api
+
+# Run only game file tests
+python tests.py --game
 
 # Quick mode (fast subset)
-python real_game_tests.py --quick
+python tests.py --quick
 
-# Run specific category
-python real_game_tests.py --category formats
-python real_game_tests.py --category bhav
-python real_game_tests.py --category saves
+# Verbose output
+python tests.py --verbose
+
+# Configure game paths for game tests
+# Edit test_paths.txt with your installation paths
 ```
 
 See [dev/README.md](dev/README.md) for full test configuration options.
