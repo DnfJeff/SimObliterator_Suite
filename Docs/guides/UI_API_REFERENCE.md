@@ -370,17 +370,17 @@ from Tools.core.file_operations import FileOpResult
 
 def safe_write_operation(action_name, operation_func, context):
     """Standard pattern for safe write operations."""
-    
+
     # Step 1: Validate action
     is_valid, reason = validate_action(action_name, context)
     if not is_valid:
         return FileOpResult(success=False, error=reason)
-    
+
     # Step 2: Create backup
     from Tools.core.file_operations import BackupManager
     backup = BackupManager()
     backup_path = backup.create_backup(context.get('file_path'))
-    
+
     try:
         # Step 3: Execute operation
         result = operation_func()
@@ -451,7 +451,7 @@ DATA_DIR = Path("S:/Repositorys_New/SimObliterator_Suite/data")
 # Opcode database
 with open(DATA_DIR / "opcodes_db.json") as f:
     opcodes = json.load(f)
-    
+
 # Global behavior database
 with open(DATA_DIR / "global_behavior_database.json") as f:
     globals_db = json.load(f)
@@ -462,20 +462,20 @@ with open(DATA_DIR / "global_behavior_database.json") as f:
 
 ## 12. Module Summary
 
-| Module | Purpose | Key Classes |
-|--------|---------|-------------|
-| `formats.iff.iff_file` | IFF parsing | `IffFile` |
-| `formats.far.far1` | FAR1 archives | `FAR1Archive` |
-| `formats.dbpf.dbpf` | DBPF (Sims 2) | `DBPFArchive` |
-| `Tools.save_editor.save_manager` | Save editing | `SaveManager` |
-| `Tools.core.bhav_operations` | BHAV editing | `BHAVEditor`, `BHAVSerializer` |
-| `Tools.core.bhav_disassembler` | BHAV disasm | `BHAVDisassembler` |
-| `Tools.core.action_registry` | Action validation | `ActionRegistry` |
-| `Tools.core.mutation_pipeline` | Write mode | `MutationPipeline` |
-| `Tools.core.file_operations` | File I/O | `BackupManager`, `IFFWriter` |
-| `Tools.core.mesh_export` | 3D export | `GLTFExporter`, `MeshDecoder` |
-| `Tools.graph.call_graph_builder` | Graph analysis | `CallGraphBuilder` |
-| `Tools.entities.*` | Data containers | `ObjectEntity`, `SimEntity` |
+| Module                           | Purpose           | Key Classes                    |
+| -------------------------------- | ----------------- | ------------------------------ |
+| `formats.iff.iff_file`           | IFF parsing       | `IffFile`                      |
+| `formats.far.far1`               | FAR1 archives     | `FAR1Archive`                  |
+| `formats.dbpf.dbpf`              | DBPF (Sims 2)     | `DBPFArchive`                  |
+| `Tools.save_editor.save_manager` | Save editing      | `SaveManager`                  |
+| `Tools.core.bhav_operations`     | BHAV editing      | `BHAVEditor`, `BHAVSerializer` |
+| `Tools.core.bhav_disassembler`   | BHAV disasm       | `BHAVDisassembler`             |
+| `Tools.core.action_registry`     | Action validation | `ActionRegistry`               |
+| `Tools.core.mutation_pipeline`   | Write mode        | `MutationPipeline`             |
+| `Tools.core.file_operations`     | File I/O          | `BackupManager`, `IFFWriter`   |
+| `Tools.core.mesh_export`         | 3D export         | `GLTFExporter`, `MeshDecoder`  |
+| `Tools.graph.call_graph_builder` | Graph analysis    | `CallGraphBuilder`             |
+| `Tools.entities.*`               | Data containers   | `ObjectEntity`, `SimEntity`    |
 
 ---
 
@@ -498,14 +498,14 @@ See `Full_Test_Example.txt` for complete test output.
 
 When building your UI, emit these events at appropriate times:
 
-| Event | When to Emit | Payload |
-|-------|--------------|---------|
-| `FILE_LOADED` | After LoadIFF/LoadFAR | `path` |
-| `FILE_CLEARED` | After closing file | `None` |
-| `CHUNK_SELECTED` | User selects chunk | `chunk` |
-| `SAVE_MODIFIED` | After any save mutation | `SaveManager` |
-| `MODE_CHANGED` | Pipeline mode switch | `PipelineMode` |
-| `STATUS_UPDATE` | Status bar messages | `str` |
+| Event            | When to Emit            | Payload        |
+| ---------------- | ----------------------- | -------------- |
+| `FILE_LOADED`    | After LoadIFF/LoadFAR   | `path`         |
+| `FILE_CLEARED`   | After closing file      | `None`         |
+| `CHUNK_SELECTED` | User selects chunk      | `chunk`        |
+| `SAVE_MODIFIED`  | After any save mutation | `SaveManager`  |
+| `MODE_CHANGED`   | Pipeline mode switch    | `PipelineMode` |
+| `STATUS_UPDATE`  | Status bar messages     | `str`          |
 
 Your UI subscribes to these for reactivity.
 
@@ -543,7 +543,7 @@ family.id       # int - family ID
 family.money    # int - family funds
 family.lot_id   # int - lot they live on
 
-# Sim object  
+# Sim object
 sim.id          # int - sim ID
 sim.first_name  # str
 sim.last_name   # str
@@ -694,6 +694,7 @@ def safe_execute(action_name, callback, *args):
 ## 17. What You Don't Need to Build
 
 The backend handles:
+
 - Binary parsing (all formats)
 - Offset calculation (save editing writes to correct bytes)
 - Validation (action registry checks)
@@ -702,6 +703,7 @@ The backend handles:
 - Export (glTF, PNG, OBJ)
 
 Your UI only needs to:
+
 - Call the right methods
 - Display the results
 - Handle user confirmation for write actions
@@ -709,4 +711,4 @@ Your UI only needs to:
 
 ---
 
-*Last updated: v1.0.3 (2026-02-04)*
+_Last updated: v1.0.3 (2026-02-04)_

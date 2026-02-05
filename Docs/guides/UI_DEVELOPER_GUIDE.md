@@ -356,9 +356,9 @@ from Tools.core.mutation_pipeline import MutationPipeline, MutationMode
 
 ## Cross-References
 
-| Document | Purpose |
-|----------|--------|
-| [ACTION_MAP.md](../ACTION_MAP.md) | Maps all 161 actions to implementing modules |
-| [ACTION_SURFACE.md](../ACTION_SURFACE.md) | Complete action reference with properties |
-| [UI_API_REFERENCE.md](UI_API_REFERENCE.md) | Headless API quickstart for UI integration |
+| Document                                               | Purpose                                      |
+| ------------------------------------------------------ | -------------------------------------------- |
+| [ACTION_MAP.md](../ACTION_MAP.md)                      | Maps all 161 actions to implementing modules |
+| [ACTION_SURFACE.md](../ACTION_SURFACE.md)              | Complete action reference with properties    |
+| [UI_API_REFERENCE.md](UI_API_REFERENCE.md)             | Headless API quickstart for UI integration   |
 | [headless_examples.py](../../dev/headless_examples.py) | Runnable code demonstrating all API patterns |
