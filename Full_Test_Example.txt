@@ -1,120 +1,350 @@
 ╔════════════════════════════════════════════════════════════╗
-║  SIMOBLITERATOR - REAL GAME FILE TESTS                     ║
-║  2026-02-04 17:45:13                                        ║
-╚════════════════════════════════════════════════════════════╝
-Configured Paths:
-  ✓ game_install: G:\SteamLibrary\steamapps\common\The Sims Legacy Collection
-  ✓ user_data: C:\Users\****\Saved Games\Electronic Arts\The Sims 25
-  ✓ broken_save: C:\Users\****\Desktop\File Compare\ReChanged\User00088.iff
-  ✓ good_save: C:\Users\****\Desktop\File Compare\Works\User00088.iff
-  ✓ gamedata_dir: G:\SteamLibrary\steamapps\common\The Sims Legacy Collection\GameData
-  ✓ houses_dir: C:\Users\*****\Saved Games\Electronic Arts\The Sims 25\UserData\Houses
-
-════════════════════════════════════════════════════════════
-  CAPABILITIES
-════════════════════════════════════════════════════════════
-
-  Using object: CarPortal.iff
-    Extracted 38 strings from 4 STR# chunks
-    Sample: At School
-  ✅ Extract all strings from object (3.9ms)
-  ✅ List pie menu interactions (TTAB) (2.8ms)
-    Disassembled BHAV 0x1003 (2 instructions)
-      [ 0] Sleep: T→2 F→0
-      [ 1] Unknown: T→46 F→1
-  ✅ Disassemble BHAV to readable form (3.8ms)
-    Call graph: 47 nodes, 6 edges
-  ✅ Build BHAV call graph (5.2ms)
-    Variable analysis for BHAV 0x1016:
-      Locals declared: 2
-      Params declared: 0
-      Variables tracked: 2
-  ✅ Analyze variable usage (3.8ms)
-  ✅ Parse SLOT positioning data (19.3ms)
-    ├─ Parse real SLOT: 0 slots from CarPortal.iff
-    ├─ Chair template: 2 slots (sitting + routing)
-    ├─ Counter template: 1 slots (front approach)
-    ├─ Editor ops: add→dup→remove = 2 slots
-    ├─ Query ops: 1 sitting, 1 standing
-    ├─ XML round-trip: 2 → XML → 2 slots
-    │    Position: ✓ Type: ✓ Flags: ✓
-    ├─ File I/O: wrote 473 bytes, read 2 slots
-    ├─ Binary: 2 slots → 74 bytes → 2 slots
-    ├─ Metadata: type=Sitting, flags=['Face Object', 'Sitting Slot']
-    └─ SLOT capabilities: 22/22 checks passed
-
-    XML Sample:
-      <SLOT version="4" chunk_id="0x0000">
-        <Slot index="0" type="Sitting" type_id="2">
-          <Position x="0.0000" y="0.0000" z="0.4000" facing="0.0000"/>
-          <Flags value="0x0A" decoded="FACE_OBJECT,SITTING_SLOT"/>
-          <HeightOffset>0.4000</HeightOffset>
-        </Slot>
-        <Slot index="1" type="Standing" type_id="1">
-          <Position x="0.5000" y="0.0000" z="0.0000" facing="3.1416"/>
-          <Flags value="0x10" decoded="ROUTING_SLOT"/>
-  ✅ SLOT comprehensive (parse/edit/XML/binary) (8.2ms)
-    Object: CarPortal.iff
-      Chunk ID: 0x41A7
-      Type: 1
-      TTAB ID: 129
-      SLOT ID: 128
-      Catalog STR#: 2000
-  ✅ Extract object info (0.3ms)
-    Scanned 1 files for ID conflicts
-      Total conflicts: 0
-      Errors: 0, Warnings: 0
-  ✅ Scan for ID conflicts (2.7ms)
-    Terrain type by house number:
-      House 28: sand
-      House 40: snow
-      House 1: grass
-      House 99: cloud
-  ✅ Lot terrain type detection (3.9ms)
-    Comparing saves:
-      Broken: 29 chunks
-      Good:   29 chunks
-  ✅ Compare broken vs good saves (0.7ms)
-
-════════════════════════════════════════════════════════════
-TEST SUMMARY
-════════════════════════════════════════════════════════════
-Total:   11
-Passed:  11 ✅
-Failed:  0 ❌
-Skipped: 0 ⏭️
-
-By Category:
-  capabilities: 11/11
-PS S:\Repositorys_New\SimObliterator_Suite\dev> python real_game_tests.py
-╔════════════════════════════════════════════════════════════╗
-║  SIMOBLITERATOR - REAL GAME FILE TESTS                     ║
-║  2026-02-04 17:45:18                                        ║
+║  SIMOBLITERATOR SUITE - UNIFIED TEST SYSTEM               ║
+║  2026-02-04 20:47:58                                        ║
 ╚════════════════════════════════════════════════════════════╝
 
 ════════════════════════════════════════════════════════════
-TEST SUMMARY
+  MODULE: API TESTS (test_api.py)
 ════════════════════════════════════════════════════════════
-Total:   73
-Passed:  73 ✅
+
+============================================================
+ACTION REGISTRY
+============================================================
+  ✅ Registry loaded
+  ✅ Has write actions
+  ✅ Has high-risk actions
+  ✅ LoadIFF validation
+  ✅ Reject unknown action
+  ✅ WriteSave blocks in INSPECT
+  ✅ WriteSave allows in MUTATE
+
+  📊 Registry: 153 actions, 71 write, 36 high-risk
+
+============================================================
+MUTATION PIPELINE
+============================================================
+  ✅ Singleton pattern
+  ✅ Default mode is INSPECT
+  ✅ Mode switch to PREVIEW
+  ✅ MutationRequest created
+  ✅ MutationDiff created
+
+  📊 Pipeline mode: inspect
+
+============================================================
+PROVENANCE SYSTEM
+============================================================
+  ✅ Provenance created
+  ✅ Confidence badge
+  ✅ Low confidence badge
+  ✅ Registry stores/retrieves
+
+  📊 Provenance system functional
+
+============================================================
+SAFETY API
+============================================================
+  ✅ SafetyResult.is_safe
+  ✅ SafetyResult.summary
+  ✅ DANGEROUS not is_safe
+  ✅ Scope enum exists
+  ✅ ResourceOwner enum exists
+
+  📊 Safety levels: ['safe', 'caution', 'warning', 'dangerous', 'blocked']
+
+============================================================
+BHAV EXECUTOR
+============================================================
+  ✅ VMPrimitiveExitCode exists
+  ✅ RETURN_TRUE exit code
+  ✅ ExecutionTrace created
+  ✅ Trace starts empty
+  ✅ format_summary works
+  ✅ BHAVExecutor class exists
+
+  📊 Exit codes: 11
+
+============================================================
+BHAV OPERATIONS
+============================================================
+  ✅ BHAVSerializer exists
+  ✅ BHAVValidator exists
+  ✅ BHAVEditor exists
+  ✅ BHAVImporter exists
+  ✅ BHAVOpResult created
+
+  📊 BHAV operations module loaded
+
+============================================================
+BHAV PATCHING
+============================================================
+  ✅ BHAVScope.is_global(0x50)
+  ✅ BHAVScope.is_semi_global(0x200)
+  ✅ BHAVScope.is_object_local(0x1000)
+  ✅ BHAVScope.get_scope works
+  ✅ BHAVCallOpcodes.is_call_opcode(0x0002)
+  ✅ BHAVCallOpcodes has call info
+  ✅ BHAVIDRemapper exists
+  ✅ BHAVCallRewirer exists
+  ✅ GlobalBHAVPatcher exists
+  ✅ SemiGlobalBHAVPatcher exists
+  ✅ ObjectBHAVPatcher exists
+  ✅ BHAVPatchResult created
+  ✅ BHAVPatchResult has id_map
+
+  📊 BHAV patching module loaded
+
+============================================================
+IFF PARSER
+============================================================
+  ✅ IffFile class exists
+  ✅ IffRuntimeInfo exists
+  ✅ IffFile instantiation
+
+  📊 IFF parser available
+
+============================================================
+FAR PARSER
+============================================================
+  ✅ FAR1Archive class exists
+  ✅ FarEntry exists
+  ✅ FarEntry instantiation
+
+  📊 FAR parser available
+
+============================================================
+DBPF PARSER
+============================================================
+  ✅ DBPFTypeID exists
+  ✅ OBJD type ID
+  ✅ BHAV type ID
+
+  📊 DBPF parser available, 21 type IDs defined
+
+============================================================
+CHUNK PARSERS
+============================================================
+  ✅ Chunk: bhav.py
+  ✅ Chunk: objd.py
+  ✅ Chunk: objf.py
+  ✅ Chunk: ttab.py
+  ✅ Chunk: str_.py
+  ✅ Chunk: dgrp.py
+  ✅ Chunk: spr.py
+
+  📊 Total chunk parsers: 60
+
+============================================================
+ENTITY ABSTRACTIONS
+============================================================
+  ✅ ObjectEntity exists
+  ✅ BehaviorEntity exists
+  ✅ BehaviorPurpose enum
+  ✅ SimEntity exists
+  ✅ RelationshipGraph exists
+
+  📊 Entities: ObjectEntity, BehaviorEntity, SimEntity, RelationshipGraph
+
+============================================================
+FILE OPERATIONS
+============================================================
+  ✅ BackupManager created
+  ✅ ContainerValidator exists
+  ✅ IFFWriter exists
+  ✅ ChunkOperations exists
+  ✅ FileOpResult created
+
+  📊 File operations module loaded
+
+============================================================
+IMPORT OPERATIONS
+============================================================
+  ✅ ChunkImporter exists
+  ✅ SpriteImporter exists
+  ✅ DatabaseImporter exists
+  ✅ AssetImporter exists
+  ✅ ImportResult created
+
+  📊 Import operations module loaded
+
+============================================================
+CONTAINER OPERATIONS
+============================================================
+  ✅ CacheManager singleton
+  ✅ clear_caches works
+  ✅ HeaderNormalizer exists
+  ✅ IndexRebuilder exists
+  ✅ ContainerReindexer exists
+  ✅ IFFSplitter exists
+  ✅ IFFMerger exists
+  ✅ FARWriter exists
+  ✅ ContainerOpResult created
+
+  📊 Container operations module loaded
+
+============================================================
+SAVE MUTATIONS
+============================================================
+  ✅ SimTemplate created
+  ✅ SimTemplate has personality
+  ✅ SimTemplate serializes
+  ✅ SimManager exists
+  ✅ TimeManager exists
+  ✅ InventoryManager exists
+  ✅ AspirationManager exists
+  ✅ MemoryManager exists
+  ✅ SaveMutationResult created
+
+  📊 Save mutations module loaded
+
+============================================================
+MESH EXPORT
+============================================================
+  ✅ Vertex created
+  ✅ Vertex.to_list works
+  ✅ Face created
+  ✅ Face.to_list works
+  ✅ Mesh created
+  ✅ Mesh has faces
+  ✅ Mesh.get_bounds works
+  ✅ MeshVisualizer.to_three_js works
+  ✅ MeshVisualizer.to_obj_string works
+  ✅ MeshDecoder exists
+  ✅ GLTFExporter exists
+  ✅ ChunkMeshExporter exists
+  ✅ MeshExportResult created
+
+  📊 Mesh export module loaded
+
+============================================================
+FOCUS COORDINATOR
+============================================================
+  ✅ Initial selection None
+  ✅ Selection stored
+  ✅ Selection type correct
+  ✅ Selection ID correct
+  ✅ Scope.ALL exists
+  ✅ Context.FILE exists
+
+  📊 Scopes: ['ALL', 'OBJECT_ONLY', 'GLOBAL_ONLY', 'SEMI_GLOBAL']
+
+============================================================
+GUI PANELS INVENTORY
+============================================================
+  ✅ FileLoaderPanel
+  ✅ IFFInspectorPanel
+  ✅ ChunkInspectorPanel
+  ✅ BHAVEditorPanel
+  ✅ FARBrowserPanel
+  ✅ SemanticInspectorPanel
+  ✅ ObjectInspectorPanel
+  ✅ GraphCanvasPanel
+  ✅ SaveEditorPanel
+  ✅ LibraryBrowserPanel
+  ✅ VisualObjectBrowserPanel
+  ✅ NavigationBarPanel
+  ✅ DiffComparePanel
+  ✅ TaskRunnerPanel
+  ✅ SafetyTrustPanel
+  ✅ GlobalSearchPanel
+  ✅ SystemOverviewPanel
+  ✅ SpriteExportPanel
+
+  📊 Panels found: 18/18
+
+============================================================
+ENGINE TOOLKIT
+============================================================
+  ✅ EngineToolkit created
+
+  📊 Engine toolkit functional
+
+============================================================
+DATA FILES
+============================================================
+  ✅ unknowns_db.json
+  ✅ opcodes_db.json
+  ✅ global_behaviors.json
+  ✅ execution_model.json
+  ✅ global_behavior_database.json
+  ✅ characters.json
+  ✅ objects.json
+  ✅ meshes.json
+  ✅ GBD has metadata
+  ✅ GBD has expansion_ranges
+  ✅ GBD has found_globals
+  ✅ GBD globals count
+
+  📊 Data directory: S:\Repositorys_New\SimObliterator_Suite\data
+
+============================================================
+RESEARCH DOCUMENTATION
+============================================================
+  ✅ research/DEFINITIVE_BHAV_REFERENCE.md
+  ✅ research/FREESO_BEHAVIORAL_ARCHITECTURE.md
+  ✅ research/BHAV_OPCODE_REFERENCE.md
+  ✅ research/ENGINE_PRIMITIVES.md
+  ✅ research/VALIDATION_TRUST_GUIDE.md
+  ✅ research/CYCLE_PATTERNS_GUIDE.md
+  ✅ technical/RESOURCE_GRAPH_USAGE_GUIDE.md
+  ✅ INTEGRATION_GAPS.md
+
+  📊 Docs directory: S:\Repositorys_New\SimObliterator_Suite\Docs
+
+============================================================
+WEBVIEWER
+============================================================
+  ✅ Webviewer folder
+  ✅ webviewer/export_server.py
+  ✅ webviewer/character_viewer.html
+  ✅ webviewer/object_viewer.html
+  ✅ webviewer/library_browser.html
+  ✅ webviewer/graph_viewer_embed.html
+  ✅ webviewer/character_exporter.py
+  ✅ webviewer/TESTING_VALIDATION.js
+  ✅ export_server.py syntax
+
+  📊 Webviewer directory: S:\Repositorys_New\SimObliterator_Suite\src\Tools\webviewer
+
+============================================================
+FREESO GAP ANALYZER
+============================================================
+  ✅ freeso_gap_analyzer.py exists
+  ✅ freeso_gap_analyzer.py syntax
+  ✅ Has ImplementationPriority enum
+  ✅ Has ImplementationComplexity enum
+  ✅ Has ParityGap dataclass
+  ✅ Has FreeSoGapAnalyzer class
+
+  📊 FreeSO analyzer ready for use
+
+============================================================
+SEMANTIC GLOBALS
+============================================================
+  ✅ semantic_globals.py exists
+  ✅ Has SemanticGlobalResolver
+  ✅ Has ExpansionBlock enum
+  ✅ Has CORE_FUNCTION_OFFSETS
+  ✅ Has FreeSoParityChecker
+  ✅ Has base game ID range (256-511)
+  ✅ Has expansion ID ranges
+
+  📊 Semantic globals provides expansion-aware BHAV labeling
+
+  📊 API: 174 passed, 0 failed, 0 skipped
+
+════════════════════════════════════════════════════════════
+  MODULE: GAME FILE TESTS (test_game.py)
+════════════════════════════════════════════════════════════
+
+  📊 Game: 73 passed, 0 failed, 0 skipped
+
+════════════════════════════════════════════════════════════
+FINAL SUMMARY
+════════════════════════════════════════════════════════════
+Total:   247
+Passed:  247 ✅
 Failed:  0 ❌
 Skipped: 0 ⏭️
 
-By Category:
-  bhav: 7/7
-  bhav_mut: 2/2
-  capabilities: 11/11
-  cc_folder: 5/5
-  core: 4/4
-  export: 2/2
-  far_deep: 1/1
-  forensic: 2/2
-  formats: 5/5
-  graph: 2/2
-  lots: 4/4
-  objects: 4/4
-  paths: 7/7
-  save_edit: 9/9
-  saves: 3/3
-  strings: 3/3
-  world_mut: 2/2
+🎉 ALL TESTS PASSED!
