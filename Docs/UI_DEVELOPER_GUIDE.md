@@ -35,13 +35,13 @@ Reference for completing the GUI implementation using Dear PyGui.
 
 ## Key Files
 
-| File                          | Purpose                                 |
-| ----------------------------- | --------------------------------------- |
-| `src/main_app.py`             | Entry point, menu bar, panel layout     |
-| `src/Tools/gui/state.py`      | Global AppState singleton               |
-| `src/Tools/gui/events.py`     | EventBus pub/sub + Events constants     |
-| `src/Tools/gui/theme.py`      | Dear PyGui theme (colors, fonts)        |
-| `src/Tools/gui/panels/*.py`   | Individual panel implementations        |
+| File                                | Purpose                                |
+| ----------------------------------- | -------------------------------------- |
+| `src/main_app.py`                   | Entry point, menu bar, panel layout    |
+| `src/Tools/gui/state.py`            | Global AppState singleton              |
+| `src/Tools/gui/events.py`           | EventBus pub/sub + Events constants    |
+| `src/Tools/gui/theme.py`            | Dear PyGui theme (colors, fonts)       |
+| `src/Tools/gui/panels/*.py`         | Individual panel implementations       |
 | `src/Tools/core/action_registry.py` | 110 canonical actions with safety tags |
 
 ---
@@ -75,21 +75,21 @@ EventBus.subscribe(Events.CHUNK_SELECTED, on_chunk_selected)
 
 ### Event Constants
 
-| Event                    | Payload             | When                          |
-| ------------------------ | ------------------- | ----------------------------- |
-| `FILE_LOADED`            | Path                | IFF/FAR/DBPF opened           |
-| `FILE_CLEARED`           | None                | File closed                   |
-| `FAR_LOADED`             | FARArchive          | FAR archive opened            |
-| `IFF_LOADED`             | IFFFile             | IFF extracted or loaded       |
-| `CHUNK_SELECTED`         | Chunk               | User clicks chunk in tree     |
-| `BHAV_SELECTED`          | BHAVChunk           | BHAV selected for editing     |
-| `CHARACTER_SELECTED`     | SimEntity           | Sim selected in save editor   |
-| `GRAPH_NODE_SELECTED`    | (type, id)          | Node clicked in call graph    |
-| `SEARCH_RESULT_SELECTED` | (file, chunk)       | Search result clicked         |
-| `SAVE_MODIFIED`          | SaveFile            | Save file edited              |
-| `ANALYSIS_STARTED`       | str                 | Long operation begins         |
-| `ANALYSIS_COMPLETE`      | result              | Long operation ends           |
-| `STATUS_UPDATE`          | str                 | Status bar message            |
+| Event                    | Payload       | When                        |
+| ------------------------ | ------------- | --------------------------- |
+| `FILE_LOADED`            | Path          | IFF/FAR/DBPF opened         |
+| `FILE_CLEARED`           | None          | File closed                 |
+| `FAR_LOADED`             | FARArchive    | FAR archive opened          |
+| `IFF_LOADED`             | IFFFile       | IFF extracted or loaded     |
+| `CHUNK_SELECTED`         | Chunk         | User clicks chunk in tree   |
+| `BHAV_SELECTED`          | BHAVChunk     | BHAV selected for editing   |
+| `CHARACTER_SELECTED`     | SimEntity     | Sim selected in save editor |
+| `GRAPH_NODE_SELECTED`    | (type, id)    | Node clicked in call graph  |
+| `SEARCH_RESULT_SELECTED` | (file, chunk) | Search result clicked       |
+| `SAVE_MODIFIED`          | SaveFile      | Save file edited            |
+| `ANALYSIS_STARTED`       | str           | Long operation begins       |
+| `ANALYSIS_COMPLETE`      | result        | Long operation ends         |
+| `STATUS_UPDATE`          | str           | Status bar message          |
 
 ---
 
@@ -159,18 +159,18 @@ if not valid:
 
 ### Action Categories
 
-| Category        | Examples                                      |
-| --------------- | --------------------------------------------- |
-| FILE_CONTAINER  | LoadIFF, WriteIFF, LoadFAR, MergeIFF          |
-| SAVE_STATE      | AddMoney, ModifySimAttributes, ModifyCareer   |
-| BHAV            | DisassembleBHAV, EditBHAV, InjectBHAV         |
-| VISUALIZATION   | RenderCallGraph, RenderAnimationFrames        |
-| EXPORT          | ExportSprite, ExportMesh, ExportSTR           |
-| IMPORT          | ImportSprite, ImportMesh, ImportBHAV          |
-| ANALYSIS        | AnalyzeBHAV, DetectPatterns, CompareObjects   |
-| SLOT            | ParseSLOT, EditSLOT, ExportSLOTXML            |
-| TTAB            | ParseTTAB, EditTTAB, AnalyzeAutonomy          |
-| LOCALIZATION    | ParseSTR, ScanReferences, AuditLocalization   |
+| Category       | Examples                                    |
+| -------------- | ------------------------------------------- |
+| FILE_CONTAINER | LoadIFF, WriteIFF, LoadFAR, MergeIFF        |
+| SAVE_STATE     | AddMoney, ModifySimAttributes, ModifyCareer |
+| BHAV           | DisassembleBHAV, EditBHAV, InjectBHAV       |
+| VISUALIZATION  | RenderCallGraph, RenderAnimationFrames      |
+| EXPORT         | ExportSprite, ExportMesh, ExportSTR         |
+| IMPORT         | ImportSprite, ImportMesh, ImportBHAV        |
+| ANALYSIS       | AnalyzeBHAV, DetectPatterns, CompareObjects |
+| SLOT           | ParseSLOT, EditSLOT, ExportSLOTXML          |
+| TTAB           | ParseTTAB, EditTTAB, AnalyzeAutonomy        |
+| LOCALIZATION   | ParseSTR, ScanReferences, AuditLocalization |
 
 ---
 
@@ -186,23 +186,23 @@ class MyPanel:
     def __init__(self, tag: str = "my_panel"):
         self.tag = tag
         self._setup_subscriptions()
-    
+
     def _setup_subscriptions(self):
         EventBus.subscribe(Events.CHUNK_SELECTED, self._on_chunk_selected)
-    
+
     def _on_chunk_selected(self, chunk):
         # React to selection
         self.refresh(chunk)
-    
+
     def create(self):
         with dpg.window(label="My Panel", tag=self.tag):
             dpg.add_text("Content here")
             dpg.add_button(label="Action", callback=self._on_action)
-    
+
     def _on_action(self, sender, app_data):
         # Do something
         EventBus.publish(Events.STATUS_UPDATE, "Action completed")
-    
+
     def refresh(self, data):
         # Update panel contents
         pass
@@ -225,44 +225,44 @@ These are stub implementations waiting for GUI wiring:
 
 ### File Operations
 
-| Location                        | TODO                                    |
-| ------------------------------- | --------------------------------------- |
-| `file_loader.py:215`            | Implement directory browser            |
-| `file_loader.py:235`            | Implement search                        |
-| `iff_inspector.py:69`           | Handle FAR archive loading              |
-| `save_editor_panel.py:264`      | Use file dialog instead of hardcoded path |
+| Location                   | TODO                                      |
+| -------------------------- | ----------------------------------------- |
+| `file_loader.py:215`       | Implement directory browser               |
+| `file_loader.py:235`       | Implement search                          |
+| `iff_inspector.py:69`      | Handle FAR archive loading                |
+| `save_editor_panel.py:264` | Use file dialog instead of hardcoded path |
 
 ### Object Editing
 
-| Location                        | TODO                                    |
-| ------------------------------- | --------------------------------------- |
-| `object_inspector.py:458`       | Edit price for OBJD                     |
-| `object_inspector.py:461`       | Edit name for OBJD                      |
-| `object_inspector.py:472`       | Clone object (OBJD duplication)         |
-| `chunk_inspector.py:316`        | Open string editor for STR#             |
-| `chunk_inspector.py:320`        | Open OBJD editor                        |
-| `chunk_inspector.py:324`        | Export raw bytes                        |
+| Location                  | TODO                            |
+| ------------------------- | ------------------------------- |
+| `object_inspector.py:458` | Edit price for OBJD             |
+| `object_inspector.py:461` | Edit name for OBJD              |
+| `object_inspector.py:472` | Clone object (OBJD duplication) |
+| `chunk_inspector.py:316`  | Open string editor for STR#     |
+| `chunk_inspector.py:320`  | Open OBJD editor                |
+| `chunk_inspector.py:324`  | Export raw bytes                |
 
 ### Safety System
 
-| Location                        | TODO                                    |
-| ------------------------------- | --------------------------------------- |
-| `scope_tracker.py:242`          | Integrate with GUID database            |
-| `edit_mode.py:224-231`          | Trigger resource duplication            |
+| Location               | TODO                         |
+| ---------------------- | ---------------------------- |
+| `scope_tracker.py:242` | Integrate with GUID database |
+| `edit_mode.py:224-231` | Trigger resource duplication |
 
 ### Export Features
 
-| Location                        | TODO                                    |
-| ------------------------------- | --------------------------------------- |
-| `character_viewer_panel.py:365` | GLTF export for characters              |
-| `character_viewer_panel.py:372` | PNG export for character render         |
+| Location                        | TODO                            |
+| ------------------------------- | ------------------------------- |
+| `character_viewer_panel.py:365` | GLTF export for characters      |
+| `character_viewer_panel.py:372` | PNG export for character render |
 
 ### Reference Panels
 
-| Location                        | TODO                                    |
-| ------------------------------- | --------------------------------------- |
-| `iff_viewer.py:898`             | Opcode reference popup                  |
-| `iff_viewer.py:902`             | Behavior dictionary popup               |
+| Location            | TODO                      |
+| ------------------- | ------------------------- |
+| `iff_viewer.py:898` | Opcode reference popup    |
+| `iff_viewer.py:902` | Behavior dictionary popup |
 
 ---
 
@@ -270,18 +270,18 @@ These are stub implementations waiting for GUI wiring:
 
 All parsing is done - just needs UI wiring.
 
-| Resource | Parser                     | Editor                   |
-| -------- | -------------------------- | ------------------------ |
-| IFF      | `formats/iff/iff_file.py`  | -                        |
-| FAR1/3   | `formats/far/far1.py`      | -                        |
-| DBPF     | `formats/dbpf/dbpf.py`     | -                        |
-| BHAV     | `core/bhav_disassembler.py`| `core/bhav_patching.py`  |
-| OBJD     | `core/chunk_parsers.py`    | -                        |
-| TTAB     | `core/chunk_parsers.py`    | `core/ttab_editor.py`    |
-| SLOT     | `core/slot_editor.py`      | `core/slot_editor.py`    |
-| STR#     | `core/str_parser.py`       | -                        |
-| SPR2     | `core/chunk_parsers.py`    | `core/sprite_export.py`  |
-| Saves    | `save_editor/save_manager.py` | `save_editor/*.py`    |
+| Resource | Parser                        | Editor                  |
+| -------- | ----------------------------- | ----------------------- |
+| IFF      | `formats/iff/iff_file.py`     | -                       |
+| FAR1/3   | `formats/far/far1.py`         | -                       |
+| DBPF     | `formats/dbpf/dbpf.py`        | -                       |
+| BHAV     | `core/bhav_disassembler.py`   | `core/bhav_patching.py` |
+| OBJD     | `core/chunk_parsers.py`       | -                       |
+| TTAB     | `core/chunk_parsers.py`       | `core/ttab_editor.py`   |
+| SLOT     | `core/slot_editor.py`         | `core/slot_editor.py`   |
+| STR#     | `core/str_parser.py`          | -                       |
+| SPR2     | `core/chunk_parsers.py`       | `core/sprite_export.py` |
+| Saves    | `save_editor/save_manager.py` | `save_editor/*.py`      |
 
 ---
 
