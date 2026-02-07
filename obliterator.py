@@ -9,11 +9,9 @@ PersonData indices verified against original Sims 1 documentation
 (PersonData.h, Jamie Doornbos, 12/17/99). NOT FreeSO/TSO VM indices.
 """
 
-# ================================================================
 # COMMANDS — The single source of truth.
 # Read this table: you know every command, arg, output format.
 # Implementation below is driven by it. Never hand-wire argparse.
-# ================================================================
 
 COMMANDS = {
     # --- IFF FILE INSPECTION ---
@@ -183,10 +181,7 @@ GLOBAL_OPTS = [
      "help": "Output format: table (default), json, yaml, csv, raw"},
 ]
 
-# ================================================================
 # REFERENCE DATA — PersonData layout, trait poles, career tracks.
-# Also data. Also sniffable. Also single source of truth.
-# ================================================================
 
 TRAIT_INFO = {
     "nice":     {"index": 2,  "low": "Grouchy",  "high": "Nice"},
@@ -230,10 +225,7 @@ DEMO_FIELDS = {"age": 58, "skin_color": 60, "family_number": 61,
 CAREER_FIELDS = {"job_type": 56, "job_status": 57, "job_performance": 63}
 
 
-# ================================================================
 # IMPLEMENTATION — Driven by the tables above.
-# Everything below here is plumbing. The interface is above.
-# ================================================================
 
 import sys
 import json
@@ -248,7 +240,7 @@ if str(_src) not in sys.path:
     sys.path.insert(0, str(_src))
 
 
-# -- Lazy imports: only load what each command needs --
+# Lazy imports: only load what each command needs
 
 def _save_manager():
     from Tools.save_editor.save_manager import SaveManager, PersonData
@@ -271,7 +263,7 @@ def _bhav_decompiler():
     return BHAVDecompiler
 
 
-# -- Helpers --
+# Helpers
 
 def _load_save(path):
     SaveManager, _ = _save_manager()
@@ -327,7 +319,7 @@ def _read_demo(pd):
     }
 
 
-# -- Output formatters --
+# Output formatters
 
 def _emit(data, fmt, headers=None):
     if fmt == "json": print(json.dumps(data, indent=2, default=str))
@@ -387,9 +379,7 @@ def _emit_table(rows, headers=None):
         print("  ".join(str(row.get(k,"")).ljust(widths[k]) for k in keys))
 
 
-# ================================================================
-# COMMAND IMPLEMENTATIONS — IFF
-# ================================================================
+# Commands: IFF
 
 def cmd_iff_info(args):
     IffFile = _iff_file()
@@ -487,9 +477,7 @@ def cmd_iff_bhav(args):
     _emit(rows, args.format, ["id", "label", "instructions"])
 
 
-# ================================================================
-# COMMAND IMPLEMENTATIONS — FAR
-# ================================================================
+# Commands: FAR
 
 def cmd_far_list(args):
     path = args.file
@@ -523,9 +511,7 @@ def cmd_far_extract(args):
         print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
 
 
-# ================================================================
-# COMMAND IMPLEMENTATIONS — SAVE EDITING
-# ================================================================
+# Commands: Save editing
 
 def cmd_inspect(args):
     mgr = _load_save(args.file)
@@ -634,9 +620,7 @@ def cmd_dump_raw(args):
     else: _emit(rows, args.format, ["index","value","field"])
 
 
-# ================================================================
-# COMMAND IMPLEMENTATIONS — UPLIFT/DOWNLOAD
-# ================================================================
+# Commands: Uplift/Download
 
 def cmd_uplift(args):
     mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
@@ -661,9 +645,7 @@ def cmd_uplift(args):
     else: print(out, end="")
 
 
-# ================================================================
-# PARSER BUILDER — Driven by COMMANDS table. Not hand-wired.
-# ================================================================
+# Parser builder — driven by COMMANDS table
 
 def build_parser():
     parser = argparse.ArgumentParser(
