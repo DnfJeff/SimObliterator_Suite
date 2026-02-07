@@ -67,45 +67,76 @@ class NeighborData:
 
 @dataclass
 class PersonData:
-    """Sim attributes stored in person_data array (88 shorts)."""
-    # Indices based on FreeSO VMPersonDataVariable
-    COOKING_SKILL = 0
-    MECH_SKILL = 1
-    CHARISMA_SKILL = 2
-    LOGIC_SKILL = 3
-    BODY_SKILL = 4
-    CREATIVITY_SKILL = 5
-    CLEANING_SKILL = 6  # Yes, there's a cleaning skill internally
-    
-    NICE_PERSONALITY = 7
-    ACTIVE_PERSONALITY = 8
-    GENEROUS_PERSONALITY = 9
-    PLAYFUL_PERSONALITY = 10
-    OUTGOING_PERSONALITY = 11
-    NEAT_PERSONALITY = 12
-    
-    HUNGER_MOTIVE = 13
-    COMFORT_MOTIVE = 14
-    HYGIENE_MOTIVE = 15
-    BLADDER_MOTIVE = 16
-    ENERGY_MOTIVE = 17
-    FUN_MOTIVE = 18
-    SOCIAL_MOTIVE = 19
-    ROOM_MOTIVE = 20
-    
-    PERSON_AGE = 21
-    GENDER = 22  # 0=male, 1=female
-    
-    JOB_TYPE = 23
-    JOB_LEVEL = 24
-    JOB_EXPERIENCE = 25
-    JOB_PERFORMANCE = 26
-    
-    TS1_FAMILY_NUMBER = 42
+    """Sim attributes stored in person_data array.
+
+    Indices verified against original Sims 1 source (PersonData.h, 12/17/99).
+    The fData[] array in Neighbor objects stores these fields sequentially.
+    NBRS chunks serialize fData[] in order, so these indices map directly
+    to the person_data list read from save files.
+
+    Previous version used FreeSO VMPersonDataVariable indices (for The Sims
+    Online), which are a DIFFERENT layout. Those indices were WRONG for
+    reading Sims 1 save files. Fixed 2026-02-07.
+    """
+    # Runtime state (not personality/skill data)
+    IDLE_STATE = 0
+    NPC_FEE_AMOUNT = 1
+
+    # Personality traits (indices 2-7, range 0-1000, display 0-10)
+    NICE_PERSONALITY = 2       # grouchy -> nice
+    ACTIVE_PERSONALITY = 3     # lazy -> active
+    GENEROUS_PERSONALITY = 4   # selfish -> generous
+    PLAYFUL_PERSONALITY = 5    # serious -> playful
+    OUTGOING_PERSONALITY = 6   # shy -> outgoing
+    NEAT_PERSONALITY = 7       # sloppy -> neat
+
+    CURRENT_OUTFIT = 8
+
+    # Skills (indices 9-18, range 0-1000, display 0-10)
+    CLEANING_SKILL = 9
+    COOKING_SKILL = 10
+    CHARISMA_SKILL = 11        # kSocialSkill in source
+    MECH_SKILL = 12            # kRepairSkill in source
+    GARDENING_SKILL = 13
+    MUSIC_SKILL = 14
+    CREATIVITY_SKILL = 15      # kCreativeSkill in source
+    LITERACY_SKILL = 16
+    BODY_SKILL = 17            # kPhysicalSkill in source
+    LOGIC_SKILL = 18
+
+    # Job/Career (scattered indices)
+    JOB_DATA = 24
+    JOB_TYPE = 56              # career track ID, 0 = unemployed
+    JOB_STATUS = 57            # promotion flags, depends on job type
+    JOB_PERFORMANCE = 63       # affects promotion probability
+
+    # Demographics
+    PERSON_AGE = 58            # 0=child, 1=adult
+    SKIN_COLOR = 60            # 0=light, 1=medium, 2=dark
+    FAMILY_NUMBER = 61
+    GENDER = 65                # 0=male, 1=female
+    PERSON_IS_GHOST = 68
+    ZODIAC_SIGN = 70           # 0=uncomputed, 1-12 = Aries..Pisces
+
+    # Interests (indices 46-55)
+    INTEREST_0 = 46
+    INTEREST_9 = 55
+
+    # NOTE: Motives (hunger, comfort, hygiene, bladder, energy, fun,
+    # social, room) are NOT stored in the PersonData array. They are
+    # runtime state managed by the Motive system. Save files store
+    # motives separately from person_data, if they store them at all.
+    # The previous HUNGER_MOTIVE=13..ROOM_MOTIVE=20 constants were
+    # pointing at skill indices (gardening through logic), not motives.
     
     @classmethod
     def get_skill_indices(cls) -> List[Tuple[str, int]]:
-        """Get all skill name/index pairs."""
+        """Get all skill name/index pairs.
+
+        Returns the 7 player-visible skills. Gardening, Music, and
+        Literacy are internal engine skills not exposed in the Sims 1
+        UI, but they exist in the data.
+        """
         return [
             ("Cooking", cls.COOKING_SKILL),
             ("Mechanical", cls.MECH_SKILL),
@@ -113,11 +144,32 @@ class PersonData:
             ("Logic", cls.LOGIC_SKILL),
             ("Body", cls.BODY_SKILL),
             ("Creativity", cls.CREATIVITY_SKILL),
+            ("Cleaning", cls.CLEANING_SKILL),
         ]
-    
+
+    @classmethod
+    def get_all_skill_indices(cls) -> List[Tuple[str, int]]:
+        """Get ALL skill indices including internal/hidden ones."""
+        return [
+            ("Cleaning", cls.CLEANING_SKILL),
+            ("Cooking", cls.COOKING_SKILL),
+            ("Charisma", cls.CHARISMA_SKILL),
+            ("Mechanical", cls.MECH_SKILL),
+            ("Gardening", cls.GARDENING_SKILL),
+            ("Music", cls.MUSIC_SKILL),
+            ("Creativity", cls.CREATIVITY_SKILL),
+            ("Literacy", cls.LITERACY_SKILL),
+            ("Body", cls.BODY_SKILL),
+            ("Logic", cls.LOGIC_SKILL),
+        ]
+
     @classmethod
     def get_personality_indices(cls) -> List[Tuple[str, int]]:
-        """Get all personality trait name/index pairs."""
+        """Get all personality trait name/index pairs.
+
+        Order matches PersonData.h enum: nice, active, generous,
+        playful, outgoing, neat (indices 2-7).
+        """
         return [
             ("Nice", cls.NICE_PERSONALITY),
             ("Active", cls.ACTIVE_PERSONALITY),
@@ -126,19 +178,21 @@ class PersonData:
             ("Outgoing", cls.OUTGOING_PERSONALITY),
             ("Neat", cls.NEAT_PERSONALITY),
         ]
-    
+
     @classmethod
-    def get_motive_indices(cls) -> List[Tuple[str, int]]:
-        """Get all motive name/index pairs."""
+    def get_motive_names(cls) -> List[str]:
+        """Get motive names for display purposes.
+
+        NOTE: Motives are NOT stored in the PersonData array.
+        They are runtime state. This method returns names only,
+        not indices, because there are no valid PersonData indices
+        for motives. Motive data may be stored elsewhere in save
+        files (e.g., in lot/house files during active gameplay)
+        but not in the NBRS person_data array.
+        """
         return [
-            ("Hunger", cls.HUNGER_MOTIVE),
-            ("Comfort", cls.COMFORT_MOTIVE),
-            ("Hygiene", cls.HYGIENE_MOTIVE),
-            ("Bladder", cls.BLADDER_MOTIVE),
-            ("Energy", cls.ENERGY_MOTIVE),
-            ("Fun", cls.FUN_MOTIVE),
-            ("Social", cls.SOCIAL_MOTIVE),
-            ("Room", cls.ROOM_MOTIVE),
+            "Hunger", "Comfort", "Hygiene", "Bladder",
+            "Energy", "Fun", "Social", "Room",
         ]
 
 
@@ -654,48 +708,24 @@ class SaveManager:
         return True
     
     def set_sim_motive(self, neighbor_id: int, motive: str, value: int) -> bool:
+        """Set a Sim's motive value.
+
+        WARNING: Motives (hunger, comfort, hygiene, etc.) are NOT stored
+        in the PersonData array in Neighborhood.iff. They are runtime
+        state managed by the game engine's Motive system. This method
+        cannot edit motives in the neighborhood save file because they
+        don't exist there.
+
+        Motives may be stored in House##.iff files during active gameplay,
+        but that's a different file format and code path.
+
+        This method is preserved for API compatibility but always returns
+        False with a warning.
         """
-        Set a Sim's motive value.
-        
-        Args:
-            neighbor_id: The Sim's neighbor ID
-            motive: Motive name (hunger, comfort, hygiene, bladder, energy, fun, social, room)
-            value: Motive value (-100 to 100, where 100 = full)
-        """
-        motive_map = {
-            'hunger': PersonData.HUNGER_MOTIVE,
-            'comfort': PersonData.COMFORT_MOTIVE,
-            'hygiene': PersonData.HYGIENE_MOTIVE,
-            'bladder': PersonData.BLADDER_MOTIVE,
-            'energy': PersonData.ENERGY_MOTIVE,
-            'fun': PersonData.FUN_MOTIVE,
-            'social': PersonData.SOCIAL_MOTIVE,
-            'room': PersonData.ROOM_MOTIVE,
-        }
-        
-        motive_lower = motive.lower()
-        if motive_lower not in motive_map:
-            print(f"Unknown motive: {motive}")
-            return False
-        
-        index = motive_map[motive_lower]
-        offset = self._get_person_data_offset(neighbor_id, index)
-        if offset is None:
-            print(f"Neighbor {neighbor_id} not found or has no person_data")
-            return False
-        
-        # Clamp value (motives are typically -100 to 100 scaled)
-        value = max(-100, min(value, 100))
-        
-        # Update in memory
-        neigh = self.neighbors[neighbor_id]
-        if len(neigh.person_data) > index:
-            neigh.person_data[index] = value
-        
-        # Update in file
-        self.neighborhood.write_int16_le(offset, value)
-        print(f"Set {neigh.name}'s {motive} to {value}")
-        return True
+        print(f"WARNING: Motives are not stored in PersonData. "
+              f"Cannot set {motive} via neighborhood save file. "
+              f"Motives are runtime state managed by the game engine.")
+        return False
     
     def set_sim_personality(self, neighbor_id: int, trait: str, value: int) -> bool:
         """
@@ -739,50 +769,52 @@ class SaveManager:
         print(f"Set {neigh.name}'s {trait} to {value}")
         return True
     
-    def set_sim_career(self, neighbor_id: int, job_type: int = None, 
-                       job_level: int = None, job_exp: int = None,
+    def set_sim_career(self, neighbor_id: int, job_type: int = None,
+                       job_status: int = None,
                        job_performance: int = None) -> bool:
-        """
-        Set a Sim's career/job data.
-        
+        """Set a Sim's career/job data.
+
         Args:
             neighbor_id: The Sim's neighbor ID
-            job_type: Job type ID (None to keep current)
-            job_level: Job level 1-10 (None to keep current)
-            job_exp: Job experience points (None to keep current)
-            job_performance: Job performance (None to keep current)
+            job_type: Career track ID at PersonData[56]. 0 = unemployed.
+                Career IDs are defined in Careers.iff data files.
+            job_status: Promotion/status flags at PersonData[57].
+                Meaning depends on the career track.
+            job_performance: Performance rating at PersonData[63].
+                Affects promotion probability.
+
+        Note: The old job_level and job_exp parameters mapped to
+        PersonData indices that don't exist in The Sims 1. Career
+        level is encoded in job_status, and experience is tracked
+        by the behavior tree system, not as a PersonData field.
         """
         if neighbor_id not in self.neighbors:
             print(f"Neighbor {neighbor_id} not found")
             return False
-        
+
         neigh = self.neighbors[neighbor_id]
-        
+
         if job_type is not None:
             offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_TYPE)
             if offset:
-                neigh.person_data[PersonData.JOB_TYPE] = job_type
+                if len(neigh.person_data) > PersonData.JOB_TYPE:
+                    neigh.person_data[PersonData.JOB_TYPE] = job_type
                 self.neighborhood.write_int16_le(offset, job_type)
-        
-        if job_level is not None:
-            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_LEVEL)
+
+        if job_status is not None:
+            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_STATUS)
             if offset:
-                level = max(1, min(job_level, 10))
-                neigh.person_data[PersonData.JOB_LEVEL] = level
-                self.neighborhood.write_int16_le(offset, level)
-        
-        if job_exp is not None:
-            offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_EXPERIENCE)
-            if offset:
-                neigh.person_data[PersonData.JOB_EXPERIENCE] = job_exp
-                self.neighborhood.write_int16_le(offset, job_exp)
-        
+                if len(neigh.person_data) > PersonData.JOB_STATUS:
+                    neigh.person_data[PersonData.JOB_STATUS] = job_status
+                self.neighborhood.write_int16_le(offset, job_status)
+
         if job_performance is not None:
             offset = self._get_person_data_offset(neighbor_id, PersonData.JOB_PERFORMANCE)
             if offset:
-                neigh.person_data[PersonData.JOB_PERFORMANCE] = job_performance
+                if len(neigh.person_data) > PersonData.JOB_PERFORMANCE:
+                    neigh.person_data[PersonData.JOB_PERFORMANCE] = job_performance
                 self.neighborhood.write_int16_le(offset, job_performance)
-        
+
         print(f"Updated {neigh.name}'s career data")
         return True
     
@@ -795,12 +827,15 @@ class SaveManager:
         return success
     
     def max_all_motives(self, neighbor_id: int) -> bool:
-        """Set all of a Sim's motives to maximum (100)."""
-        success = True
-        for motive_name, _ in PersonData.get_motive_indices():
-            if not self.set_sim_motive(neighbor_id, motive_name, 100):
-                success = False
-        return success
+        """Set all of a Sim's motives to maximum.
+
+        WARNING: Motives are not stored in the PersonData array.
+        This method cannot work on neighborhood save files.
+        Preserved for API compatibility.
+        """
+        print("WARNING: Motives are runtime state, not saved in "
+              "PersonData. Cannot max motives via save file edit.")
+        return False
     
     # ========================================================================
     # Relationship Operations
