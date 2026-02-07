@@ -69,12 +69,19 @@ from .bhav_decompiler import BHAVDecompiler, BHAVValidator, decompile_bhav
 from .bhav_formatter import BHAVFormatter, CodeStyle, format_bhav
 from .bhav_graph import analyze_bhav_flow, visualize_bhav_ascii
 from .bhav_analysis import lint_bhav, analyze_bhav
-from .bhav_editor import open_bhav_editor
+# bhav_editor is lazy-loaded to avoid pulling in tkinter for headless use.
+# Import open_bhav_editor from .bhav_editor directly when GUI is needed.
 # bhav_integration removed - was importing from simobliterator (old architecture)
 from .bhav_ast import BehaviorAST, Instruction, VMVariableScope, VariableRef
 from .primitive_registry import (
     PRIMITIVE_REGISTRY, get_primitive_info, get_primitive_name
 )
+
+
+def open_bhav_editor(*args, **kwargs):
+    """Lazy wrapper: imports bhav_editor (and tkinter) only when called."""
+    from .bhav_editor import open_bhav_editor as _open
+    return _open(*args, **kwargs)
 
 __all__ = [
     'STR', 'CTSS', 'STRItem', 'STRLanguageSet', 'STRLangCode',

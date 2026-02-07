@@ -8,7 +8,7 @@ the correctness of the index constants themselves.
 The Sims 1 PersonData array is an array of 80 signed 16-bit integers
 (kNumPersonDataFields = 80) stored in each Neighbor record. The indices
 were verified by cross-referencing multiple authoritative sources:
-  - Original game header file documentation (PersonData.h, Jamie Doornbos)
+  - Header file documentation (PersonData.h, Jamie Doornbos)
   - The Sims Online (TSO) fork of the same header (same layout preserved)
   - FreeSO open-source reimplementation documentation
   - Niotso wiki reverse engineering documentation
@@ -271,18 +271,11 @@ def run_nbrs_tests(results):
     print("NBRS CHUNK PARSER VERIFICATION")
     print("=" * 60)
 
-    # Import directly to avoid the chunks/__init__.py chain which pulls in tkinter
-    import importlib.util
-    nbrs_path = SRC_DIR / "formats" / "iff" / "chunks" / "nbrs.py"
-    spec = importlib.util.spec_from_file_location("nbrs", nbrs_path)
-    nbrs_mod = importlib.util.module_from_spec(spec)
     try:
-        spec.loader.exec_module(nbrs_mod)
-    except Exception:
-        results.skip("NBRS import", "Could not import nbrs.py directly (dependency chain)")
+        from formats.iff.chunks.nbrs import NBRS, Neighbour
+    except Exception as e:
+        results.skip("NBRS import", f"Could not import: {e}")
         return
-    NBRS = nbrs_mod.NBRS
-    Neighbour = nbrs_mod.Neighbour
 
     # Test that _read_neighbor returns None (not empty object) for invalid entries
     # This is tested structurally: verify the return type contract
@@ -314,18 +307,11 @@ def run_fami_tests(results):
     print("FAMI CHUNK PARSER VERIFICATION")
     print("=" * 60)
 
-    import importlib.util
-    fami_path = SRC_DIR / "formats" / "iff" / "chunks" / "fami.py"
-    spec = importlib.util.spec_from_file_location("fami", fami_path)
-    fami_mod = importlib.util.module_from_spec(spec)
     try:
-        spec.loader.exec_module(fami_mod)
-    except Exception:
-        results.skip("FAMI import", "Could not import fami.py directly (dependency chain)")
+        from formats.iff.chunks.fami import FAMI, FAMI_IN_HOUSE, FAMI_USER_CREATED
+    except Exception as e:
+        results.skip("FAMI import", f"Could not import: {e}")
         return
-    FAMI = fami_mod.FAMI
-    FAMI_IN_HOUSE = fami_mod.FAMI_IN_HOUSE
-    FAMI_USER_CREATED = fami_mod.FAMI_USER_CREATED
 
     results.record(
         "FAMI_IN_HOUSE flag == 1",
