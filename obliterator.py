@@ -1,244 +1,207 @@
 #!/usr/bin/env python3
 """obliterator.py — One CLI to rule them all.
 
-This is the single command-line entry point for SimObliterator Suite.
-Instead of importing Python modules and writing scripts, you run:
+Hierarchical command tree, like gcloud. Every level has --help.
 
-    python obliterator.py <command> <args>
-
-It can inspect IFF game files, list FAR archives, read and edit
-neighborhood save files, and generate MOOLLM character YAML.
+    obliterator character uplift <neighborhood.iff> <name>
+    obliterator character come-home <neighborhood.iff> <uplift.yml>
+    obliterator family list <neighborhood.iff>
+    obliterator iff info <file.iff>
+    obliterator far list <file.far>
+    obliterator tmog export <file.iff>
 
 HOW THIS FILE IS ORGANIZED:
 
-1. COMMANDS table     — declares every available command and its arguments
-2. Reference data     — PersonData indices, trait names, career tracks, etc.
-3. Helpers            — load files, find characters, read traits/skills
-4. Output formatters  — turn data into table/json/yaml/csv/raw text
-5. Command functions  — one function per command (cmd_inspect, cmd_traits, etc.)
-6. Parser builder     — reads the COMMANDS table and wires up argparse
+1. COMMANDS tree    — declares every group, command, and argument
+2. Global options   — cross-cutting flags (--format, --sims-data, etc.)
+3. Reference data   — PersonData indices, trait names, career tracks
+4. Helpers          — load files, find characters, read traits/skills
+5. Output formatters — table/json/yaml/csv/raw
+6. Command functions — one per leaf command (cmd_character_uplift, etc.)
+7. Parser builder   — reads COMMANDS tree, builds argparse hierarchy
 
-The COMMANDS table at the top is the single source of truth for the CLI.
-The parser at the bottom reads it and creates all the argument parsing
-automatically. You never hand-wire argparse — add a command to the table
-and it appears in the CLI.
-
-PersonData indices verified against original Sims 1 documentation
-(PersonData.h, Jamie Doornbos, 12/17/99). NOT FreeSO/TSO VM indices.
+PersonData indices verified against original Sims 1 documentation.
 """
 
-# COMMANDS table — every command the CLI supports.
-#
-# Each entry has:
-#   "group" — which category it belongs to (iff, far, save, bridge)
-#   "help"  — one-line description shown in --help
-#   "args"  — positional arguments (required, in order)
-#   "opts"  — optional flags (--output, --type, etc.)
-#
-# The parser builder at the bottom of this file reads this table
-# and creates all the argparse subcommands from it. When you add
-# a new command here, it automatically shows up in the CLI.
+# COMMANDS tree. Each top-level key is a command group.
+# Each group has a help string and a dict of subcommands.
+# The parser builder walks this tree and creates argparse subparsers.
+# `obliterator character --help` shows all character subcommands.
 
 COMMANDS = {
-    # IFF file inspection — read any .iff file and show what's inside
-    "iff-info": {
-        "group": "iff",
-        "help": "Show IFF file summary: chunk count, types, sizes",
-        "args": [
-            {"name": "file", "help": "Path to .iff file"},
-        ],
-    },
-    "iff-chunks": {
-        "group": "iff",
-        "help": "List all chunks in an IFF file with type, ID, label, size",
-        "args": [
-            {"name": "file", "help": "Path to .iff file"},
-        ],
-        "opts": [
-            {"flags": ["--type"], "help": "Filter by chunk type (e.g. BHAV, STR#, OBJD)"},
-        ],
-    },
-    "iff-strings": {
-        "group": "iff",
-        "help": "Show all string tables (STR#/CTSS) in an IFF file",
-        "args": [
-            {"name": "file", "help": "Path to .iff file"},
-        ],
-        "opts": [
-            {"flags": ["--lang"], "help": "Language index (0=US English, default: all)", "type": int},
-            {"flags": ["--chunk-id"], "help": "Specific STR# chunk ID", "type": int},
-        ],
-    },
-    "iff-objects": {
-        "group": "iff",
-        "help": "List all objects (OBJD) in an IFF with GUID, name, price",
-        "args": [
-            {"name": "file", "help": "Path to .iff file"},
-        ],
-    },
-    "iff-bhav": {
-        "group": "iff",
-        "help": "List or decompile BHAV (behavior) chunks in an IFF",
-        "args": [
-            {"name": "file", "help": "Path to .iff file"},
-        ],
-        "opts": [
-            {"flags": ["--id"], "help": "Decompile specific BHAV by chunk ID", "type": int},
-        ],
-    },
-
-    # FAR archive operations — .far files are compressed archives holding .iff files
-    "far-list": {
-        "group": "far",
-        "help": "List contents of a .far archive",
-        "args": [
-            {"name": "file", "help": "Path to .far file"},
-        ],
-    },
-    "far-extract": {
-        "group": "far",
-        "help": "Extract files from a .far archive",
-        "args": [
-            {"name": "file", "help": "Path to .far file"},
-            {"name": "output", "help": "Output directory"},
-        ],
-        "opts": [
-            {"flags": ["--name"], "help": "Extract only this filename"},
-        ],
-    },
-
-    # Neighborhood save file operations — Neighborhood.iff contains families and Sims
-    "inspect": {
-        "group": "save",
-        "help": "List all families and characters in a neighborhood",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-        ],
-    },
-    "families": {
-        "group": "save",
-        "help": "List families with budgets and house assignments",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-        ],
-    },
     "character": {
-        "group": "save",
-        "help": "Full character sheet: traits, skills, demographics, relationships",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name (partial match OK)"},
-        ],
-    },
-    "traits": {
-        "group": "save",
-        "help": "Show personality traits with visual bars",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-        ],
-    },
-    "skills": {
-        "group": "save",
-        "help": "Show skill levels with visual bars",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-        ],
-    },
-    "set-trait": {
-        "group": "save",
-        "help": "Set a personality trait (0-10 scale, writes to file)",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-            {"name": "trait", "help": "neat|outgoing|active|playful|nice|generous"},
-            {"name": "value", "help": "0-10", "type": int},
-        ],
-    },
-    "set-skill": {
-        "group": "save",
-        "help": "Set a skill level (0-10 scale, writes to file)",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-            {"name": "skill", "help": "cooking|mechanical|charisma|logic|body|creativity|cleaning"},
-            {"name": "value", "help": "0-10", "type": int},
-        ],
-    },
-    "set-money": {
-        "group": "save",
-        "help": "Set a family's budget in Simoleons (writes to file)",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "family_id", "help": "Family ID number", "type": int},
-            {"name": "amount", "help": "Amount in Simoleons", "type": int},
-        ],
-    },
-    "dump-raw": {
-        "group": "save",
-        "help": "Dump raw PersonData array with field name annotations",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-        ],
+        "help": "Sim character operations: inspect, edit, uplift, come home",
+        "commands": {
+            "inspect": {
+                "help": "List all characters in a neighborhood",
+                "args": [{"name": "file", "help": "Path to Neighborhood.iff"}],
+            },
+            "show": {
+                "help": "Full character sheet: traits, skills, demographics, relationships",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name (partial match OK)"},
+                ],
+            },
+            "traits": {
+                "help": "Show personality traits with visual bars",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                ],
+            },
+            "skills": {
+                "help": "Show skill levels with visual bars",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                ],
+            },
+            "set-trait": {
+                "help": "Set a personality trait (0-10 scale)",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                    {"name": "trait", "help": "neat|outgoing|active|playful|nice|generous"},
+                    {"name": "value", "help": "0-10", "type": int},
+                ],
+            },
+            "set-skill": {
+                "help": "Set a skill level (0-10 scale)",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                    {"name": "skill", "help": "cooking|mechanical|charisma|logic|body|creativity|cleaning"},
+                    {"name": "value", "help": "0-10", "type": int},
+                ],
+            },
+            "dump-raw": {
+                "help": "Dump raw PersonData array with field name annotations",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                ],
+            },
+            "uplift": {
+                "help": "Extract character data to SIMS-UPLIFT.yml for LLM processing",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                ],
+                "opts": [{"flags": ["-o", "--output"], "help": "Write to file (default: stdout)"}],
+            },
+            "come-home": {
+                "help": "Write SIMS-UPLIFT.yml data back into save file (return to The Sims)",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "uplift_yml", "help": "Path to SIMS-UPLIFT.yml"},
+                ],
+            },
+            "sync": {
+                "help": "Compare save file against CHARACTER.yml, emit merge events for LLM",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "name", "help": "Character name"},
+                    {"name": "character_yml", "help": "Path to existing CHARACTER.yml"},
+                ],
+            },
+        },
     },
 
-    # Bridge commands — move characters between The Sims and MOOLLM.
-    # SIMS-UPLIFT.yml is the machine-readable interchange format.
-    # obliterator.py reads/writes it. The LLM reads/writes CHARACTER.yml.
-    # Neither crosses into the other's domain.
-    "uplift": {
-        "group": "bridge",
-        "help": "Extract Sim data from save file into SIMS-UPLIFT.yml format",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-        ],
-        "opts": [
-            {"flags": ["-o", "--output"], "help": "Write to file (default: stdout)"},
-        ],
+    "family": {
+        "help": "Family and household operations",
+        "commands": {
+            "list": {
+                "help": "List families with budgets, houses, and member counts",
+                "args": [{"name": "file", "help": "Path to Neighborhood.iff"}],
+            },
+            "set-money": {
+                "help": "Set a family's budget in Simoleons",
+                "args": [
+                    {"name": "file", "help": "Path to Neighborhood.iff"},
+                    {"name": "family_id", "help": "Family ID number", "type": int},
+                    {"name": "amount", "help": "Amount in Simoleons", "type": int},
+                ],
+            },
+        },
     },
-    "homecoming": {
-        "group": "bridge",
-        "help": "Write SIMS-UPLIFT.yml data back into a save file (return to The Sims)",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "uplift_yml", "help": "Path to SIMS-UPLIFT.yml to write back"},
-        ],
+
+    "iff": {
+        "help": "IFF file inspection (any .iff file)",
+        "commands": {
+            "info": {
+                "help": "Show chunk count and type distribution",
+                "args": [{"name": "file", "help": "Path to .iff file"}],
+            },
+            "chunks": {
+                "help": "List all chunks with type, ID, label, size",
+                "args": [{"name": "file", "help": "Path to .iff file"}],
+                "opts": [{"flags": ["--type"], "help": "Filter by chunk type (BHAV, STR#, OBJD, etc.)"}],
+            },
+            "strings": {
+                "help": "Show string tables (STR#/CTSS) with language filtering",
+                "args": [{"name": "file", "help": "Path to .iff file"}],
+                "opts": [
+                    {"flags": ["--lang"], "help": "Language index (0=US English)", "type": int},
+                    {"flags": ["--chunk-id"], "help": "Specific chunk ID", "type": int},
+                ],
+            },
+            "objects": {
+                "help": "List object definitions (OBJD) with GUID, name, price",
+                "args": [{"name": "file", "help": "Path to .iff file"}],
+            },
+            "bhav": {
+                "help": "List or disassemble BHAV behavior scripts",
+                "args": [{"name": "file", "help": "Path to .iff file"}],
+                "opts": [{"flags": ["--id"], "help": "Disassemble specific BHAV by chunk ID", "type": int}],
+            },
+        },
     },
-    "sync": {
-        "group": "bridge",
-        "help": "Compare save file against CHARACTER.yml, emit merge events for LLM",
-        "args": [
-            {"name": "file", "help": "Path to Neighborhood.iff"},
-            {"name": "name", "help": "Character name"},
-            {"name": "character_yml", "help": "Path to existing CHARACTER.yml"},
-        ],
-        "opts": [
-            {"flags": ["--apply"], "help": "Path to write merged sims: block",
-             "default": None},
-        ],
+
+    "far": {
+        "help": "FAR archive operations (.far files)",
+        "commands": {
+            "list": {
+                "help": "List contents of a .far archive",
+                "args": [{"name": "file", "help": "Path to .far file"}],
+            },
+            "extract": {
+                "help": "Extract files from a .far archive",
+                "args": [
+                    {"name": "file", "help": "Path to .far file"},
+                    {"name": "output", "help": "Output directory"},
+                ],
+                "opts": [{"flags": ["--name"], "help": "Extract only this filename"}],
+            },
+        },
+    },
+
+    "tmog": {
+        "help": "Transmogrifier: IFF object <-> YAML round-trip",
+        "commands": {
+            "export": {
+                "help": "Export .iff object to IFF-OBJECT.yml (all chunks, symbolic names)",
+                "args": [{"name": "file", "help": "Path to .iff object file"}],
+                "opts": [{"flags": ["-o", "--output"], "help": "Output .yml path"}],
+            },
+            "import": {
+                "help": "Import IFF-OBJECT.yml back to .iff binary",
+                "args": [{"name": "yml", "help": "Path to IFF-OBJECT.yml"}],
+                "opts": [{"flags": ["-o", "--output"], "help": "Output .iff path"}],
+            },
+        },
     },
 }
 
-# Every command supports these output format flags
-OUTPUT_FORMATS = ["table", "json", "yaml", "csv", "raw"]
+# Cross-cutting global options available on every command
 GLOBAL_OPTS = [
-    {"flags": ["-f", "--format"], "choices": OUTPUT_FORMATS, "default": "table",
-     "help": "Output format: table (default), json, yaml, csv, raw"},
+    {"flags": ["-f", "--format"], "choices": ["table", "json", "yaml", "csv", "raw"],
+     "default": "table", "help": "Output format"},
+    {"flags": ["-d", "--sims-data"], "default": None,
+     "help": "Sims data root directory (auto-detected if not set)"},
 ]
 
-
-# Reference data — field indices, display names, value mappings.
-#
-# These tables serve double duty: they define what the UI shows AND
-# where to find each field in the PersonData binary array. The indices
-# come from PersonData.h (the original Sims 1 header, 12/17/99).
-
-# Personality traits live at PersonData indices 2-7.
-# Each has a low-end name (e.g. "Sloppy") and high-end name (e.g. "Neat").
-# Values are 0-1000 internally, displayed as 0-10.
+# Reference data
 TRAIT_INFO = {
     "nice":     {"index": 2,  "low": "Grouchy",  "high": "Nice"},
     "active":   {"index": 3,  "low": "Lazy",     "high": "Active"},
@@ -247,48 +210,31 @@ TRAIT_INFO = {
     "outgoing": {"index": 6,  "low": "Shy",      "high": "Outgoing"},
     "neat":     {"index": 7,  "low": "Sloppy",   "high": "Neat"},
 }
-
-# Skills live at PersonData indices 9-18. Some are hidden from the UI.
 SKILL_INFO = {
-    "cleaning":   {"index": 9},
-    "cooking":    {"index": 10},
-    "charisma":   {"index": 11},
-    "mechanical": {"index": 12},
-    "gardening":  {"index": 13, "hidden": True},
-    "music":      {"index": 14, "hidden": True},
-    "creativity": {"index": 15},
-    "literacy":   {"index": 16, "hidden": True},
-    "body":       {"index": 17},
-    "logic":      {"index": 18},
+    "cleaning":   {"index": 9},  "cooking":    {"index": 10},
+    "charisma":   {"index": 11}, "mechanical": {"index": 12},
+    "gardening":  {"index": 13, "hidden": True}, "music": {"index": 14, "hidden": True},
+    "creativity": {"index": 15}, "literacy":   {"index": 16, "hidden": True},
+    "body":       {"index": 17}, "logic":      {"index": 18},
 }
-
-# The 7 skills shown in the Sims 1 UI, in display order
 VISIBLE_SKILLS = ["cooking", "mechanical", "charisma", "logic", "body", "creativity", "cleaning"]
-
-# Career track IDs (PersonData[56])
 CAREER_TRACKS = {
     0: "Unemployed", 1: "Cooking/Culinary", 2: "Entertainment",
     3: "Law Enforcement", 4: "Medicine", 5: "Military",
     6: "Politics", 7: "Pro Athlete", 8: "Science", 9: "Xtreme",
 }
-
-# Zodiac signs (PersonData[70], computed from traits)
 ZODIAC_SIGNS = {
     0: "Uncomputed", 1: "Aries", 2: "Taurus", 3: "Gemini",
     4: "Cancer", 5: "Leo", 6: "Virgo", 7: "Libra",
     8: "Scorpio", 9: "Sagittarius", 10: "Capricorn",
     11: "Aquarius", 12: "Pisces",
 }
-
-# Demographic fields scattered across the PersonData array
 DEMO_FIELDS = {"age": 58, "skin_color": 60, "family_number": 61,
                "gender": 65, "ghost": 68, "zodiac": 70}
 CAREER_FIELDS = {"job_type": 56, "job_status": 57, "job_performance": 63}
 
 
-# Implementation starts here. Everything above is data declarations
-# that define the interface. Everything below is plumbing that reads
-# those declarations and does the work.
+# Implementation
 
 import sys
 import json
@@ -298,47 +244,29 @@ import argparse
 from pathlib import Path
 from typing import Any, Optional
 
-# Add SimObliterator's src/ to the Python import path so we can
-# import its format parsers and save editor modules
 _src = Path(__file__).parent / "src"
 if str(_src) not in sys.path:
     sys.path.insert(0, str(_src))
 
-
-# Lazy imports — each function below only loads the SimObliterator
-# modules it actually needs. This keeps startup fast: if you're just
-# listing FAR archives, you don't load the save editor, and vice versa.
-
+# Lazy imports
 def _save_manager():
-    """Import the save file editing module (only when needed)."""
+    """Import save file editing module."""
     from Tools.save_editor.save_manager import SaveManager, PersonData
     return SaveManager, PersonData
 
 def _iff_file():
-    """Import the IFF file reader (only when needed)."""
+    """Import IFF file reader."""
     from formats.iff.iff_file import IffFile
     return IffFile
 
 def _far1():
-    """Import the FAR v1 archive reader (only when needed)."""
+    """Import FAR v1 archive reader."""
     from formats.far.far1 import FAR1Archive
     return FAR1Archive
 
-def _far3():
-    """Import the FAR v3 archive reader (only when needed)."""
-    from formats.far.far3 import FAR3Archive
-    return FAR3Archive
-
-def _bhav_decompiler():
-    """Import the BHAV bytecode decompiler (only when needed)."""
-    from formats.iff.chunks.bhav_decompiler import BHAVDecompiler
-    return BHAVDecompiler
-
-
-# Helpers for save file operations
-
+# Helpers
 def _load_save(path):
-    """Load a Neighborhood.iff save file via SaveManager. Exits on failure."""
+    """Load a Neighborhood.iff save file. Exits on failure."""
     SaveManager, _ = _save_manager()
     mgr = SaveManager(path)
     if not mgr.load():
@@ -347,13 +275,7 @@ def _load_save(path):
     return mgr
 
 def _find(mgr, name):
-    """Find a Sim by name in the loaded neighborhood.
-
-    Matches case-insensitively and allows partial matches.
-    If "Bob" matches "Bob Newbie", that's a hit.
-    If multiple Sims match, tries for an exact match first.
-    Exits with an error if no match or ambiguous.
-    """
+    """Find a Sim by name (case-insensitive partial match). Exits on ambiguity."""
     lo = name.lower()
     hits = [(nid, n) for nid, n in mgr.neighbors.items() if lo in n.name.lower()]
     if not hits:
@@ -371,40 +293,29 @@ def _find(mgr, name):
     return hits[0]
 
 def _pd(data, idx):
-    """Read one value from a PersonData array, safely. Returns None if out of bounds."""
+    """Read one value from PersonData, safely."""
     if data and 0 <= idx < len(data):
         return data[idx]
     return None
 
 def _bar(v, w=10):
-    """Render a visual bar like [████████░░] for a value 0-10."""
+    """Visual bar [████████░░] for value 0-10."""
     v = max(0, min(v, w))
     return "\u2588" * v + "\u2591" * (w - v)
 
 def _read_traits(pd):
-    """Extract personality traits from a PersonData array.
-
-    Returns a dict like {"neat": {"raw": 700, "display": 7, "low": "Sloppy", "high": "Neat"}}.
-    The raw value is 0-1000 (as stored in the binary). Display is 0-10.
-    """
+    """Extract personality traits from PersonData."""
     return {n: {"raw": r, "display": round(r/100), "low": i["low"], "high": i["high"]}
             for n, i in TRAIT_INFO.items() if (r := _pd(pd, i["index"])) is not None}
 
 def _read_skills(pd, hidden=False):
-    """Extract skills from a PersonData array.
-
-    Returns a dict like {"cooking": {"raw": 300, "display": 3}}.
-    Hidden skills (gardening, music, literacy) are excluded unless hidden=True.
-    """
+    """Extract skills from PersonData."""
     return {n: {"raw": r, "display": round(r/100)}
             for n, i in SKILL_INFO.items()
             if (hidden or not i.get("hidden")) and (r := _pd(pd, i["index"])) is not None}
 
 def _read_demo(pd):
-    """Extract demographic fields (age, gender, career, zodiac, etc.) from PersonData.
-
-    Returns a dict with human-readable string values.
-    """
+    """Extract demographics from PersonData."""
     age = _pd(pd, DEMO_FIELDS["age"])
     gen = _pd(pd, DEMO_FIELDS["gender"])
     skin = _pd(pd, DEMO_FIELDS["skin_color"])
@@ -420,94 +331,62 @@ def _read_demo(pd):
         "job_performance": jp,
     }
 
-
-# Output formatters — turn data into the requested format.
-#
-# Commands return Python dicts/lists. These functions render them
-# as text. The -f/--format flag chooses which one to use.
-# "table" is the default human-readable format.
-# "json" is for machine consumption or piping to other tools.
-# "yaml" is MOOLLM-compatible.
-# "csv" is for spreadsheets.
-# "raw" is key=value pairs, grep-friendly.
-
+# Output formatters
 def _emit(data, fmt, headers=None):
-    """Dispatch to the right formatter based on the --format flag."""
-    if fmt == "json":
-        print(json.dumps(data, indent=2, default=str))
-    elif fmt == "yaml":
-        _emit_yaml(data)
-    elif fmt == "csv":
-        _emit_csv(data, headers)
-    elif fmt == "raw":
-        _emit_raw(data)
+    """Dispatch to the right output formatter."""
+    if fmt == "json": print(json.dumps(data, indent=2, default=str))
+    elif fmt == "yaml": _emit_yaml(data)
+    elif fmt == "csv": _emit_csv(data, headers)
+    elif fmt == "raw": _emit_raw(data)
     elif fmt == "table":
-        if isinstance(data, str):
-            print(data)
-        elif isinstance(data, list) and data and isinstance(data[0], dict):
-            _emit_table(data, headers)
-        else:
-            print(data)
+        if isinstance(data, str): print(data)
+        elif isinstance(data, list) and data and isinstance(data[0], dict): _emit_table(data, headers)
+        else: print(data)
 
 def _emit_yaml(d, indent=0):
-    """Print data as YAML. Simple recursive emitter, no pyyaml dependency."""
+    """Simple YAML emitter (no pyyaml dependency)."""
     p = "  " * indent
     if isinstance(d, dict):
         for k, v in d.items():
-            if isinstance(v, (dict, list)):
-                print(f"{p}{k}:")
-                _emit_yaml(v, indent+1)
-            else:
-                print(f"{p}{k}: {v}")
+            if isinstance(v, (dict, list)): print(f"{p}{k}:"); _emit_yaml(v, indent+1)
+            else: print(f"{p}{k}: {v}")
     elif isinstance(d, list):
         for item in d:
             if isinstance(item, dict):
                 first = True
                 for k, v in item.items():
-                    print(f"{p}{'- ' if first else '  '}{k}: {v}")
-                    first = False
-            else:
-                print(f"{p}- {item}")
-    else:
-        print(f"{p}{d}")
+                    print(f"{p}{'- ' if first else '  '}{k}: {v}"); first = False
+            else: print(f"{p}- {item}")
+    else: print(f"{p}{d}")
 
 def _emit_csv(data, headers=None):
-    """Print data as CSV."""
+    """CSV output."""
     buf = io.StringIO()
     if isinstance(data, list) and data and isinstance(data[0], dict):
         keys = headers or list(data[0].keys())
-        w = csv.DictWriter(buf, fieldnames=keys)
-        w.writeheader()
-        for row in data:
-            w.writerow({k: row.get(k,"") for k in keys})
+        w = csv.DictWriter(buf, fieldnames=keys); w.writeheader()
+        for row in data: w.writerow({k: row.get(k,"") for k in keys})
     elif isinstance(data, dict):
         w = csv.writer(buf)
-        for k, v in data.items():
-            w.writerow([k, v])
+        for k, v in data.items(): w.writerow([k, v])
     print(buf.getvalue().rstrip())
 
 def _emit_raw(data):
-    """Print data as key=value pairs, one per line. Good for grep."""
+    """Key=value output for grep."""
     if isinstance(data, dict):
         for k, v in data.items():
             if isinstance(v, dict):
-                for k2, v2 in v.items():
-                    print(f"{k}.{k2}={v2}")
-            else:
-                print(f"{k}={v}")
+                for k2, v2 in v.items(): print(f"{k}.{k2}={v2}")
+            else: print(f"{k}={v}")
     elif isinstance(data, list):
         for item in data:
-            if isinstance(item, dict):
-                print("\t".join(str(v) for v in item.values()))
-            else:
-                print(item)
-    else:
-        print(data)
+            if isinstance(item, dict): print("\t".join(str(v) for v in item.values()))
+            else: print(item)
+    else: print(data)
 
 def _emit_table(rows, headers=None):
-    """Print a list of dicts as an aligned text table with column headers."""
-    if not rows:
-        return
+    """Aligned text table."""
+    if not rows: return
     keys = headers or list(rows[0].keys())
     widths = {k: max(len(str(k)), max((len(str(r.get(k,""))) for r in rows), default=0)) for k in keys}
     print("  ".join(str(k).ljust(widths[k]) for k in keys))
@@ -516,159 +395,11 @@ def _emit_table(rows, headers=None):
         print("  ".join(str(row.get(k,"")).ljust(widths[k]) for k in keys))
 
 
-# Command functions — one per CLI command.
-#
-# Each function is named cmd_<command> where <command> matches the
-# COMMANDS table key (with dashes replaced by underscores).
-# They receive the parsed argparse args and do the work.
+# Command functions
+# Named: cmd_<group>_<subcommand> (dashes become underscores)
 
-def cmd_iff_info(args):
-    """Show a summary of an IFF file: how many chunks, what types."""
-    IffFile = _iff_file()
-    iff = IffFile.read(args.file)
-    types = {}
-    for c in iff.chunks:
-        t = c.type_code if hasattr(c, 'type_code') else type(c).__name__
-        types[t] = types.get(t, 0) + 1
-    data = {"file": args.file, "chunks": len(iff.chunks), "types": types}
-    if args.format == "table":
-        print(f"IFF: {args.file}")
-        print(f"Chunks: {len(iff.chunks)}")
-        print(f"\nType    Count")
-        print(f"----    -----")
-        for t, c in sorted(types.items(), key=lambda x: -x[1]):
-            print(f"{t:<8} {c}")
-    else:
-        _emit(data, args.format)
-
-def cmd_iff_chunks(args):
-    """List every chunk in an IFF file. Optionally filter by type."""
-    IffFile = _iff_file()
-    iff = IffFile.read(args.file)
-    rows = []
-    for c in iff.chunks:
-        t = c.type_code if hasattr(c, 'type_code') else type(c).__name__
-        if args.type and t != args.type:
-            continue
-        rows.append({
-            "type": t, "id": c.chunk_id,
-            "label": getattr(c, 'chunk_label', ''),
-            "size": getattr(c, 'chunk_size', 0),
-        })
-    _emit(rows, args.format, ["type", "id", "label", "size"])
-
-def cmd_iff_strings(args):
-    """Show string tables in an IFF file. Strings are how objects get their names,
-    descriptions, and menu text. Each string has up to 20 language translations."""
-    IffFile = _iff_file()
-    iff = IffFile.read(args.file)
-    from formats.iff.chunks.str_ import STR, CTSS
-    results = []
-    for chunk in iff.chunks:
-        if not isinstance(chunk, (STR, CTSS)):
-            continue
-        if args.chunk_id is not None and chunk.chunk_id != args.chunk_id:
-            continue
-        for idx, lang_set in enumerate(chunk.strings):
-            for lang_code, entry in lang_set.languages.items():
-                if args.lang is not None and lang_code != args.lang:
-                    continue
-                results.append({
-                    "chunk_id": chunk.chunk_id,
-                    "chunk_type": chunk.type_code if hasattr(chunk, 'type_code') else type(chunk).__name__,
-                    "index": idx, "lang": lang_code, "text": entry.value,
-                })
-    _emit(results, args.format, ["chunk_id", "chunk_type", "index", "lang", "text"])
-
-def cmd_iff_objects(args):
-    """List all object definitions (OBJD chunks) in an IFF file.
-    Shows GUID, name, type, and catalog price."""
-    IffFile = _iff_file()
-    iff = IffFile.read(args.file)
-    from formats.iff.chunks.objd import OBJD
-    rows = []
-    for c in iff.chunks:
-        if not isinstance(c, OBJD):
-            continue
-        rows.append({
-            "id": c.chunk_id,
-            "guid": f"0x{c.guid:08X}" if c.guid else "0x00000000",
-            "label": getattr(c, 'chunk_label', ''),
-            "type": str(c.object_type) if hasattr(c, 'object_type') else "",
-            "price": c.price if hasattr(c, 'price') else 0,
-        })
-    _emit(rows, args.format, ["id", "guid", "label", "type", "price"])
-
-def cmd_iff_bhav(args):
-    """List all behavior scripts (BHAV chunks) in an IFF file.
-    With --id, shows the individual instructions of one specific BHAV."""
-    IffFile = _iff_file()
-    iff = IffFile.read(args.file)
-    from formats.iff.chunks.bhav import BHAV
-    if args.id is not None:
-        for c in iff.chunks:
-            if isinstance(c, BHAV) and c.chunk_id == args.id:
-                print(f"BHAV #{c.chunk_id}: {getattr(c, 'chunk_label', '')}")
-                print(f"Instructions: {len(c.instructions)}")
-                for i, inst in enumerate(c.instructions):
-                    opcode = inst.opcode if hasattr(inst, 'opcode') else 0
-                    true_t = inst.true_target if hasattr(inst, 'true_target') else 0
-                    false_t = inst.false_target if hasattr(inst, 'false_target') else 0
-                    print(f"  [{i:>3}] opcode=0x{opcode:04X}  T->{true_t}  F->{false_t}")
-                return
-        print(f"ERROR: BHAV #{args.id} not found", file=sys.stderr)
-        sys.exit(1)
-    rows = []
-    for c in iff.chunks:
-        if not isinstance(c, BHAV):
-            continue
-        rows.append({
-            "id": c.chunk_id,
-            "label": getattr(c, 'chunk_label', ''),
-            "instructions": len(c.instructions),
-        })
-    _emit(rows, args.format, ["id", "label", "instructions"])
-
-
-def cmd_far_list(args):
-    """List every file inside a .far archive (The Sims' compressed archive format)."""
-    try:
-        FAR1Archive = _far1()
-        arc = FAR1Archive(args.file)
-        rows = [{"index": i, "name": e.filename, "size": e.file_size1}
-                for i, e in enumerate(arc.entries)]
-        if args.format == "table":
-            print(f"FAR Archive: {args.file} ({len(rows)} files)")
-        _emit(rows, args.format, ["index", "name", "size"])
-    except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
-
-def cmd_far_extract(args):
-    """Extract files from a .far archive to a directory."""
-    try:
-        FAR1Archive = _far1()
-        arc = FAR1Archive(args.file)
-        out = Path(args.output)
-        out.mkdir(parents=True, exist_ok=True)
-        if args.name:
-            data = arc.get_entry(args.name)
-            if data is None:
-                print(f"ERROR: '{args.name}' not found in archive", file=sys.stderr)
-                sys.exit(1)
-            (out / args.name).write_bytes(data)
-            print(f"Extracted: {args.name} ({len(data)} bytes)")
-        else:
-            arc.extract_all(str(out))
-            print(f"Extracted {len(arc.entries)} files to {out}")
-    except Exception as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
-
-
-def cmd_inspect(args):
-    """List all families and all characters in a neighborhood save file.
-    This is the starting point: see who lives here."""
+def cmd_character_inspect(args):
+    """List all characters in a neighborhood with trait summaries."""
     mgr = _load_save(args.file)
     families = [{"id": fid, "house": f.house_number, "budget": f.budget,
                  "members": f.num_members, "status": "townie" if f.is_townie else "resident"}
@@ -682,692 +413,448 @@ def cmd_inspect(args):
     if args.format == "table":
         print(f"Neighborhood: {args.file}")
         print(f"Families: {len(families)}  |  Characters: {len(characters)}\n")
-        if families:
-            print("FAMILIES")
-            _emit_table(families, ["id","house","budget","members","status"])
-        if characters:
-            print("\nCHARACTERS")
-            _emit_table(characters, ["id","name","traits"])
+        if families: print("FAMILIES"); _emit_table(families, ["id","house","budget","members","status"])
+        if characters: print("\nCHARACTERS"); _emit_table(characters, ["id","name","traits"])
     else:
         _emit({"families": families, "characters": characters}, args.format)
 
-def cmd_families(args):
-    """List families with their house numbers, budgets, and member counts."""
-    mgr = _load_save(args.file)
-    rows = [{"id": fid, "house": f.house_number, "budget": f.budget,
-             "members": f.num_members, "status": "townie" if f.is_townie else "resident"}
-            for fid, f in sorted(mgr.families.items())]
-    _emit(rows, args.format, ["id","house","budget","members","status"])
-
-def cmd_character(args):
-    """Show a full character sheet for one Sim: traits, skills, demographics,
-    and relationships. The name can be a partial match ('Bob' finds 'Bob Newbie')."""
+def cmd_character_show(args):
+    """Full character sheet for one Sim."""
     mgr = _load_save(args.file)
     nid, n = _find(mgr, args.name)
-    if not n.person_data:
-        print(f"ERROR: {n.name} has no person_data", file=sys.stderr)
-        sys.exit(1)
-    tr = _read_traits(n.person_data)
-    sk = _read_skills(n.person_data)
-    dm = _read_demo(n.person_data)
+    if not n.person_data: print(f"ERROR: {n.name} has no person_data", file=sys.stderr); sys.exit(1)
+    tr = _read_traits(n.person_data); sk = _read_skills(n.person_data); dm = _read_demo(n.person_data)
     data = {"name": n.name, "neighbor_id": nid, "demographics": dm,
             "traits": {k:v["display"] for k,v in tr.items()},
-            "traits_raw": {k:v["raw"] for k,v in tr.items()},
             "skills": {k:v["display"] for k,v in sk.items()},
-            "skills_raw": {k:v["raw"] for k,v in sk.items()},
             "relationships": {str(k):v for k,v in n.relationships.items()}}
     if args.format == "table":
         print(f"  {n.name}  (neighbor #{nid})")
         print(f"\n  {dm['age']}  |  {dm['gender']}  |  {dm['zodiac']}  |  {dm['career']}")
         print(f"\n  PERSONALITY")
         for t in ["neat","outgoing","active","playful","nice","generous"]:
-            if t in tr:
-                v = tr[t]
-                print(f"  {v['low']:>8} [{_bar(v['display'])}] {v['high']:<8} {v['display']:>2}")
+            if t in tr: v=tr[t]; print(f"  {v['low']:>8} [{_bar(v['display'])}] {v['high']:<8} {v['display']:>2}")
         print(f"\n  SKILLS")
         for s in VISIBLE_SKILLS:
-            if s in sk:
-                v = sk[s]
-                print(f"  {s:>12} [{_bar(v['display'])}] {v['display']:>2}")
+            if s in sk: v=sk[s]; print(f"  {s:>12} [{_bar(v['display'])}] {v['display']:>2}")
         if n.relationships:
             print(f"\n  RELATIONSHIPS")
             for rid, rv in list(n.relationships.items())[:10]:
-                d = rv[0] if len(rv)>0 else "?"
-                l = rv[1] if len(rv)>1 else "?"
+                d = rv[0] if len(rv)>0 else "?"; l = rv[1] if len(rv)>1 else "?"
                 print(f"  Neighbor {rid}: daily={d}, lifetime={l}")
-    else:
-        _emit(data, args.format)
+    else: _emit(data, args.format)
 
-def cmd_traits(args):
-    """Show personality traits for one Sim with visual bars and raw values."""
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
-    if not n.person_data:
-        print(f"ERROR: no person_data", file=sys.stderr)
-        sys.exit(1)
+def cmd_character_traits(args):
+    """Show personality traits with visual bars."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
+    if not n.person_data: print(f"ERROR: no person_data", file=sys.stderr); sys.exit(1)
     tr = _read_traits(n.person_data)
     if args.format == "table":
         print(f"{n.name} — Personality")
         for t in ["neat","outgoing","active","playful","nice","generous"]:
-            if t in tr:
-                v = tr[t]
-                print(f"  {v['low']:>8} [{_bar(v['display'])}] {v['high']:<8} {v['display']:>2}  (raw {v['raw']})")
-    else:
-        _emit({"name": n.name, "traits": {k:v["display"] for k,v in tr.items()}}, args.format)
+            if t in tr: v=tr[t]; print(f"  {v['low']:>8} [{_bar(v['display'])}] {v['high']:<8} {v['display']:>2}  (raw {v['raw']})")
+    else: _emit({"name": n.name, "traits": {k:v["display"] for k,v in tr.items()}}, args.format)
 
-def cmd_skills(args):
-    """Show skill levels for one Sim with visual bars and raw values."""
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
-    if not n.person_data:
-        print(f"ERROR: no person_data", file=sys.stderr)
-        sys.exit(1)
+def cmd_character_skills(args):
+    """Show skill levels with visual bars."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
+    if not n.person_data: print(f"ERROR: no person_data", file=sys.stderr); sys.exit(1)
     sk = _read_skills(n.person_data)
     if args.format == "table":
         print(f"{n.name} — Skills")
         for s in VISIBLE_SKILLS:
-            if s in sk:
-                v = sk[s]
-                print(f"  {s:>12} [{_bar(v['display'])}] {v['display']:>2}  (raw {v['raw']})")
-    else:
-        _emit({"name": n.name, "skills": {k:v["display"] for k,v in sk.items()}}, args.format)
+            if s in sk: v=sk[s]; print(f"  {s:>12} [{_bar(v['display'])}] {v['display']:>2}  (raw {v['raw']})")
+    else: _emit({"name": n.name, "skills": {k:v["display"] for k,v in sk.items()}}, args.format)
 
-def cmd_set_trait(args):
-    """Write a new personality trait value to the save file. Scale is 0-10."""
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
+def cmd_character_set_trait(args):
+    """Write a personality trait value to the save file (0-10)."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
     raw = max(0, min(args.value, 10)) * 100
     if mgr.set_sim_personality(nid, args.trait, raw):
-        mgr.save()
-        print(f"Saved. {n.name} {args.trait} = {args.value}")
-    else:
-        sys.exit(1)
+        mgr.save(); print(f"Saved. {n.name} {args.trait} = {args.value}")
+    else: sys.exit(1)
 
-def cmd_set_skill(args):
-    """Write a new skill level to the save file. Scale is 0-10."""
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
+def cmd_character_set_skill(args):
+    """Write a skill level to the save file (0-10)."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
     raw = max(0, min(args.value, 10)) * 100
     if mgr.set_sim_skill(nid, args.skill, raw):
-        mgr.save()
-        print(f"Saved. {n.name} {args.skill} = {args.value}")
-    else:
-        sys.exit(1)
+        mgr.save(); print(f"Saved. {n.name} {args.skill} = {args.value}")
+    else: sys.exit(1)
 
-def cmd_set_money(args):
-    """Write a new family budget to the save file."""
-    mgr = _load_save(args.file)
-    if mgr.set_family_money(args.family_id, args.amount):
-        mgr.save()
-        print(f"Saved. Family {args.family_id} = \u00a7{args.amount:,}")
-    else:
-        sys.exit(1)
-
-def cmd_dump_raw(args):
-    """Dump the entire PersonData array for one Sim.
-
-    Shows all 80+ field indices with their values and known field names.
-    Nonzero values are marked with * so you can spot the interesting ones.
-    Useful for debugging and verifying the field indices are correct.
-    """
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
-    if not n.person_data:
-        print(f"ERROR: no person_data", file=sys.stderr)
-        sys.exit(1)
-    # Build a lookup of index -> field name from our reference tables
+def cmd_character_dump_raw(args):
+    """Dump raw PersonData array with field name annotations."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
+    if not n.person_data: print(f"ERROR: no person_data", file=sys.stderr); sys.exit(1)
     known = {}
-    for name, info in TRAIT_INFO.items():
-        known[info["index"]] = f"personality.{name}"
-    for name, info in SKILL_INFO.items():
-        known[info["index"]] = f"skill.{name}"
-    for name, idx in DEMO_FIELDS.items():
-        known[idx] = f"demo.{name}"
-    for name, idx in CAREER_FIELDS.items():
-        known[idx] = f"career.{name}"
+    for name, info in TRAIT_INFO.items(): known[info["index"]] = f"personality.{name}"
+    for name, info in SKILL_INFO.items(): known[info["index"]] = f"skill.{name}"
+    for name, idx in DEMO_FIELDS.items(): known[idx] = f"demo.{name}"
+    for name, idx in CAREER_FIELDS.items(): known[idx] = f"career.{name}"
     known.update({0:"idle_state", 1:"npc_fee_amount", 8:"current_outfit"})
     rows = [{"index":i, "value":v, "field":known.get(i,""), "nz":"*" if v!=0 else ""}
             for i,v in enumerate(n.person_data)]
     if args.format == "table":
         print(f"PersonData for {n.name} ({len(n.person_data)} fields)")
-        for r in rows:
-            print(f"  [{r['index']:>3}] {r['value']:>6}{r['nz']:>2}  {r['field']}")
-    else:
-        _emit(rows, args.format, ["index","value","field"])
+        for r in rows: print(f"  [{r['index']:>3}] {r['value']:>6}{r['nz']:>2}  {r['field']}")
+    else: _emit(rows, args.format, ["index","value","field"])
 
-
-def cmd_uplift(args):
-    """Extract a Sim's data from a save file into SIMS-UPLIFT.yml format.
-
-    SIMS-UPLIFT.yml is the machine-readable interchange format. It contains
-    just the structured data: traits, skills, career, relationships, identity.
-    No narrative. No YAML Jazz. No soul_philosophy.
-
-    The LLM reads this file and generates CHARACTER.yml from it — adding
-    emoji_identity, mind_mirror, soul_philosophy, description, relationship
-    narratives, and everything else that requires taste and creativity.
-
-    The file is saved in the character's directory as SIMS-UPLIFT.yml so it
-    can be edited, synced, and used for homecoming later.
-    """
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
-    if not n.person_data:
-        print(f"ERROR: no person_data", file=sys.stderr)
-        sys.exit(1)
-    tr = _read_traits(n.person_data)
-    sk = _read_skills(n.person_data)
-    dm = _read_demo(n.person_data)
-
-    # Find family info for this Sim
-    family_id = 0
-    family_budget = 0
-    house_number = 0
-    family_members = []
+def cmd_character_uplift(args):
+    """Extract Sim data from save file into SIMS-UPLIFT.yml format.
+    The LLM reads this to generate CHARACTER.yml."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
+    if not n.person_data: print(f"ERROR: no person_data", file=sys.stderr); sys.exit(1)
+    tr = _read_traits(n.person_data); sk = _read_skills(n.person_data); dm = _read_demo(n.person_data)
+    family_id = family_budget = house_number = 0; family_members = []
     for fid, fam in mgr.families.items():
         if n.guid in fam.member_guids:
-            family_id = fid
-            family_budget = fam.budget
-            house_number = fam.house_number
-            family_members = [g for g in fam.member_guids if g != n.guid]
-            break
-
-    # Build the SIMS-UPLIFT.yml
-    lines = [
-        f"# SIMS-UPLIFT.yml — {n.name}",
-        f"# Extracted from: {args.file}",
-        f"# Direction: uplift (binary -> yaml)",
-        f"# The LLM reads this to generate CHARACTER.yml.",
-        f"# For homecoming, the LLM updates this and obliterator.py writes it back.",
-        "",
-        "schema_version: 1",
-        "",
-        "source:",
-        f"  file: {args.file}",
-        f"  neighbor_id: {nid}",
-        f"  guid: {n.guid}",
-        f"  family_id: {family_id}",
-        f"  family_budget: {family_budget}",
-        f"  house_number: {house_number}",
-        f"  direction: uplift",
-        "",
-        "identity:",
-        f"  name: {n.name}",
-        f"  age: {dm['age']}",
-        f"  gender: {dm['gender']}",
-        f"  skin_color: {dm['skin_color']}",
-        f"  zodiac: {dm['zodiac'].lower()}",
-        "",
-        "traits:",
-    ]
-    for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
-        if t in tr:
-            lines.append(f"  {t}: {tr[t]['display']}")
+            family_id = fid; family_budget = fam.budget; house_number = fam.house_number
+            family_members = [g for g in fam.member_guids if g != n.guid]; break
+    lines = [f"# SIMS-UPLIFT.yml — {n.name}", f"# Source: {args.file}", "",
+             "schema_version: 1", "", "source:",
+             f"  file: {args.file}", f"  neighbor_id: {nid}", f"  guid: {n.guid}",
+             f"  family_id: {family_id}", f"  family_budget: {family_budget}",
+             f"  house_number: {house_number}", f"  direction: uplift", "",
+             "identity:", f"  name: {n.name}", f"  age: {dm['age']}",
+             f"  gender: {dm['gender']}", f"  skin_color: {dm['skin_color']}",
+             f"  zodiac: {dm['zodiac'].lower()}", "", "traits:"]
+    for t in ["neat","outgoing","active","playful","nice","generous"]:
+        if t in tr: lines.append(f"  {t}: {tr[t]['display']}")
     lines += ["", "skills:"]
     for s in VISIBLE_SKILLS:
-        if s in sk:
-            lines.append(f"  {s}: {sk[s]['display']}")
-    lines += [
-        "",
-        "career:",
-        f"  track: {dm['career'].lower().replace('/', '_')}",
-        f"  performance: {dm['job_performance']}",
-    ]
-
-    # Relationships
-    lines += ["", "relationships:"]
+        if s in sk: lines.append(f"  {s}: {sk[s]['display']}")
+    lines += ["", "career:", f"  track: {dm['career'].lower().replace('/','_')}",
+              f"  performance: {dm['job_performance']}", "", "relationships:"]
     if n.relationships:
-        for rel_id, rel_vals in n.relationships.items():
-            daily = rel_vals[0] if len(rel_vals) > 0 else 0
-            lifetime = rel_vals[1] if len(rel_vals) > 1 else 0
-            # Try to find the neighbor's name
-            rel_name = ""
-            for other_nid, other in mgr.neighbors.items():
-                if other_nid == rel_id:
-                    rel_name = other.name
-                    break
-            lines.append(f"  {rel_id}:")
-            lines.append(f"    daily: {daily}")
-            lines.append(f"    lifetime: {lifetime}")
-            if rel_name:
-                lines.append(f"    name: {rel_name}")
-    else:
-        lines.append("  {}")
-
-    # Family members
-    lines += ["", f"family_members: {family_members}"]
-    lines.append("")
-
+        for rel_id, rv in n.relationships.items():
+            d = rv[0] if len(rv)>0 else 0; l = rv[1] if len(rv)>1 else 0
+            rn = next((o.name for oid, o in mgr.neighbors.items() if oid == rel_id), "")
+            lines += [f"  {rel_id}:", f"    daily: {d}", f"    lifetime: {l}"]
+            if rn: lines.append(f"    name: {rn}")
+    else: lines.append("  {}")
+    lines += ["", f"family_members: {family_members}", ""]
     out = "\n".join(lines)
     if args.output:
-        p = Path(args.output)
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(out)
-        print(f"Wrote {p}")
-    else:
-        print(out, end="")
+        p = Path(args.output); p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(out); print(f"Wrote {p}")
+    else: print(out, end="")
 
-
-def cmd_homecoming(args):
-    """Write a SIMS-UPLIFT.yml file back into a neighborhood save file.
-
-    This is the return journey. After the Sim has lived in MOOLLM — gained
-    skills, made friends, changed careers — the LLM generates an updated
-    SIMS-UPLIFT.yml with direction: homecoming. This command reads that file
-    and writes the data back into the binary save.
-
-    What gets written back:
-    - Personality traits (sims can change in MOOLLM)
-    - Skills (sims can learn in MOOLLM)
-    - Career track and performance
-    - Relationships (new friends from MOOLLM, mapped to neighbor IDs)
-
-    What doesn't go back (MOOLLM-only):
-    - mind_mirror, soul_philosophy, emoji_identity, description
-    - These live in CHARACTER.yml and have no binary representation
-    """
+def cmd_character_come_home(args):
+    """Write SIMS-UPLIFT.yml back into save file. Welcome home."""
     mgr = _load_save(args.file)
-    uplift_path = Path(args.uplift_yml)
-    if not uplift_path.is_file():
-        print(f"ERROR: {uplift_path} not found", file=sys.stderr)
-        sys.exit(1)
-
-    # Parse the SIMS-UPLIFT.yml
-    data = _parse_uplift_yml(uplift_path.read_text())
-
+    up = Path(args.uplift_yml)
+    if not up.is_file(): print(f"ERROR: {up} not found", file=sys.stderr); sys.exit(1)
+    data = _parse_uplift_yml(up.read_text())
     nid = data.get("neighbor_id")
     if nid is None or nid not in mgr.neighbors:
-        # Try to find by name
         name = data.get("name", "")
-        if name:
-            nid, n = _find(mgr, name)
-        else:
-            print(f"ERROR: No neighbor_id in uplift file and no name to search", file=sys.stderr)
-            sys.exit(1)
-
+        if name: nid, _ = _find(mgr, name)
+        else: print(f"ERROR: No neighbor_id or name in uplift file", file=sys.stderr); sys.exit(1)
     changes = 0
-
-    # Write traits
-    for trait_name in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
-        val = data.get("traits", {}).get(trait_name)
-        if val is not None:
-            raw = max(0, min(int(val), 10)) * 100
-            if mgr.set_sim_personality(nid, trait_name, raw):
-                changes += 1
-
-    # Write skills
-    for skill_name in VISIBLE_SKILLS:
-        val = data.get("skills", {}).get(skill_name)
-        if val is not None:
-            raw = max(0, min(int(val), 10)) * 100
-            if mgr.set_sim_skill(nid, skill_name, raw):
-                changes += 1
-
-    # Write career
-    career = data.get("career", {})
-    track_name = career.get("track", "").lower()
-    # Reverse lookup career track name to ID
-    track_id = None
-    for tid, tname in CAREER_TRACKS.items():
-        if tname.lower().replace("/", "_") == track_name or tname.lower() == track_name:
-            track_id = tid
-            break
+    for t in ["neat","outgoing","active","playful","nice","generous"]:
+        v = data.get("traits",{}).get(t)
+        if v is not None:
+            if mgr.set_sim_personality(nid, t, max(0,min(int(v),10))*100): changes += 1
+    for s in VISIBLE_SKILLS:
+        v = data.get("skills",{}).get(s)
+        if v is not None:
+            if mgr.set_sim_skill(nid, s, max(0,min(int(v),10))*100): changes += 1
+    career = data.get("career",{})
+    tn = career.get("track","").lower()
+    tid = next((k for k,v in CAREER_TRACKS.items() if v.lower().replace("/","_")==tn or v.lower()==tn), None)
     perf = career.get("performance")
-    if track_id is not None or perf is not None:
-        mgr.set_sim_career(nid, job_type=track_id, job_performance=perf)
-        changes += 1
-
-    # Write family budget
-    budget = data.get("family_budget")
-    family_id = data.get("family_id")
-    if budget is not None and family_id is not None and family_id in mgr.families:
-        mgr.set_family_money(family_id, int(budget))
-        changes += 1
-
+    if tid is not None or perf is not None:
+        mgr.set_sim_career(nid, job_type=tid, job_performance=perf); changes += 1
+    budget = data.get("family_budget"); fid = data.get("family_id")
+    if budget is not None and fid is not None and fid in mgr.families:
+        mgr.set_family_money(fid, int(budget)); changes += 1
     if changes > 0:
         mgr.save()
         print(f"Homecoming complete. {changes} fields written to {args.file}")
         print(f"Welcome home, {data.get('name', 'Sim')}.")
-    else:
-        print("No changes to write.")
+    else: print("No changes to write.")
 
+def cmd_character_sync(args):
+    """Compare save file against CHARACTER.yml, emit merge events for the LLM."""
+    mgr = _load_save(args.file); nid, n = _find(mgr, args.name)
+    if not n.person_data: print(f"ERROR: no person_data", file=sys.stderr); sys.exit(1)
+    save_tr = _read_traits(n.person_data); save_sk = _read_skills(n.person_data); save_dm = _read_demo(n.person_data)
+    yp = Path(args.character_yml)
+    if not yp.is_file():
+        _emit([{"type":"NEW_CHARACTER","severity":"action",
+                "message":f"No CHARACTER.yml at {yp}. Run: obliterator character uplift {args.file} '{args.name}'"}], args.format)
+        return
+    yt, ys, yd, yr = _parse_character_yml(yp.read_text())
+    events = []; drift = 0
+    for t in ["neat","outgoing","active","playful","nice","generous"]:
+        sv = save_tr.get(t,{}).get("display"); yv = yt.get(t)
+        if sv is None: continue
+        if yv is None or sv != yv:
+            events.append({"type":"TRAIT_DRIFT","severity":"warning","field":t,"save":sv,"yaml":yv,
+                           "message":f"{t}: save={sv} vs yaml={yv}"}); drift += 1
+        else: events.append({"type":"TRAIT_MATCH","severity":"ok","field":t,"value":sv,"message":f"{t}: {sv} (matches)"})
+    for s in VISIBLE_SKILLS:
+        sv = save_sk.get(s,{}).get("display"); yv = ys.get(s)
+        if sv is None: continue
+        if yv is None or sv > (yv or 0):
+            events.append({"type":"SKILL_GAINED","severity":"info","field":s,"save":sv,"yaml":yv or 0,
+                           "message":f"{s}: {yv or 0} -> {sv}"})
+        elif sv < yv:
+            events.append({"type":"SKILL_LOST","severity":"warning","field":s,"save":sv,"yaml":yv,
+                           "message":f"{s}: {yv} -> {sv}"})
+        else: events.append({"type":"SKILL_MATCH","severity":"ok","field":s,"value":sv,"message":f"{s}: {sv} (matches)"})
+    if drift >= 2:
+        events.append({"type":"NARRATIVE_STALE","severity":"action","drift_count":drift,
+                       "message":f"{drift} traits drifted. soul_philosophy may need revision."})
+    events.append({"type":"NEEDS_NOTE","severity":"info","message":"Motives are runtime state, not in save file."})
+    if args.format == "table":
+        actions = sum(1 for e in events if e["severity"]=="action")
+        warnings = sum(1 for e in events if e["severity"]=="warning")
+        print(f"SYNC: {n.name}\nSave: {args.file}  |  YAML: {args.character_yml}")
+        print(f"Events: {len(events)} ({actions} actions, {warnings} warnings)\n")
+        for e in events:
+            icon = {"ok":"  ","info":"->","warning":"!!","action":">>"}
+            print(f"  {icon.get(e['severity'],'  ')} [{e['type']}] {e['message']}")
+    else: _emit({"name":n.name,"events":events}, args.format)
+
+def cmd_family_list(args):
+    """List families with budgets and house assignments."""
+    mgr = _load_save(args.file)
+    rows = [{"id": fid, "house": f.house_number, "budget": f.budget,
+             "members": f.num_members, "status": "townie" if f.is_townie else "resident"}
+            for fid, f in sorted(mgr.families.items())]
+    _emit(rows, args.format, ["id","house","budget","members","status"])
+
+def cmd_family_set_money(args):
+    """Set family budget in Simoleons."""
+    mgr = _load_save(args.file)
+    if mgr.set_family_money(args.family_id, args.amount):
+        mgr.save(); print(f"Saved. Family {args.family_id} = \u00a7{args.amount:,}")
+    else: sys.exit(1)
+
+def cmd_iff_info(args):
+    """Show IFF file summary."""
+    IffFile = _iff_file(); iff = IffFile.read(args.file)
+    types = {}
+    for c in iff.chunks:
+        t = c.type_code if hasattr(c,'type_code') else type(c).__name__
+        types[t] = types.get(t,0)+1
+    if args.format == "table":
+        print(f"IFF: {args.file}\nChunks: {len(iff.chunks)}\n\nType    Count\n----    -----")
+        for t,c in sorted(types.items(), key=lambda x:-x[1]): print(f"{t:<8} {c}")
+    else: _emit({"file":args.file,"chunks":len(iff.chunks),"types":types}, args.format)
+
+def cmd_iff_chunks(args):
+    """List all chunks in an IFF file."""
+    IffFile = _iff_file(); iff = IffFile.read(args.file)
+    rows = []
+    for c in iff.chunks:
+        t = c.type_code if hasattr(c,'type_code') else type(c).__name__
+        if args.type and t != args.type: continue
+        rows.append({"type":t,"id":c.chunk_id,"label":getattr(c,'chunk_label',''),"size":getattr(c,'chunk_size',0)})
+    _emit(rows, args.format, ["type","id","label","size"])
+
+def cmd_iff_strings(args):
+    """Show string tables in an IFF file."""
+    IffFile = _iff_file(); iff = IffFile.read(args.file)
+    from formats.iff.chunks.str_ import STR, CTSS
+    results = []
+    for chunk in iff.chunks:
+        if not isinstance(chunk,(STR,CTSS)): continue
+        if args.chunk_id is not None and chunk.chunk_id != args.chunk_id: continue
+        for idx, ls in enumerate(chunk.strings):
+            for lc, entry in ls.languages.items():
+                if args.lang is not None and lc != args.lang: continue
+                results.append({"chunk_id":chunk.chunk_id,"index":idx,"lang":lc,"text":entry.value})
+    _emit(results, args.format, ["chunk_id","index","lang","text"])
+
+def cmd_iff_objects(args):
+    """List OBJD object definitions."""
+    IffFile = _iff_file(); iff = IffFile.read(args.file)
+    from formats.iff.chunks.objd import OBJD
+    rows = [{"id":c.chunk_id,"guid":f"0x{c.guid:08X}" if c.guid else "0x00000000",
+             "label":getattr(c,'chunk_label',''),"price":c.price if hasattr(c,'price') else 0}
+            for c in iff.chunks if isinstance(c,OBJD)]
+    _emit(rows, args.format, ["id","guid","label","price"])
+
+def cmd_iff_bhav(args):
+    """List or disassemble BHAV behavior scripts."""
+    IffFile = _iff_file(); iff = IffFile.read(args.file)
+    from formats.iff.chunks.bhav import BHAV
+    if args.id is not None:
+        for c in iff.chunks:
+            if isinstance(c,BHAV) and c.chunk_id == args.id:
+                print(f"BHAV #{c.chunk_id}: {getattr(c,'chunk_label','')}\nInstructions: {len(c.instructions)}")
+                for i,inst in enumerate(c.instructions):
+                    op = inst.opcode if hasattr(inst,'opcode') else 0
+                    tt = inst.true_pointer if hasattr(inst,'true_pointer') else 0
+                    ft = inst.false_pointer if hasattr(inst,'false_pointer') else 0
+                    print(f"  [{i:>3}] opcode=0x{op:04X}  T->{tt}  F->{ft}")
+                return
+        print(f"ERROR: BHAV #{args.id} not found", file=sys.stderr); sys.exit(1)
+    rows = [{"id":c.chunk_id,"label":getattr(c,'chunk_label',''),"instructions":len(c.instructions)}
+            for c in iff.chunks if isinstance(c,BHAV)]
+    _emit(rows, args.format, ["id","label","instructions"])
+
+def cmd_far_list(args):
+    """List contents of a .far archive."""
+    try:
+        FAR1Archive = _far1(); arc = FAR1Archive(args.file)
+        rows = [{"index":i,"name":e.filename,"size":e.file_size1} for i,e in enumerate(arc.entries)]
+        if args.format == "table": print(f"FAR: {args.file} ({len(rows)} files)")
+        _emit(rows, args.format, ["index","name","size"])
+    except Exception as e: print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
+
+def cmd_far_extract(args):
+    """Extract files from .far archive."""
+    try:
+        FAR1Archive = _far1(); arc = FAR1Archive(args.file)
+        out = Path(args.output); out.mkdir(parents=True, exist_ok=True)
+        if args.name:
+            data = arc.get_entry(args.name)
+            if data is None: print(f"ERROR: '{args.name}' not found", file=sys.stderr); sys.exit(1)
+            (out/args.name).write_bytes(data); print(f"Extracted: {args.name} ({len(data)} bytes)")
+        else:
+            arc.extract_all(str(out)); print(f"Extracted {len(arc.entries)} files to {out}")
+    except Exception as e: print(f"ERROR: {e}", file=sys.stderr); sys.exit(1)
+
+def cmd_tmog_export(args):
+    """Export .iff to IFF-OBJECT.yml (placeholder — schema defined, assembler not yet built)."""
+    print("tmog export: not yet implemented. See IFF-OBJECT-SCHEMA.yml for the target format.")
+    print("The BHAV assembler/disassembler and symbol table resolver are needed first.")
+    print(f"File: {args.file}")
+
+def cmd_tmog_import(args):
+    """Import IFF-OBJECT.yml to .iff (placeholder — assembler not yet built)."""
+    print("tmog import: not yet implemented. See IFF-OBJECT-SCHEMA.yml for the source format.")
+    print(f"File: {args.yml}")
+
+
+# YAML parsers for sync and come-home
 
 def _parse_uplift_yml(text):
-    """Parse a SIMS-UPLIFT.yml file into a flat dict for homecoming.
-
-    Returns a dict with keys: neighbor_id, name, traits, skills, career,
-    family_id, family_budget, etc.
-    """
-    result = {"traits": {}, "skills": {}, "career": {}}
-    section = None
-
+    """Parse SIMS-UPLIFT.yml into a dict for homecoming."""
+    result = {"traits":{},"skills":{},"career":{}}; section = None
     for line in text.split("\n"):
-        stripped = line.split("#")[0].rstrip()
-        if not stripped:
-            continue
-        indent = len(line) - len(line.lstrip())
-
-        # Top-level sections
-        if indent == 0 and stripped.endswith(":") and not stripped.startswith(" "):
-            word = stripped[:-1].strip()
-            if word in ("source", "identity", "traits", "skills", "career", "relationships"):
-                section = word
-                continue
-            else:
-                section = None
-                continue
-
-        if ":" not in stripped:
-            continue
-
-        key, _, val = stripped.partition(":")
-        key = key.strip()
-        val = val.strip()
-        if not val or val == "{}":
-            continue
-
-        # Try numeric
-        try:
-            num = int(val)
-        except ValueError:
-            num = None
-
-        if section == "source":
-            if key == "neighbor_id" and num is not None:
-                result["neighbor_id"] = num
-            elif key == "guid" and num is not None:
-                result["guid"] = num
-            elif key == "family_id" and num is not None:
-                result["family_id"] = num
-            elif key == "family_budget" and num is not None:
-                result["family_budget"] = num
-            elif key == "file":
-                result["source_file"] = val
-        elif section == "identity":
-            if key == "name":
-                result["name"] = val
-            elif key in ("age", "gender", "skin_color", "zodiac"):
-                result[key] = val
-        elif section == "traits":
-            if num is not None:
-                result["traits"][key] = num
-        elif section == "skills":
-            if num is not None:
-                result["skills"][key] = num
-        elif section == "career":
-            if key == "track":
-                result["career"]["track"] = val
-            elif key == "performance" and num is not None:
-                result["career"]["performance"] = num
-
+        s = line.split("#")[0].rstrip()
+        if not s: continue
+        indent = len(line)-len(line.lstrip())
+        if indent==0 and s.endswith(":") and not s.startswith(" "):
+            w = s[:-1].strip()
+            if w in ("source","identity","traits","skills","career","relationships"): section=w; continue
+            else: section=None; continue
+        if ":" not in s: continue
+        k,_,v = s.partition(":"); k=k.strip(); v=v.strip()
+        if not v or v=="{}": continue
+        try: num=int(v)
+        except: num=None
+        if section=="source":
+            if k=="neighbor_id" and num is not None: result["neighbor_id"]=num
+            elif k=="guid" and num is not None: result["guid"]=num
+            elif k=="family_id" and num is not None: result["family_id"]=num
+            elif k=="family_budget" and num is not None: result["family_budget"]=num
+        elif section=="identity":
+            if k=="name": result["name"]=v
+            elif k in ("age","gender","skin_color","zodiac"): result[k]=v
+        elif section=="traits" and num is not None: result["traits"][k]=num
+        elif section=="skills" and num is not None: result["skills"][k]=num
+        elif section=="career":
+            if k=="track": result["career"]["track"]=v
+            elif k=="performance" and num is not None: result["career"]["performance"]=num
     return result
 
-
-def cmd_sync(args):
-    """Compare a save file against an existing CHARACTER.yml and emit merge events.
-
-    Instead of replacing the YAML wholesale, sync diffs both sources field by
-    field and emits structured events telling the LLM what changed:
-
-      TRAIT_MATCH      — values agree, no action needed
-      TRAIT_DRIFT      — values differ, LLM decides how to merge
-      SKILL_GAINED     — Sim learned in The Sims, update + add memory
-      SKILL_LOST       — unusual decrease, investigate
-      CAREER_CHANGE    — switched tracks
-      RELATIONSHIP_NEW — met someone new in The Sims
-      NARRATIVE_STALE  — enough changed that the prose needs revision
-
-    The LLM reads these events, makes merge decisions, updates the YAML,
-    and can re-run sync to verify convergence. Iterate until clean.
-    """
-    mgr = _load_save(args.file)
-    nid, n = _find(mgr, args.name)
-    if not n.person_data:
-        print(f"ERROR: {n.name} has no person_data", file=sys.stderr)
-        sys.exit(1)
-
-    save_traits = _read_traits(n.person_data)
-    save_skills = _read_skills(n.person_data)
-    save_demo = _read_demo(n.person_data)
-
-    yml_path = Path(args.character_yml)
-    if not yml_path.is_file():
-        _emit([{"type": "NEW_CHARACTER", "severity": "action",
-                "message": f"No existing CHARACTER.yml at {yml_path}. Full uplift needed.",
-                "suggestion": f"Run: obliterator uplift {args.file} '{args.name}' -o {yml_path}"}],
-              args.format)
-        return
-
-    yml_traits, yml_skills, yml_demo, yml_rels = _parse_character_yml(yml_path.read_text())
-    events = []
-    trait_drift_count = 0
-
-    # Compare traits
-    for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
-        sv = save_traits.get(t, {}).get("display")
-        yv = yml_traits.get(t)
-        if sv is None:
-            continue
-        if yv is None:
-            events.append({"type": "TRAIT_DRIFT", "severity": "info",
-                           "field": t, "save": sv, "yaml": None,
-                           "message": f"{t}: save={sv}, YAML missing"})
-            trait_drift_count += 1
-        elif sv != yv:
-            delta = sv - yv
-            events.append({"type": "TRAIT_DRIFT", "severity": "warning",
-                           "field": t, "save": sv, "yaml": yv, "delta": delta,
-                           "message": f"{t}: save={sv} vs yaml={yv} ({'higher' if delta>0 else 'lower'} by {abs(delta)})",
-                           "suggestion": f"Update sims.traits.{t} to {sv}, or keep {yv} if MOOLLM changes intentional"})
-            trait_drift_count += 1
-        else:
-            events.append({"type": "TRAIT_MATCH", "severity": "ok",
-                           "field": t, "value": sv, "message": f"{t}: {sv} (matches)"})
-
-    # Compare skills
-    for s in VISIBLE_SKILLS:
-        sv = save_skills.get(s, {}).get("display")
-        yv = yml_skills.get(s)
-        if sv is None:
-            continue
-        if yv is None or sv > (yv or 0):
-            events.append({"type": "SKILL_GAINED", "severity": "info",
-                           "field": s, "save": sv, "yaml": yv or 0,
-                           "message": f"{s}: {yv or 0} -> {sv} (+{sv - (yv or 0)})",
-                           "suggestion": f"Sim gained {s}. Update and add a memory."})
-        elif sv < yv:
-            events.append({"type": "SKILL_LOST", "severity": "warning",
-                           "field": s, "save": sv, "yaml": yv,
-                           "message": f"{s}: {yv} -> {sv} (decreased)",
-                           "suggestion": "Unusual. Check if save is older."})
-        else:
-            events.append({"type": "SKILL_MATCH", "severity": "ok",
-                           "field": s, "value": sv, "message": f"{s}: {sv} (matches)"})
-
-    # Compare career
-    sc = save_demo.get("career", "Unemployed")
-    yc = yml_demo.get("career")
-    if yc and sc.lower() != yc.lower():
-        events.append({"type": "CAREER_CHANGE", "severity": "warning",
-                       "save": sc, "yaml": yc,
-                       "message": f"Career: {yc} -> {sc}",
-                       "suggestion": "Update career track and add a memory."})
-
-    # Compare demographics
-    for field in ["age", "gender", "zodiac"]:
-        sv = save_demo.get(field)
-        yv = yml_demo.get(field)
-        if yv and sv and str(sv).lower() != str(yv).lower():
-            events.append({"type": "DEMOGRAPHIC_DRIFT", "severity": "warning",
-                           "field": field, "save": sv, "yaml": yv,
-                           "message": f"{field}: {yv} -> {sv}"})
-
-    # New relationships
-    for rel_id, rel_vals in n.relationships.items():
-        daily = rel_vals[0] if len(rel_vals) > 0 else 0
-        lifetime = rel_vals[1] if len(rel_vals) > 1 else 0
-        if str(rel_id) not in yml_rels:
-            events.append({"type": "RELATIONSHIP_NEW", "severity": "info",
-                           "target_id": rel_id, "daily": daily, "lifetime": lifetime,
-                           "message": f"New relationship with neighbor {rel_id}: daily={daily}, lifetime={lifetime}",
-                           "suggestion": "LLM should generate a narrative from the scores."})
-
-    # Narrative staleness
-    if trait_drift_count >= 2:
-        events.append({"type": "NARRATIVE_STALE", "severity": "action",
-                       "drift_count": trait_drift_count,
-                       "message": f"{trait_drift_count} traits drifted. soul_philosophy may need revision.",
-                       "suggestion": "LLM should re-read traits and revise the character's voice."})
-
-    events.append({"type": "NEEDS_NOTE", "severity": "info",
-                   "message": "Motives are runtime state, not in save file. Update needs based on narrative."})
-
-    # Output
-    actions = sum(1 for e in events if e["severity"] == "action")
-    warnings = sum(1 for e in events if e["severity"] == "warning")
-    infos = sum(1 for e in events if e["severity"] == "info")
-    oks = sum(1 for e in events if e["severity"] == "ok")
-
-    if args.format == "table":
-        print(f"SYNC: {n.name}")
-        print(f"Save: {args.file}  |  YAML: {args.character_yml}")
-        print(f"Events: {len(events)} ({actions} actions, {warnings} warnings, {infos} info, {oks} ok)\n")
-        for e in events:
-            icon = {"ok": "  ", "info": "->", "warning": "!!", "action": ">>"}
-            print(f"  {icon.get(e['severity'], '  ')} [{e['type']}] {e['message']}")
-            if "suggestion" in e:
-                print(f"     {e['suggestion']}")
-    else:
-        _emit({"name": n.name, "save_file": args.file,
-               "character_yml": args.character_yml,
-               "summary": {"actions": actions, "warnings": warnings, "info": infos, "ok": oks},
-               "events": events}, args.format)
-
-
 def _parse_character_yml(text):
-    """Read trait/skill/demographic values from a CHARACTER.yml file.
-
-    This is a minimal YAML parser — just enough to extract the sims: block
-    fields for comparison. It doesn't need pyyaml because CHARACTER.yml
-    uses a predictable subset of YAML.
-
-    Returns (traits_dict, skills_dict, demographics_dict, relationships_dict).
-    """
-    traits = {}
-    skills = {}
-    demo = {}
-    rels = {}
-    section = None
-    subsection = None
-
+    """Parse CHARACTER.yml sims: block for sync comparison."""
+    traits={}; skills={}; demo={}; rels={}; section=None; sub=None
     for line in text.split("\n"):
-        stripped = line.split("#")[0].rstrip()
-        if not stripped:
-            continue
-        indent = len(line) - len(line.lstrip())
-
-        if indent <= 2 and "sims:" in stripped:
-            section = "sims"; continue
-        if indent <= 2 and "relationships:" in stripped and section != "sims":
-            section = "relationships"; continue
-        if stripped.endswith(":") and indent == 0:
-            section = None; continue
-
-        if section == "sims":
-            if "traits:" in stripped and indent <= 4:
-                subsection = "traits"; continue
-            elif "skills:" in stripped and indent <= 4:
-                subsection = "skills"; continue
-            elif "career:" in stripped and indent <= 4:
-                subsection = "career"; continue
-            elif "identity:" in stripped and indent <= 4:
-                subsection = "identity"; continue
-            elif stripped.endswith(":") and indent <= 4:
-                subsection = None; continue
-
-            if ":" in stripped:
-                key, _, val = stripped.partition(":")
-                key = key.strip()
-                val = val.strip()
-                if not val:
-                    continue
-                try:
-                    num = int(val)
-                except ValueError:
-                    num = None
-
-                if subsection == "traits" and num is not None:
-                    traits[key] = num
-                elif subsection == "skills" and num is not None:
-                    skills[key] = num
-                elif subsection == "career":
-                    if key == "track": demo["career"] = val
-                elif subsection == "identity":
-                    demo[key] = val
-
+        s = line.split("#")[0].rstrip()
+        if not s: continue
+        indent = len(line)-len(line.lstrip())
+        if indent<=2 and "sims:" in s: section="sims"; continue
+        if indent<=2 and "relationships:" in s and section!="sims": section="rels"; continue
+        if s.endswith(":") and indent==0: section=None; continue
+        if section=="sims":
+            if "traits:" in s and indent<=4: sub="traits"; continue
+            elif "skills:" in s and indent<=4: sub="skills"; continue
+            elif "career:" in s and indent<=4: sub="career"; continue
+            elif "identity:" in s and indent<=4: sub="identity"; continue
+            elif s.endswith(":") and indent<=4: sub=None; continue
+            if ":" in s:
+                k,_,v = s.partition(":"); k=k.strip(); v=v.strip()
+                if not v: continue
+                try: num=int(v)
+                except: num=None
+                if sub=="traits" and num is not None: traits[k]=num
+                elif sub=="skills" and num is not None: skills[k]=num
+                elif sub=="career":
+                    if k=="track": demo["career"]=v
+                elif sub=="identity": demo[k]=v
     return traits, skills, demo, rels
 
 
-# Parser builder — reads the COMMANDS table and creates argparse subcommands.
-#
-# This is the glue between the data table at the top and Python's argparse
-# library. For each entry in COMMANDS, it creates a subcommand with the
-# specified arguments and options. It also looks up the matching cmd_*
-# function to call when that command is invoked.
-#
-# This means you never write argparse code by hand. You add a command to
-# the COMMANDS dict, write a cmd_* function, and it just works.
+# Parser builder — walks the COMMANDS tree and creates argparse hierarchy.
+# Each group becomes a subparser. Each command within becomes a sub-subparser.
+# `obliterator character --help` lists character subcommands.
+# `obliterator character uplift --help` shows uplift arguments.
 
 def build_parser():
-    """Build the argparse parser from the COMMANDS table."""
+    """Build argparse hierarchy from COMMANDS tree."""
     parser = argparse.ArgumentParser(
         prog="obliterator",
-        description="One CLI to rule The Sims 1 files. "
-                    "IFF inspection, FAR archives, save editing, character uplift.",
+        description="One CLI to rule The Sims 1 files.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Formats: table json yaml csv raw\n"
-               "PersonData verified against Sims 1 docs.",
+        epilog="Use 'obliterator <group> --help' to see subcommands.\n"
+               "Formats: table json yaml csv raw",
     )
     for opt in GLOBAL_OPTS:
-        parser.add_argument(*opt["flags"], choices=opt.get("choices"),
-                            default=opt.get("default"), help=opt["help"])
+        kw = {"help": opt["help"]}
+        if "choices" in opt: kw["choices"] = opt["choices"]
+        if "default" in opt: kw["default"] = opt["default"]
+        parser.add_argument(*opt["flags"], **kw)
 
-    sub = parser.add_subparsers(dest="command")
+    groups = parser.add_subparsers(dest="group", help="Command group")
     dispatch = {}
 
-    for cmd_name, spec in COMMANDS.items():
-        p = sub.add_parser(cmd_name, help=spec["help"])
-        for a in spec.get("args", []):
-            kw = {"help": a["help"]}
-            if "type" in a:
-                kw["type"] = a["type"]
-            p.add_argument(a["name"], **kw)
-        for o in spec.get("opts", []):
-            kw = {"help": o["help"]}
-            if "type" in o: kw["type"] = o["type"]
-            if "choices" in o: kw["choices"] = o["choices"]
-            if "default" in o: kw["default"] = o["default"]
-            p.add_argument(*o["flags"], **kw)
-        # cmd_name "iff-info" maps to function cmd_iff_info
-        fn_name = "cmd_" + cmd_name.replace("-", "_")
-        dispatch[cmd_name] = globals().get(fn_name)
+    for group_name, group_spec in COMMANDS.items():
+        group_parser = groups.add_parser(group_name, help=group_spec["help"])
+        commands = group_parser.add_subparsers(dest="command", help="Command")
+
+        for cmd_name, cmd_spec in group_spec["commands"].items():
+            cmd_parser = commands.add_parser(cmd_name, help=cmd_spec["help"])
+            for a in cmd_spec.get("args", []):
+                kw = {"help": a["help"]}
+                if "type" in a: kw["type"] = a["type"]
+                cmd_parser.add_argument(a["name"], **kw)
+            for o in cmd_spec.get("opts", []):
+                kw = {"help": o["help"]}
+                if "type" in o: kw["type"] = o["type"]
+                if "choices" in o: kw["choices"] = o["choices"]
+                if "default" in o: kw["default"] = o["default"]
+                cmd_parser.add_argument(*o["flags"], **kw)
+
+            fn_name = f"cmd_{group_name}_{cmd_name}".replace("-", "_")
+            dispatch[(group_name, cmd_name)] = globals().get(fn_name)
 
     return parser, dispatch
 
 
 def main():
-    """Parse command line arguments and run the requested command."""
+    """Parse args and run the requested command."""
     parser, dispatch = build_parser()
     args = parser.parse_args()
-    if not args.command:
-        parser.print_help()
+    if not args.group:
+        parser.print_help(); sys.exit(0)
+    if not getattr(args, 'command', None):
+        # Show group help
+        for act in parser._subparsers._actions:
+            if isinstance(act, argparse._SubParsersAction):
+                act.choices[args.group].print_help()
         sys.exit(0)
-    fn = dispatch.get(args.command)
-    if fn:
-        fn(args)
+    fn = dispatch.get((args.group, args.command))
+    if fn: fn(args)
     else:
-        parser.print_help()
-
+        print(f"Command not implemented: {args.group} {args.command}", file=sys.stderr)
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
