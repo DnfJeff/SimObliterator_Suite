@@ -1,35 +1,210 @@
 #!/usr/bin/env python3
-"""obliterator.py — LLM-friendly CLI for SimObliterator Suite.
+"""obliterator.py — One CLI to rule them all.
 
-Sniffable Python wrapper providing a coherent command structure
-for reading, inspecting, and editing The Sims 1 save files.
-Designed for both human and LLM consumption.
+Sniffable Python: the COMMANDS table below IS the interface.
+Read it and you know everything. Single source of truth.
 
-Usage:
-    python obliterator.py inspect <neighborhood.iff>
-    python obliterator.py families <neighborhood.iff>
-    python obliterator.py character <neighborhood.iff> <name>
-    python obliterator.py traits <neighborhood.iff> <name>
-    python obliterator.py set-trait <neighborhood.iff> <name> <trait> <value>
-    python obliterator.py set-skill <neighborhood.iff> <name> <skill> <value>
-    python obliterator.py set-money <neighborhood.iff> <family-id> <amount>
-    python obliterator.py uplift <neighborhood.iff> <name> [--output <path>]
-    python obliterator.py dump-raw <neighborhood.iff> <name>
-
-Output formats (append to any command):
-    --format table    (default, human-readable)
-    --format json     (machine-readable)
-    --format yaml     (MOOLLM-compatible)
-
-PersonData indices verified against original Sims 1 source code
-(PersonData.h, 12/17/99). NOT FreeSO/TSO indices.
+PersonData indices verified against original Sims 1 documentation
+(PersonData.h, Jamie Doornbos, 12/17/99). NOT FreeSO/TSO VM indices.
 """
+
+# ================================================================
+# COMMAND TABLE — The single source of truth.
+# Read this table and you know every command, every argument,
+# every output format. The implementation below is driven by it.
+# ================================================================
+
+COMMANDS = {
+    "inspect": {
+        "help": "List all families and characters in a neighborhood",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+        ],
+        "examples": [
+            "obliterator inspect Neighborhood.iff",
+            "obliterator inspect Neighborhood.iff -f json",
+        ],
+    },
+    "families": {
+        "help": "List families with budgets and house assignments",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+        ],
+        "examples": [
+            "obliterator families Neighborhood.iff",
+            "obliterator families Neighborhood.iff -f csv",
+        ],
+    },
+    "character": {
+        "help": "Full character sheet: traits, skills, demographics, relationships",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name (partial match OK)"},
+        ],
+        "examples": [
+            "obliterator character Neighborhood.iff 'Bella Goth'",
+            "obliterator character Neighborhood.iff Mortimer -f yaml",
+            "obliterator character Neighborhood.iff Mortimer -f json",
+        ],
+    },
+    "traits": {
+        "help": "Show personality traits with visual bars",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+        ],
+        "examples": [
+            "obliterator traits Neighborhood.iff 'Bob Newbie'",
+        ],
+    },
+    "skills": {
+        "help": "Show skill levels with visual bars",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+        ],
+        "examples": [
+            "obliterator skills Neighborhood.iff Mortimer",
+        ],
+    },
+    "set-trait": {
+        "help": "Set a personality trait (0-10 scale)",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+            {"name": "trait", "help": "neat|outgoing|active|playful|nice|generous"},
+            {"name": "value", "help": "0-10", "type": int},
+        ],
+        "examples": [
+            "obliterator set-trait Neighborhood.iff Bob outgoing 3",
+        ],
+    },
+    "set-skill": {
+        "help": "Set a skill level (0-10 scale)",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+            {"name": "skill", "help": "cooking|mechanical|charisma|logic|body|creativity|cleaning"},
+            {"name": "value", "help": "0-10", "type": int},
+        ],
+        "examples": [
+            "obliterator set-skill Neighborhood.iff Mortimer logic 10",
+        ],
+    },
+    "set-money": {
+        "help": "Set a family's budget in Simoleons",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "family_id", "help": "Family ID number", "type": int},
+            {"name": "amount", "help": "Amount in Simoleons", "type": int},
+        ],
+        "examples": [
+            "obliterator set-money Neighborhood.iff 1 99999",
+        ],
+    },
+    "dump-raw": {
+        "help": "Dump raw PersonData array with field name annotations",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+        ],
+        "examples": [
+            "obliterator dump-raw Neighborhood.iff Mortimer",
+            "obliterator dump-raw Neighborhood.iff Bella -f json",
+        ],
+    },
+    "uplift": {
+        "help": "Generate MOOLLM CHARACTER.yml sims: block from save data",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+        ],
+        "opts": [
+            {"flags": ["-o", "--output"], "help": "Write to file instead of stdout"},
+        ],
+        "examples": [
+            "obliterator uplift Neighborhood.iff 'Bella Goth'",
+            "obliterator uplift Neighborhood.iff Mortimer -o mortimer-goth/CHARACTER.yml",
+        ],
+    },
+}
+
+# Output formats available for all commands
+OUTPUT_FORMATS = ["table", "json", "yaml", "csv", "raw"]
+
+# Global options available on every command
+GLOBAL_OPTS = [
+    {"flags": ["-f", "--format"], "choices": OUTPUT_FORMATS, "default": "table",
+     "help": "Output format: table (default), json, yaml, csv, raw"},
+]
+
+# ================================================================
+# REFERENCE DATA — Trait poles, career tracks, zodiac signs.
+# Also data: also sniffable. Also single source of truth.
+# ================================================================
+
+TRAIT_INFO = {
+    "nice":     {"index": 2,  "low": "Grouchy",  "high": "Nice"},
+    "active":   {"index": 3,  "low": "Lazy",     "high": "Active"},
+    "generous": {"index": 4,  "low": "Selfish",  "high": "Generous"},
+    "playful":  {"index": 5,  "low": "Serious",  "high": "Playful"},
+    "outgoing": {"index": 6,  "low": "Shy",      "high": "Outgoing"},
+    "neat":     {"index": 7,  "low": "Sloppy",   "high": "Neat"},
+}
+
+SKILL_INFO = {
+    "cleaning":   {"index": 9},
+    "cooking":    {"index": 10},
+    "charisma":   {"index": 11},
+    "mechanical": {"index": 12},
+    "gardening":  {"index": 13, "hidden": True},
+    "music":      {"index": 14, "hidden": True},
+    "creativity": {"index": 15},
+    "literacy":   {"index": 16, "hidden": True},
+    "body":       {"index": 17},
+    "logic":      {"index": 18},
+}
+
+# UI-visible skills in display order
+VISIBLE_SKILLS = ["cooking", "mechanical", "charisma", "logic", "body", "creativity", "cleaning"]
+
+CAREER_TRACKS = {
+    0: "Unemployed", 1: "Cooking/Culinary", 2: "Entertainment",
+    3: "Law Enforcement", 4: "Medicine", 5: "Military",
+    6: "Politics", 7: "Pro Athlete", 8: "Science", 9: "Xtreme",
+}
+
+ZODIAC_SIGNS = {
+    0: "Uncomputed", 1: "Aries", 2: "Taurus", 3: "Gemini",
+    4: "Cancer", 5: "Leo", 6: "Virgo", 7: "Libra",
+    8: "Scorpio", 9: "Sagittarius", 10: "Capricorn",
+    11: "Aquarius", 12: "Pisces",
+}
+
+# PersonData demographic field indices
+DEMO_FIELDS = {
+    "age": 58, "skin_color": 60, "family_number": 61,
+    "gender": 65, "ghost": 68, "zodiac": 70,
+}
+
+# PersonData career field indices
+CAREER_FIELDS = {
+    "job_type": 56, "job_status": 57, "job_performance": 63,
+}
+
+
+# ================================================================
+# IMPLEMENTATION — Driven by the tables above.
+# Everything below here is plumbing. The interface is above.
+# ================================================================
 
 import sys
 import json
+import csv
+import io
 import argparse
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 
 # Add SimObliterator src to path
 _src_dir = Path(__file__).parent / "src"
@@ -39,47 +214,8 @@ if str(_src_dir) not in sys.path:
 from Tools.save_editor.save_manager import SaveManager, PersonData
 
 
-# Personality trait display names and their 0-10 scale poles
-TRAIT_POLES = {
-    "nice":     ("Grouchy", "Nice"),
-    "active":   ("Lazy", "Active"),
-    "generous": ("Selfish", "Generous"),
-    "playful":  ("Serious", "Playful"),
-    "outgoing": ("Shy", "Outgoing"),
-    "neat":     ("Sloppy", "Neat"),
-}
-
-# Skill display names
-SKILL_NAMES = [
-    "cooking", "mechanical", "charisma", "logic",
-    "body", "creativity", "cleaning",
-]
-
-# Career track names (from Careers.iff, IDs 1-9 plus 0=unemployed)
-CAREER_TRACKS = {
-    0: "Unemployed",
-    1: "Cooking/Culinary",
-    2: "Entertainment",
-    3: "Law Enforcement",
-    4: "Medicine",
-    5: "Military",
-    6: "Politics",
-    7: "Pro Athlete",
-    8: "Science",
-    9: "Xtreme",
-}
-
-# Zodiac signs (PersonData[70], 0=uncomputed, 1-12)
-ZODIAC_SIGNS = {
-    0: "Uncomputed", 1: "Aries", 2: "Taurus", 3: "Gemini",
-    4: "Cancer", 5: "Leo", 6: "Virgo", 7: "Libra",
-    8: "Scorpio", 9: "Sagittarius", 10: "Capricorn",
-    11: "Aquarius", 12: "Pisces",
-}
-
-
-def load_save(path: str) -> SaveManager:
-    """Load a neighborhood save file. Exits on failure."""
+def _load(path: str) -> SaveManager:
+    """Load neighborhood. Exit on failure."""
     mgr = SaveManager(path)
     if not mgr.load():
         print(f"ERROR: Failed to load {path}", file=sys.stderr)
@@ -87,444 +223,472 @@ def load_save(path: str) -> SaveManager:
     return mgr
 
 
-def find_neighbor(mgr: SaveManager, name: str):
-    """Find a neighbor by name (case-insensitive partial match).
-
-    Returns (neighbor_id, neighbor_data) or exits with error.
-    """
+def _find(mgr: SaveManager, name: str):
+    """Find neighbor by name. Case-insensitive partial match. Exit on ambiguity."""
     name_lower = name.lower()
-    matches = []
-    for nid, neigh in mgr.neighbors.items():
-        if name_lower in neigh.name.lower():
-            matches.append((nid, neigh))
-
-    if not matches:
-        print(f"ERROR: No character matching '{name}' found.", file=sys.stderr)
-        available = [n.name for n in mgr.neighbors.values() if n.name]
-        if available:
-            print(f"Available: {', '.join(sorted(available))}", file=sys.stderr)
+    hits = [(nid, n) for nid, n in mgr.neighbors.items()
+            if name_lower in n.name.lower()]
+    if not hits:
+        avail = sorted(n.name for n in mgr.neighbors.values() if n.name)
+        print(f"ERROR: No match for '{name}'. Available: {', '.join(avail)}", file=sys.stderr)
         sys.exit(1)
-
-    if len(matches) > 1:
-        exact = [(nid, n) for nid, n in matches if n.name.lower() == name_lower]
+    if len(hits) > 1:
+        exact = [(nid, n) for nid, n in hits if n.name.lower() == name_lower]
         if len(exact) == 1:
             return exact[0]
-        print(f"ERROR: Multiple matches for '{name}':", file=sys.stderr)
-        for nid, n in matches:
+        print(f"ERROR: Ambiguous '{name}':", file=sys.stderr)
+        for nid, n in hits:
             print(f"  [{nid}] {n.name}", file=sys.stderr)
         sys.exit(1)
+    return hits[0]
 
-    return matches[0]
 
-
-def get_person_data_value(person_data: list, index: int) -> Optional[int]:
-    """Safely read a value from the person_data array."""
+def _pd(person_data, index):
+    """Safe PersonData read."""
     if person_data and 0 <= index < len(person_data):
         return person_data[index]
     return None
 
 
-def read_traits(person_data: list) -> dict:
-    """Extract personality traits from person_data.
+def _bar(val, width=10):
+    """Visual bar: val out of width."""
+    v = max(0, min(val, width))
+    return "\u2588" * v + "\u2591" * (width - v)
 
-    Returns dict of trait_name -> (raw_value, display_value).
-    Raw values are 0-1000 internal scale. Display is 0-10.
-    """
-    result = {}
-    for name, index in PersonData.get_personality_indices():
-        raw = get_person_data_value(person_data, index)
+
+def _read_traits(pd_list):
+    """Extract traits as {name: {raw, display, low, high}}."""
+    out = {}
+    for name, info in TRAIT_INFO.items():
+        raw = _pd(pd_list, info["index"])
         if raw is not None:
-            display = round(raw / 100)
-            result[name.lower()] = {"raw": raw, "display": display}
-    return result
+            out[name] = {"raw": raw, "display": round(raw / 100),
+                         "low": info["low"], "high": info["high"]}
+    return out
 
 
-def read_skills(person_data: list) -> dict:
-    """Extract skills from person_data.
-
-    Returns dict of skill_name -> (raw_value, display_value).
-    """
-    result = {}
-    for name, index in PersonData.get_skill_indices():
-        raw = get_person_data_value(person_data, index)
+def _read_skills(pd_list, include_hidden=False):
+    """Extract skills as {name: {raw, display}}."""
+    out = {}
+    for name, info in SKILL_INFO.items():
+        if not include_hidden and info.get("hidden"):
+            continue
+        raw = _pd(pd_list, info["index"])
         if raw is not None:
-            display = round(raw / 100)
-            result[name.lower()] = {"raw": raw, "display": display}
-    return result
+            out[name] = {"raw": raw, "display": round(raw / 100)}
+    return out
 
 
-def read_demographics(person_data: list) -> dict:
-    """Extract demographic fields from person_data."""
-    age_val = get_person_data_value(person_data, PersonData.PERSON_AGE)
-    gender_val = get_person_data_value(person_data, PersonData.GENDER)
-    skin_val = get_person_data_value(person_data, PersonData.SKIN_COLOR)
-    zodiac_val = get_person_data_value(person_data, PersonData.ZODIAC_SIGN)
-    job_type = get_person_data_value(person_data, PersonData.JOB_TYPE)
-    job_perf = get_person_data_value(person_data, PersonData.JOB_PERFORMANCE)
-
+def _read_demographics(pd_list):
+    """Extract demographics as a flat dict."""
+    age = _pd(pd_list, DEMO_FIELDS["age"])
+    gender = _pd(pd_list, DEMO_FIELDS["gender"])
+    skin = _pd(pd_list, DEMO_FIELDS["skin_color"])
+    zodiac = _pd(pd_list, DEMO_FIELDS["zodiac"])
+    job_type = _pd(pd_list, CAREER_FIELDS["job_type"])
+    job_perf = _pd(pd_list, CAREER_FIELDS["job_performance"])
     return {
-        "age": "child" if age_val == 0 else "adult" if age_val == 1 else str(age_val),
-        "gender": "male" if gender_val == 0 else "female" if gender_val == 1 else str(gender_val),
-        "skin_color": {0: "light", 1: "medium", 2: "dark"}.get(skin_val, str(skin_val)),
-        "zodiac": ZODIAC_SIGNS.get(zodiac_val, f"unknown ({zodiac_val})"),
-        "career": CAREER_TRACKS.get(job_type, f"unknown ({job_type})"),
+        "age": {0: "child", 1: "adult"}.get(age, str(age)),
+        "gender": {0: "male", 1: "female"}.get(gender, str(gender)),
+        "skin_color": {0: "light", 1: "medium", 2: "dark"}.get(skin, str(skin)),
+        "zodiac": ZODIAC_SIGNS.get(zodiac, f"unknown({zodiac})"),
+        "career": CAREER_TRACKS.get(job_type, f"unknown({job_type})"),
         "job_performance": job_perf,
     }
 
 
-def format_character_table(name: str, traits: dict, skills: dict,
-                           demographics: dict, relationships: dict) -> str:
-    """Format character data as a human-readable table."""
-    lines = [f"{'=' * 50}", f"  {name}", f"{'=' * 50}"]
+# ================================================================
+# OUTPUT FORMATTERS — One per format. Commands return data dicts,
+# formatters render them. Clean separation.
+# ================================================================
 
-    lines.append(f"\n  Age: {demographics['age']}  |  Gender: {demographics['gender']}  |  Zodiac: {demographics['zodiac']}")
-    lines.append(f"  Career: {demographics['career']}  |  Performance: {demographics['job_performance']}")
-
-    lines.append(f"\n  PERSONALITY TRAITS (0-10)")
-    lines.append(f"  {'─' * 40}")
-    for trait_name in ["neat", "outgoing", "active", "playful", "nice"]:
-        if trait_name in traits:
-            val = traits[trait_name]["display"]
-            low, high = TRAIT_POLES.get(trait_name, ("", ""))
-            bar = "█" * val + "░" * (10 - val)
-            lines.append(f"  {low:>8} [{bar}] {high:<8}  {val:>2}")
-
-    lines.append(f"\n  SKILLS (0-10)")
-    lines.append(f"  {'─' * 40}")
-    for skill_name in SKILL_NAMES:
-        if skill_name in skills:
-            val = skills[skill_name]["display"]
-            bar = "█" * val + "░" * (10 - val)
-            lines.append(f"  {skill_name:>12} [{bar}] {val:>2}")
-
-    if relationships:
-        lines.append(f"\n  RELATIONSHIPS")
-        lines.append(f"  {'─' * 40}")
-        for rel_id, rel_vals in list(relationships.items())[:10]:
-            daily = rel_vals[0] if len(rel_vals) > 0 else "?"
-            lifetime = rel_vals[1] if len(rel_vals) > 1 else "?"
-            lines.append(f"  Neighbor {rel_id}: daily={daily}, lifetime={lifetime}")
-
-    return "\n".join(lines)
+def _emit(data: Any, fmt: str, headers: list = None):
+    """Emit data in the requested format."""
+    if fmt == "json":
+        print(json.dumps(data, indent=2, default=str))
+    elif fmt == "yaml":
+        _emit_yaml(data)
+    elif fmt == "csv":
+        _emit_csv(data, headers)
+    elif fmt == "raw":
+        _emit_raw(data)
+    elif fmt == "table":
+        if isinstance(data, str):
+            print(data)
+        elif isinstance(data, list) and data and isinstance(data[0], dict):
+            _emit_table(data, headers)
+        else:
+            print(data)
 
 
-def format_character_json(name: str, nid: int, traits: dict, skills: dict,
-                          demographics: dict, relationships: dict) -> str:
-    """Format character data as JSON."""
+def _emit_yaml(data, indent=0):
+    """Simple YAML emitter. No dependency on pyyaml."""
+    prefix = "  " * indent
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(v, (dict, list)):
+                print(f"{prefix}{k}:")
+                _emit_yaml(v, indent + 1)
+            else:
+                comment = ""
+                print(f"{prefix}{k}: {v}{comment}")
+    elif isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                first = True
+                for k, v in item.items():
+                    marker = "- " if first else "  "
+                    print(f"{prefix}{marker}{k}: {v}")
+                    first = False
+            else:
+                print(f"{prefix}- {item}")
+    else:
+        print(f"{prefix}{data}")
+
+
+def _emit_csv(data, headers=None):
+    """Emit as CSV."""
+    buf = io.StringIO()
+    if isinstance(data, list) and data and isinstance(data[0], dict):
+        keys = headers or list(data[0].keys())
+        writer = csv.DictWriter(buf, fieldnames=keys)
+        writer.writeheader()
+        for row in data:
+            writer.writerow({k: row.get(k, "") for k in keys})
+    elif isinstance(data, dict):
+        writer = csv.writer(buf)
+        for k, v in data.items():
+            writer.writerow([k, v])
+    print(buf.getvalue().rstrip())
+
+
+def _emit_raw(data):
+    """Emit as raw key=value pairs. Grep-friendly."""
+    if isinstance(data, dict):
+        for k, v in data.items():
+            if isinstance(v, dict):
+                for k2, v2 in v.items():
+                    print(f"{k}.{k2}={v2}")
+            else:
+                print(f"{k}={v}")
+    elif isinstance(data, list):
+        for item in data:
+            if isinstance(item, dict):
+                print("\t".join(str(v) for v in item.values()))
+            else:
+                print(item)
+    else:
+        print(data)
+
+
+def _emit_table(rows, headers=None):
+    """Emit as aligned text table."""
+    if not rows:
+        return
+    keys = headers or list(rows[0].keys())
+    widths = {k: len(str(k)) for k in keys}
+    for row in rows:
+        for k in keys:
+            widths[k] = max(widths[k], len(str(row.get(k, ""))))
+    header = "  ".join(str(k).ljust(widths[k]) for k in keys)
+    print(header)
+    print("  ".join("-" * widths[k] for k in keys))
+    for row in rows:
+        print("  ".join(str(row.get(k, "")).ljust(widths[k]) for k in keys))
+
+
+# ================================================================
+# COMMAND IMPLEMENTATIONS — Each returns data (not strings).
+# Formatting is handled by _emit().
+# ================================================================
+
+def cmd_inspect(args):
+    mgr = _load(args.file)
+    families = []
+    for fid, fam in sorted(mgr.families.items()):
+        families.append({
+            "id": fid, "house": fam.house_number,
+            "budget": fam.budget, "members": fam.num_members,
+            "status": "townie" if fam.is_townie else "resident",
+        })
+    characters = []
+    for nid, neigh in sorted(mgr.neighbors.items()):
+        traits = _read_traits(neigh.person_data) if neigh.person_data else {}
+        trait_str = " ".join(
+            f"{k[0].upper()}{v['display']}"
+            for k, v in traits.items() if k in ["neat", "outgoing", "active", "playful", "nice"]
+        )
+        characters.append({
+            "id": nid, "name": neigh.name, "traits": trait_str,
+        })
+
+    if args.format == "table":
+        print(f"Neighborhood: {args.file}")
+        print(f"Families: {len(families)}  |  Characters: {len(characters)}\n")
+        if families:
+            print("FAMILIES")
+            _emit_table(families, ["id", "house", "budget", "members", "status"])
+        if characters:
+            print("\nCHARACTERS")
+            _emit_table(characters, ["id", "name", "traits"])
+    else:
+        _emit({"families": families, "characters": characters}, args.format)
+
+
+def cmd_families(args):
+    mgr = _load(args.file)
+    rows = []
+    for fid, fam in sorted(mgr.families.items()):
+        rows.append({
+            "id": fid, "house": fam.house_number,
+            "budget": fam.budget, "members": fam.num_members,
+            "status": "townie" if fam.is_townie else "resident",
+        })
+    _emit(rows, args.format, ["id", "house", "budget", "members", "status"])
+
+
+def cmd_character(args):
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
+    if not neigh.person_data:
+        print(f"ERROR: {neigh.name} has no person_data", file=sys.stderr)
+        sys.exit(1)
+
+    traits = _read_traits(neigh.person_data)
+    skills = _read_skills(neigh.person_data)
+    demo = _read_demographics(neigh.person_data)
+
     data = {
-        "name": name,
-        "neighbor_id": nid,
-        "demographics": demographics,
+        "name": neigh.name, "neighbor_id": nid,
+        "demographics": demo,
         "traits": {k: v["display"] for k, v in traits.items()},
         "traits_raw": {k: v["raw"] for k, v in traits.items()},
         "skills": {k: v["display"] for k, v in skills.items()},
         "skills_raw": {k: v["raw"] for k, v in skills.items()},
-        "relationships": {str(k): v for k, v in relationships.items()},
+        "relationships": {str(k): v for k, v in neigh.relationships.items()},
     }
-    return json.dumps(data, indent=2)
 
-
-def format_character_yaml(name: str, nid: int, traits: dict, skills: dict,
-                          demographics: dict, relationships: dict) -> str:
-    """Format character data as MOOLLM-compatible YAML.
-
-    Outputs a sims: block ready for inclusion in CHARACTER.yml.
-    """
-    lines = [f"# {name} — Sims 1 PersonData (verified against source)"]
-    lines.append(f"# Neighbor ID: {nid}")
-
-    lines.append(f"\nsims:")
-    lines.append(f"  traits:")
-    for trait_name in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
-        if trait_name in traits:
-            val = traits[trait_name]["display"]
-            low, high = TRAIT_POLES.get(trait_name, ("", ""))
-            lines.append(f"    {trait_name}: {val:<3}  # {low} {val}/10 {high}")
-
-    lines.append(f"  skills:")
-    for skill_name in SKILL_NAMES:
-        if skill_name in skills:
-            val = skills[skill_name]["display"]
-            lines.append(f"    {skill_name}: {val}")
-
-    lines.append(f"  career:")
-    lines.append(f"    track: {demographics['career'].lower().replace('/', '_')}")
-    lines.append(f"    performance: {demographics['job_performance']}")
-
-    lines.append(f"  identity:")
-    lines.append(f"    age: {demographics['age']}")
-    lines.append(f"    gender: {demographics['gender']}")
-    lines.append(f"    zodiac: {demographics['zodiac'].lower()}")
-
-    return "\n".join(lines)
-
-
-def cmd_inspect(args):
-    """List all characters and families in a neighborhood save."""
-    mgr = load_save(args.file)
-    print(f"Neighborhood: {args.file}")
-    print(f"Families: {len(mgr.families)}  |  Characters: {len(mgr.neighbors)}\n")
-
-    if mgr.families:
-        print("FAMILIES")
-        print("─" * 50)
-        for fid, fam in sorted(mgr.families.items()):
-            status = "townie" if fam.is_townie else f"house {fam.house_number}"
-            print(f"  [{fid}] {fam.chunk_id:>4}  §{fam.budget:>8,}  "
-                  f"{fam.num_members} members  ({status})")
-
-    if mgr.neighbors:
-        print("\nCHARACTERS")
-        print("─" * 50)
-        for nid, neigh in sorted(mgr.neighbors.items()):
-            traits = read_traits(neigh.person_data) if neigh.person_data else {}
-            trait_str = " ".join(
-                f"{k[0].upper()}{v['display']}"
-                for k, v in traits.items()
-                if k in ["neat", "outgoing", "active", "playful", "nice"]
-            )
-            print(f"  [{nid:>3}] {neigh.name:<25} {trait_str}")
-
-
-def cmd_families(args):
-    """List families with budget details."""
-    mgr = load_save(args.file)
-    for fid, fam in sorted(mgr.families.items()):
-        print(f"Family {fid}: §{fam.budget:,}  "
-              f"house={fam.house_number}  members={fam.num_members}  "
-              f"{'townie' if fam.is_townie else 'resident'}")
-
-
-def cmd_character(args):
-    """Show full character data."""
-    mgr = load_save(args.file)
-    nid, neigh = find_neighbor(mgr, args.name)
-
-    if not neigh.person_data:
-        print(f"ERROR: {neigh.name} has no person_data", file=sys.stderr)
-        sys.exit(1)
-
-    traits = read_traits(neigh.person_data)
-    skills = read_skills(neigh.person_data)
-    demographics = read_demographics(neigh.person_data)
-
-    if args.format == "json":
-        print(format_character_json(neigh.name, nid, traits, skills,
-                                    demographics, neigh.relationships))
-    elif args.format == "yaml":
-        print(format_character_yaml(neigh.name, nid, traits, skills,
-                                    demographics, neigh.relationships))
+    if args.format == "table":
+        print(f"{'=' * 50}")
+        print(f"  {neigh.name}  (neighbor #{nid})")
+        print(f"{'=' * 50}")
+        print(f"\n  {demo['age']}  |  {demo['gender']}  |  {demo['zodiac']}  |  {demo['career']}")
+        print(f"\n  PERSONALITY")
+        print(f"  {'─' * 44}")
+        for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
+            if t in traits:
+                v = traits[t]
+                print(f"  {v['low']:>8} [{_bar(v['display'])}] {v['high']:<8} {v['display']:>2}")
+        print(f"\n  SKILLS")
+        print(f"  {'─' * 44}")
+        for s in VISIBLE_SKILLS:
+            if s in skills:
+                v = skills[s]
+                print(f"  {s:>12} [{_bar(v['display'])}] {v['display']:>2}")
+        if neigh.relationships:
+            print(f"\n  RELATIONSHIPS")
+            print(f"  {'─' * 44}")
+            for rid, rv in list(neigh.relationships.items())[:10]:
+                daily = rv[0] if len(rv) > 0 else "?"
+                life = rv[1] if len(rv) > 1 else "?"
+                print(f"  Neighbor {rid}: daily={daily}, lifetime={life}")
     else:
-        print(format_character_table(neigh.name, traits, skills,
-                                     demographics, neigh.relationships))
+        _emit(data, args.format)
 
 
 def cmd_traits(args):
-    """Show just personality traits for a character."""
-    mgr = load_save(args.file)
-    nid, neigh = find_neighbor(mgr, args.name)
-
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
     if not neigh.person_data:
         print(f"ERROR: {neigh.name} has no person_data", file=sys.stderr)
         sys.exit(1)
+    traits = _read_traits(neigh.person_data)
+    if args.format == "table":
+        print(f"{neigh.name} — Personality")
+        for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
+            if t in traits:
+                v = traits[t]
+                print(f"  {v['low']:>8} [{_bar(v['display'])}] {v['high']:<8} {v['display']:>2}  (raw {v['raw']})")
+    else:
+        _emit({"name": neigh.name, "traits": {k: v["display"] for k, v in traits.items()}}, args.format)
 
-    traits = read_traits(neigh.person_data)
-    print(f"{neigh.name} — Personality Traits")
-    for trait_name in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
-        if trait_name in traits:
-            val = traits[trait_name]["display"]
-            raw = traits[trait_name]["raw"]
-            low, high = TRAIT_POLES.get(trait_name, ("", ""))
-            bar = "█" * val + "░" * (10 - val)
-            print(f"  {low:>8} [{bar}] {high:<8}  {val:>2}  (raw: {raw})")
+
+def cmd_skills(args):
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
+    if not neigh.person_data:
+        print(f"ERROR: {neigh.name} has no person_data", file=sys.stderr)
+        sys.exit(1)
+    skills = _read_skills(neigh.person_data)
+    if args.format == "table":
+        print(f"{neigh.name} — Skills")
+        for s in VISIBLE_SKILLS:
+            if s in skills:
+                v = skills[s]
+                print(f"  {s:>12} [{_bar(v['display'])}] {v['display']:>2}  (raw {v['raw']})")
+    else:
+        _emit({"name": neigh.name, "skills": {k: v["display"] for k, v in skills.items()}}, args.format)
 
 
 def cmd_set_trait(args):
-    """Set a personality trait value."""
-    mgr = load_save(args.file)
-    nid, neigh = find_neighbor(mgr, args.name)
-
-    raw_value = int(args.value) * 100
-    if mgr.set_sim_personality(nid, args.trait, raw_value):
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
+    raw = max(0, min(args.value, 10)) * 100
+    if mgr.set_sim_personality(nid, args.trait, raw):
         mgr.save()
-        print(f"Saved to {args.file}")
+        print(f"Saved. {neigh.name} {args.trait} = {args.value}")
     else:
         sys.exit(1)
 
 
 def cmd_set_skill(args):
-    """Set a skill level."""
-    mgr = load_save(args.file)
-    nid, neigh = find_neighbor(mgr, args.name)
-
-    raw_value = int(args.value) * 100
-    if mgr.set_sim_skill(nid, args.skill, raw_value):
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
+    raw = max(0, min(args.value, 10)) * 100
+    if mgr.set_sim_skill(nid, args.skill, raw):
         mgr.save()
-        print(f"Saved to {args.file}")
+        print(f"Saved. {neigh.name} {args.skill} = {args.value}")
     else:
         sys.exit(1)
 
 
 def cmd_set_money(args):
-    """Set a family's budget."""
-    mgr = load_save(args.file)
-    family_id = int(args.family_id)
-    amount = int(args.amount)
-    if mgr.set_family_money(family_id, amount):
+    mgr = _load(args.file)
+    if mgr.set_family_money(args.family_id, args.amount):
         mgr.save()
-        print(f"Saved to {args.file}")
+        print(f"Saved. Family {args.family_id} budget = {args.amount}")
     else:
         sys.exit(1)
 
 
 def cmd_dump_raw(args):
-    """Dump raw person_data array for debugging.
-
-    Shows all 80+ fields with their indices and values.
-    Cross-references known field names from PersonData.h.
-    """
-    mgr = load_save(args.file)
-    nid, neigh = find_neighbor(mgr, args.name)
-
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
     if not neigh.person_data:
         print(f"ERROR: {neigh.name} has no person_data", file=sys.stderr)
         sys.exit(1)
 
-    # Build reverse index of known field names
+    # Build reverse index of field names from our reference tables
     known = {}
-    for attr_name in dir(PersonData):
-        val = getattr(PersonData, attr_name)
-        if isinstance(val, int) and not attr_name.startswith("_"):
-            known.setdefault(val, []).append(attr_name)
+    for name, info in TRAIT_INFO.items():
+        known[info["index"]] = f"personality.{name}"
+    for name, info in SKILL_INFO.items():
+        known[info["index"]] = f"skill.{name}"
+    for name, idx in DEMO_FIELDS.items():
+        known[idx] = f"demo.{name}"
+    for name, idx in CAREER_FIELDS.items():
+        known[idx] = f"career.{name}"
+    known[0] = "idle_state"
+    known[1] = "npc_fee_amount"
+    known[8] = "current_outfit"
 
-    print(f"Raw PersonData for {neigh.name} ({len(neigh.person_data)} fields)")
-    print(f"{'─' * 60}")
-    for i, value in enumerate(neigh.person_data):
-        names = known.get(i, [])
-        name_str = ", ".join(names) if names else ""
-        flag = " *" if value != 0 else ""
-        print(f"  [{i:>3}] {value:>6}{flag:>2}  {name_str}")
+    rows = []
+    for i, val in enumerate(neigh.person_data):
+        rows.append({
+            "index": i, "value": val,
+            "field": known.get(i, ""),
+            "nonzero": "*" if val != 0 else "",
+        })
+
+    if args.format == "table":
+        print(f"PersonData for {neigh.name} ({len(neigh.person_data)} fields)")
+        print(f"{'─' * 55}")
+        for r in rows:
+            print(f"  [{r['index']:>3}] {r['value']:>6}{r['nonzero']:>2}  {r['field']}")
+    else:
+        _emit(rows, args.format, ["index", "value", "field"])
 
 
 def cmd_uplift(args):
-    """Generate MOOLLM CHARACTER.yml from a Sim's save data.
-
-    Reads PersonData, extracts traits/skills/demographics, and outputs
-    a YAML file ready for inclusion in a MOOLLM character directory.
-    """
-    mgr = load_save(args.file)
-    nid, neigh = find_neighbor(mgr, args.name)
-
+    mgr = _load(args.file)
+    nid, neigh = _find(mgr, args.name)
     if not neigh.person_data:
         print(f"ERROR: {neigh.name} has no person_data", file=sys.stderr)
         sys.exit(1)
 
-    traits = read_traits(neigh.person_data)
-    skills = read_skills(neigh.person_data)
-    demographics = read_demographics(neigh.person_data)
+    traits = _read_traits(neigh.person_data)
+    skills = _read_skills(neigh.person_data)
+    demo = _read_demographics(neigh.person_data)
 
-    yaml_output = format_character_yaml(neigh.name, nid, traits, skills,
-                                        demographics, neigh.relationships)
+    # Always emit YAML for uplift (it's a YAML generator)
+    lines = [f"# {neigh.name} — Uplifted from Sims 1 save data"]
+    lines.append(f"# Neighbor ID: {nid}  |  Source: {args.file}")
+    lines.append(f"\nsims:")
+    lines.append(f"  traits:")
+    for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
+        if t in traits:
+            v = traits[t]
+            lines.append(f"    {t}: {v['display']:<3}  # {v['low']} {v['display']}/10 {v['high']}")
+    lines.append(f"  skills:")
+    for s in VISIBLE_SKILLS:
+        if s in skills:
+            lines.append(f"    {s}: {skills[s]['display']}")
+    lines.append(f"  career:")
+    lines.append(f"    track: {demo['career'].lower().replace('/', '_')}")
+    lines.append(f"    performance: {demo['job_performance']}")
+    lines.append(f"  identity:")
+    lines.append(f"    age: {demo['age']}")
+    lines.append(f"    gender: {demo['gender']}")
+    lines.append(f"    zodiac: {demo['zodiac'].lower()}")
+    lines.append(f"    skin_color: {demo['skin_color']}")
 
+    output = "\n".join(lines) + "\n"
     if args.output:
-        output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(yaml_output + "\n")
-        print(f"Wrote {output_path}")
+        p = Path(args.output)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(output)
+        print(f"Wrote {p}")
     else:
-        print(yaml_output)
+        print(output, end="")
 
 
-def build_parser() -> argparse.ArgumentParser:
-    """Build the argument parser with all subcommands."""
+# ================================================================
+# PARSER BUILDER — Driven by COMMANDS table. Not hand-wired.
+# ================================================================
+
+def build_parser():
     parser = argparse.ArgumentParser(
         prog="obliterator",
-        description="LLM-friendly CLI for SimObliterator Suite. "
-                    "Read, inspect, and edit The Sims 1 save files.",
+        description="One CLI to rule The Sims 1 save files.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="PersonData indices verified against Sims 1 source "
-               "(PersonData.h, 12/17/99).",
+        epilog="Output formats: table (default), json, yaml, csv, raw\n"
+               "PersonData indices verified against original Sims 1 documentation.",
     )
-    parser.add_argument("--format", choices=["table", "json", "yaml"],
-                        default="table", help="Output format (default: table)")
+    # Global options
+    for opt in GLOBAL_OPTS:
+        parser.add_argument(*opt["flags"], choices=opt.get("choices"),
+                            default=opt.get("default"), help=opt["help"])
 
-    sub = parser.add_subparsers(dest="command", help="Command to run")
+    sub = parser.add_subparsers(dest="command")
 
-    # inspect
-    p = sub.add_parser("inspect", help="List all characters and families")
-    p.add_argument("file", help="Path to Neighborhood.iff")
+    # Wire each command from the COMMANDS table
+    dispatch = {}
+    for cmd_name, spec in COMMANDS.items():
+        p = sub.add_parser(cmd_name, help=spec["help"])
+        for arg in spec.get("args", []):
+            kwargs = {"help": arg["help"]}
+            if "type" in arg:
+                kwargs["type"] = arg["type"]
+            p.add_argument(arg["name"], **kwargs)
+        for opt in spec.get("opts", []):
+            kwargs = {"help": opt["help"]}
+            p.add_argument(*opt["flags"], **kwargs)
+        # Map command name to function
+        fn_name = "cmd_" + cmd_name.replace("-", "_")
+        dispatch[cmd_name] = globals().get(fn_name)
 
-    # families
-    p = sub.add_parser("families", help="List families with budgets")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-
-    # character
-    p = sub.add_parser("character", help="Show full character data")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("name", help="Character name (partial match OK)")
-
-    # traits
-    p = sub.add_parser("traits", help="Show personality traits")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("name", help="Character name")
-
-    # set-trait
-    p = sub.add_parser("set-trait", help="Set a personality trait")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("name", help="Character name")
-    p.add_argument("trait", choices=list(TRAIT_POLES.keys()), help="Trait name")
-    p.add_argument("value", type=int, help="Value 0-10")
-
-    # set-skill
-    p = sub.add_parser("set-skill", help="Set a skill level")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("name", help="Character name")
-    p.add_argument("skill", choices=SKILL_NAMES, help="Skill name")
-    p.add_argument("value", type=int, help="Value 0-10")
-
-    # set-money
-    p = sub.add_parser("set-money", help="Set family budget")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("family_id", help="Family ID number")
-    p.add_argument("amount", help="Amount in Simoleons")
-
-    # dump-raw
-    p = sub.add_parser("dump-raw", help="Dump raw PersonData array")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("name", help="Character name")
-
-    # uplift
-    p = sub.add_parser("uplift", help="Generate MOOLLM YAML from save data")
-    p.add_argument("file", help="Path to Neighborhood.iff")
-    p.add_argument("name", help="Character name")
-    p.add_argument("--output", "-o", help="Output file path (default: stdout)")
-
-    return parser
+    return parser, dispatch
 
 
 def main():
-    parser = build_parser()
+    parser, dispatch = build_parser()
     args = parser.parse_args()
-
     if not args.command:
         parser.print_help()
         sys.exit(0)
-
-    commands = {
-        "inspect": cmd_inspect,
-        "families": cmd_families,
-        "character": cmd_character,
-        "traits": cmd_traits,
-        "set-trait": cmd_set_trait,
-        "set-skill": cmd_set_skill,
-        "set-money": cmd_set_money,
-        "dump-raw": cmd_dump_raw,
-        "uplift": cmd_uplift,
-    }
-
-    cmd_func = commands.get(args.command)
-    if cmd_func:
-        cmd_func(args)
+    fn = dispatch.get(args.command)
+    if fn:
+        fn(args)
     else:
         parser.print_help()
 
