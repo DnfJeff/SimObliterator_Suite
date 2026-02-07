@@ -1,0 +1,15 @@
+{
+  "name": "vitamoo",
+  "version": "0.1.0",
+  "description": "Character animation renderer for Sims 1 meshes/skeletons/skins — TypeScript + WebGL",
+  "type": "module",
+  "main": "dist/vitamoo.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "serve": "npx http-server test -o -c-1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4"
+  }
+}

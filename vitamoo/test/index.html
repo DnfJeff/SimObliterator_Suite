@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>VitaMoo Test Harness</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; }
+h1 { padding: 12px 16px; font-size: 18px; color: #7fdbca; }
+.layout { display: flex; height: calc(100vh - 48px); }
+.sidebar { width: 280px; background: #16213e; overflow-y: auto; padding: 8px; }
+.viewer { flex: 1; display: flex; flex-direction: column; }
+canvas { flex: 1; }
+.controls { padding: 8px 16px; background: #16213e; display: flex; gap: 12px; align-items: center; }
+.controls label { font-size: 13px; color: #999; }
+.controls select, .controls input { background: #0f3460; color: #e0e0e0; border: 1px solid #333; padding: 4px 8px; border-radius: 3px; }
+.file-list { list-style: none; }
+.file-list li { padding: 4px 8px; cursor: pointer; border-radius: 3px; font-size: 13px; }
+.file-list li:hover { background: #0f3460; }
+.file-list li.active { background: #0f3460; color: #7fdbca; }
+.file-list li .ext { color: #666; font-size: 11px; }
+.section { margin-top: 12px; }
+.section h3 { font-size: 12px; color: #666; text-transform: uppercase; padding: 4px 8px; }
+.status { padding: 8px 16px; font-size: 12px; color: #666; }
+.drop-zone { border: 2px dashed #333; border-radius: 8px; padding: 24px; text-align: center; margin: 8px; color: #666; }
+.drop-zone.over { border-color: #7fdbca; color: #7fdbca; }
+</style>
+</head>
+<body>
+
+<h1>VitaMoo Test Harness</h1>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="drop-zone" id="dropZone">
+      Drop .cmx .skn .cfp .png files here<br>
+      or load from URL below
+    </div>
+
+    <div class="section">
+      <h3>Skeletons</h3>
+      <ul class="file-list" id="skeletonList"></ul>
+    </div>
+
+    <div class="section">
+      <h3>Suits</h3>
+      <ul class="file-list" id="suitList"></ul>
+    </div>
+
+    <div class="section">
+      <h3>Skills (Animations)</h3>
+      <ul class="file-list" id="skillList"></ul>
+    </div>
+
+    <div class="section">
+      <h3>Meshes</h3>
+      <ul class="file-list" id="meshList"></ul>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <canvas id="viewport"></canvas>
+    <div class="controls">
+      <label>Rotation <input type="range" id="rotY" min="0" max="360" value="0"></label>
+      <label>Zoom <input type="range" id="zoom" min="1" max="10" value="4"></label>
+      <label>Anim Speed <input type="range" id="speed" min="0" max="200" value="100"></label>
+      <label>Time <input type="range" id="time" min="0" max="1000" value="0"></label>
+    </div>
+    <div class="status" id="status">Drop files or load from URL to begin.</div>
+  </div>
+</div>
+
+<script type="module">
+// The test harness loads VitaMoo modules and provides a UI for
+// browsing and viewing character data from CMX/SKN/CFP files.
+
+import { parseCMX, parseSKN } from '../dist/parser.js';
+import { buildSkeleton, updateTransforms, deformMesh, findBone } from '../dist/skeleton.js';
+import { Renderer } from '../dist/renderer.js';
+
+const status = document.getElementById('status');
+const canvas = document.getElementById('viewport');
+const skeletonList = document.getElementById('skeletonList');
+const suitList = document.getElementById('suitList');
+const skillList = document.getElementById('skillList');
+const meshList = document.getElementById('meshList');
+
+// State
+const loaded = { skeletons: [], suits: [], skills: [], meshes: [] };
+let renderer = null;
+let activeMesh = null;
+let activeBones = null;
+
+// Initialize renderer
+function initRenderer() {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    try {
+        renderer = new Renderer(canvas);
+        status.textContent = 'WebGL ready. Drop files to load.';
+    } catch (e) {
+        status.textContent = 'WebGL not available: ' + e.message;
+    }
+}
+
+// File drop handling
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', async e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    for (const file of e.dataTransfer.files) {
+        await loadFile(file);
+    }
+});
+
+async function loadFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    status.textContent = `Loading ${file.name}...`;
+
+    if (ext === 'cmx') {
+        const text = await file.text();
+        const cmx = parseCMX(text);
+        cmx.skeletons.forEach(s => {
+            loaded.skeletons.push(s);
+            addListItem(skeletonList, s.name, () => selectSkeleton(s));
+        });
+        cmx.suits.forEach(s => {
+            loaded.suits.push(s);
+            addListItem(suitList, s.name, () => selectSuit(s));
+        });
+        cmx.skills.forEach(s => {
+            loaded.skills.push(s);
+            addListItem(skillList, s.name, () => selectSkill(s));
+        });
+        status.textContent = `Loaded ${file.name}: ${cmx.skeletons.length} skeletons, ${cmx.suits.length} suits, ${cmx.skills.length} skills`;
+    }
+    else if (ext === 'skn') {
+        const text = await file.text();
+        const mesh = parseSKN(text);
+        loaded.meshes.push(mesh);
+        addListItem(meshList, mesh.name, () => selectMesh(mesh));
+        status.textContent = `Loaded ${file.name}: ${mesh.vertices.length} vertices, ${mesh.faces.length} faces`;
+    }
+    else if (ext === 'png' || ext === 'bmp') {
+        status.textContent = `Texture ${file.name} noted (texture loading todo)`;
+    }
+    else {
+        status.textContent = `Unknown file type: ${ext}`;
+    }
+}
+
+function addListItem(list, name, onClick) {
+    const li = document.createElement('li');
+    li.textContent = name;
+    li.onclick = () => {
+        list.querySelectorAll('li').forEach(l => l.classList.remove('active'));
+        li.classList.add('active');
+        onClick();
+    };
+    list.appendChild(li);
+}
+
+function selectSkeleton(skel) {
+    activeBones = buildSkeleton(skel);
+    updateTransforms(activeBones);
+    status.textContent = `Skeleton: ${skel.name} (${skel.bones.length} bones)`;
+    renderFrame();
+}
+
+function selectSuit(suit) {
+    status.textContent = `Suit: ${suit.name} (${suit.skins.length} skins: ${suit.skins.map(s => s.name).join(', ')})`;
+}
+
+function selectSkill(skill) {
+    status.textContent = `Skill: ${skill.name} (${skill.motions.length} motions, ${skill.duration}ms)`;
+}
+
+function selectMesh(mesh) {
+    activeMesh = mesh;
+    status.textContent = `Mesh: ${mesh.name} (${mesh.vertices.length} verts, ${mesh.faces.length} tris, bones: ${mesh.boneNames.join(', ')})`;
+    renderFrame();
+}
+
+function renderFrame() {
+    if (!renderer) return;
+    renderer.clear();
+
+    const zoom = parseFloat(document.getElementById('zoom').value);
+    const rotY = parseFloat(document.getElementById('rotY').value) * Math.PI / 180;
+    const dist = zoom * 0.5;
+    renderer.setCamera(60, canvas.width / canvas.height, 0.1, 100,
+                       Math.sin(rotY) * dist, 1.0, Math.cos(rotY) * dist);
+
+    if (activeMesh && activeBones) {
+        const boneMap = new Map();
+        activeBones.forEach(b => boneMap.set(b.name, b));
+        const { vertices, normals } = deformMesh(activeMesh, activeBones, boneMap);
+        renderer.drawMesh(activeMesh, vertices, normals);
+    } else if (activeMesh) {
+        // Draw mesh in rest pose (no skeleton)
+        renderer.drawMesh(activeMesh, activeMesh.vertices, activeMesh.normals);
+    }
+}
+
+// Continuous render on slider changes
+['rotY', 'zoom', 'speed', 'time'].forEach(id => {
+    document.getElementById(id).addEventListener('input', renderFrame);
+});
+
+// Resize handling
+window.addEventListener('resize', () => {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    renderFrame();
+});
+
+initRenderer();
+</script>
+</body>
+</html>
