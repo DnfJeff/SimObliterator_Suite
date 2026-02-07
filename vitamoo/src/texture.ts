@@ -6,9 +6,10 @@
 // that's what the game content uses and we don't want to require a
 // conversion step for legacy content.
 //
-// If the filename (lowercased) ends with .png or .jpg, we use the
-// browser's native image decoder instead. This supports modern content
-// created with the Simopolis tools or AI image generation.
+// Any other extension falls through to the browser's native Image
+// decoder, which handles: .png, .jpg, .jpeg, .gif, .webp, .avif,
+// .svg, .ico — whatever the browser supports. This covers modern
+// content from Simopolis tools, AI image generation, or Photoshop.
 
 // Parse a BMP file from an ArrayBuffer. Returns an ImageData-compatible
 // object with RGBA pixels ready for WebGL texturing.

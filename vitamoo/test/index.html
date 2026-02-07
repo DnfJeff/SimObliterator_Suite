@@ -32,9 +32,11 @@ canvas { flex: 1; }
 <div class="layout">
   <div class="sidebar">
     <div class="drop-zone" id="dropZone">
-      Drop .cmx .skn .cfp .png files here<br>
-      or load from URL below
+      Drop .cmx .skn .cfp .bmp .png files here
     </div>
+    <button id="loadTestData" style="width:100%;padding:8px;margin:4px 0;background:#0f3460;color:#7fdbca;border:1px solid #333;border-radius:3px;cursor:pointer">
+      Load Test Data
+    </button>
 
     <div class="section">
       <h3>Skeletons</h3>
@@ -72,10 +74,12 @@ canvas { flex: 1; }
 <script type="module">
 // The test harness loads VitaMoo modules and provides a UI for
 // browsing and viewing character data from CMX/SKN/CFP files.
+// Click "Load Test Data" to load the bundled test assets from data/.
 
 import { parseCMX, parseSKN } from '../dist/parser.js';
 import { buildSkeleton, updateTransforms, deformMesh, findBone } from '../dist/skeleton.js';
 import { Renderer } from '../dist/renderer.js';
+import { parseBMP, loadTexture } from '../dist/texture.js';
 
 const status = document.getElementById('status');
 const canvas = document.getElementById('viewport');
@@ -214,6 +218,61 @@ window.addEventListener('resize', () => {
     canvas.height = canvas.clientHeight;
     renderFrame();
 });
+
+// Load test data from the bundled data/ directory
+document.getElementById('loadTestData').onclick = async () => {
+    status.textContent = 'Loading test data...';
+    const testFiles = [
+        'adult-skeleton.cmx',
+        'B003MAFit_01.cmx',
+        'C003MA_RomanCrew.cmx',
+        'HMLO.cmx',
+        'HMRO.cmx',
+        'adult-idle1.cmx',
+        'adult-idle2.cmx',
+        'adult-dance-inplace-twistloop.cmx',
+        'ross-walking-loop.cmx',
+        'a2o-running-start.cmx',
+    ];
+    for (const name of testFiles) {
+        try {
+            const resp = await fetch('data/' + name);
+            if (!resp.ok) { console.warn(`Skip ${name}: ${resp.status}`); continue; }
+            const text = await resp.text();
+            const cmx = parseCMX(text);
+            cmx.skeletons.forEach(s => {
+                loaded.skeletons.push(s);
+                addListItem(skeletonList, s.name, () => selectSkeleton(s));
+            });
+            cmx.suits.forEach(s => {
+                loaded.suits.push(s);
+                addListItem(suitList, s.name, () => selectSuit(s));
+            });
+            cmx.skills.forEach(s => {
+                loaded.skills.push(s);
+                addListItem(skillList, s.name, () => selectSkill(s));
+            });
+        } catch (e) { console.warn(`Error loading ${name}:`, e); }
+    }
+    // Load SKN mesh files
+    const sknFiles = [
+        'xskin-b003mafit_01-PELVIS-BODY.skn',
+        'xskin-c003ma_romancrew-HEAD-HEAD.skn',
+        'xskin-hmlo-L_HAND-L_HAND.skn',
+        'xskin-hmro-R_HAND-R_HAND.skn',
+    ];
+    for (const name of sknFiles) {
+        try {
+            const resp = await fetch('data/' + name);
+            if (!resp.ok) continue;
+            const text = await resp.text();
+            const mesh = parseSKN(text);
+            loaded.meshes.push(mesh);
+            addListItem(meshList, mesh.name, () => selectMesh(mesh));
+        } catch (e) { console.warn(`Error loading ${name}:`, e); }
+    }
+    status.textContent = `Loaded: ${loaded.skeletons.length} skeletons, ${loaded.suits.length} suits, ${loaded.skills.length} skills, ${loaded.meshes.length} meshes`;
+};
 
 initRenderer();
 </script>
