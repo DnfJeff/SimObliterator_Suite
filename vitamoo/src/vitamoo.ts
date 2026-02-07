@@ -6,3 +6,4 @@ export { parseCMX, parseSKN, parseCFP } from './parser.js';
 export { buildSkeleton, findRoot, findBone, updateTransforms, deformMesh } from './skeleton.js';
 export { Renderer } from './renderer.js';
 export { TextReader, BinaryReader } from './reader.js';
+export { parseBMP, loadTexture } from './texture.js';
