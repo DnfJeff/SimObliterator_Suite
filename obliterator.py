@@ -184,21 +184,32 @@ COMMANDS = {
         ],
     },
 
-    # Bridge commands — move characters between The Sims and MOOLLM
+    # Bridge commands — move characters between The Sims and MOOLLM.
+    # SIMS-UPLIFT.yml is the machine-readable interchange format.
+    # obliterator.py reads/writes it. The LLM reads/writes CHARACTER.yml.
+    # Neither crosses into the other's domain.
     "uplift": {
         "group": "bridge",
-        "help": "Generate MOOLLM CHARACTER.yml sims: block from save data (fresh)",
+        "help": "Extract Sim data from save file into SIMS-UPLIFT.yml format",
         "args": [
             {"name": "file", "help": "Path to Neighborhood.iff"},
             {"name": "name", "help": "Character name"},
         ],
         "opts": [
-            {"flags": ["-o", "--output"], "help": "Write to file instead of stdout"},
+            {"flags": ["-o", "--output"], "help": "Write to file (default: stdout)"},
+        ],
+    },
+    "homecoming": {
+        "group": "bridge",
+        "help": "Write SIMS-UPLIFT.yml data back into a save file (return to The Sims)",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "uplift_yml", "help": "Path to SIMS-UPLIFT.yml to write back"},
         ],
     },
     "sync": {
         "group": "bridge",
-        "help": "Compare save file against existing CHARACTER.yml, emit merge events for LLM",
+        "help": "Compare save file against CHARACTER.yml, emit merge events for LLM",
         "args": [
             {"name": "file", "help": "Path to Neighborhood.iff"},
             {"name": "name", "help": "Character name"},
@@ -826,12 +837,18 @@ def cmd_dump_raw(args):
 
 
 def cmd_uplift(args):
-    """Generate a MOOLLM-compatible sims: YAML block from a Sim's save data.
+    """Extract a Sim's data from a save file into SIMS-UPLIFT.yml format.
 
-    This is a fresh extraction — it reads the binary save file and produces
-    YAML that can go directly into a CHARACTER.yml file. If the character
-    already has a CHARACTER.yml and you want to merge instead of replace,
-    use the 'sync' command instead.
+    SIMS-UPLIFT.yml is the machine-readable interchange format. It contains
+    just the structured data: traits, skills, career, relationships, identity.
+    No narrative. No YAML Jazz. No soul_philosophy.
+
+    The LLM reads this file and generates CHARACTER.yml from it — adding
+    emoji_identity, mind_mirror, soul_philosophy, description, relationship
+    narratives, and everything else that requires taste and creativity.
+
+    The file is saved in the character's directory as SIMS-UPLIFT.yml so it
+    can be edited, synced, and used for homecoming later.
     """
     mgr = _load_save(args.file)
     nid, n = _find(mgr, args.name)
@@ -841,21 +858,87 @@ def cmd_uplift(args):
     tr = _read_traits(n.person_data)
     sk = _read_skills(n.person_data)
     dm = _read_demo(n.person_data)
-    lines = [f"# {n.name} — Uplifted from Sims 1 save data",
-             f"# Neighbor ID: {nid}  |  Source: {args.file}", "", "sims:", "  traits:"]
-    for t in ["neat","outgoing","active","playful","nice","generous"]:
+
+    # Find family info for this Sim
+    family_id = 0
+    family_budget = 0
+    house_number = 0
+    family_members = []
+    for fid, fam in mgr.families.items():
+        if n.guid in fam.member_guids:
+            family_id = fid
+            family_budget = fam.budget
+            house_number = fam.house_number
+            family_members = [g for g in fam.member_guids if g != n.guid]
+            break
+
+    # Build the SIMS-UPLIFT.yml
+    lines = [
+        f"# SIMS-UPLIFT.yml — {n.name}",
+        f"# Extracted from: {args.file}",
+        f"# Direction: uplift (binary -> yaml)",
+        f"# The LLM reads this to generate CHARACTER.yml.",
+        f"# For homecoming, the LLM updates this and obliterator.py writes it back.",
+        "",
+        "schema_version: 1",
+        "",
+        "source:",
+        f"  file: {args.file}",
+        f"  neighbor_id: {nid}",
+        f"  guid: {n.guid}",
+        f"  family_id: {family_id}",
+        f"  family_budget: {family_budget}",
+        f"  house_number: {house_number}",
+        f"  direction: uplift",
+        "",
+        "identity:",
+        f"  name: {n.name}",
+        f"  age: {dm['age']}",
+        f"  gender: {dm['gender']}",
+        f"  skin_color: {dm['skin_color']}",
+        f"  zodiac: {dm['zodiac'].lower()}",
+        "",
+        "traits:",
+    ]
+    for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
         if t in tr:
-            v = tr[t]
-            lines.append(f"    {t}: {v['display']:<3}  # {v['low']} {v['display']}/10 {v['high']}")
-    lines.append("  skills:")
+            lines.append(f"  {t}: {tr[t]['display']}")
+    lines += ["", "skills:"]
     for s in VISIBLE_SKILLS:
         if s in sk:
-            lines.append(f"    {s}: {sk[s]['display']}")
-    lines += ["  career:", f"    track: {dm['career'].lower().replace('/','_')}",
-              f"    performance: {dm['job_performance']}",
-              "  identity:", f"    age: {dm['age']}", f"    gender: {dm['gender']}",
-              f"    zodiac: {dm['zodiac'].lower()}", f"    skin_color: {dm['skin_color']}"]
-    out = "\n".join(lines) + "\n"
+            lines.append(f"  {s}: {sk[s]['display']}")
+    lines += [
+        "",
+        "career:",
+        f"  track: {dm['career'].lower().replace('/', '_')}",
+        f"  performance: {dm['job_performance']}",
+    ]
+
+    # Relationships
+    lines += ["", "relationships:"]
+    if n.relationships:
+        for rel_id, rel_vals in n.relationships.items():
+            daily = rel_vals[0] if len(rel_vals) > 0 else 0
+            lifetime = rel_vals[1] if len(rel_vals) > 1 else 0
+            # Try to find the neighbor's name
+            rel_name = ""
+            for other_nid, other in mgr.neighbors.items():
+                if other_nid == rel_id:
+                    rel_name = other.name
+                    break
+            lines.append(f"  {rel_id}:")
+            lines.append(f"    daily: {daily}")
+            lines.append(f"    lifetime: {lifetime}")
+            if rel_name:
+                lines.append(f"    name: {rel_name}")
+    else:
+        lines.append("  {}")
+
+    # Family members
+    lines += ["", f"family_members: {family_members}"]
+    lines.append("")
+
+    out = "\n".join(lines)
     if args.output:
         p = Path(args.output)
         p.parent.mkdir(parents=True, exist_ok=True)
@@ -863,6 +946,161 @@ def cmd_uplift(args):
         print(f"Wrote {p}")
     else:
         print(out, end="")
+
+
+def cmd_homecoming(args):
+    """Write a SIMS-UPLIFT.yml file back into a neighborhood save file.
+
+    This is the return journey. After the Sim has lived in MOOLLM — gained
+    skills, made friends, changed careers — the LLM generates an updated
+    SIMS-UPLIFT.yml with direction: homecoming. This command reads that file
+    and writes the data back into the binary save.
+
+    What gets written back:
+    - Personality traits (sims can change in MOOLLM)
+    - Skills (sims can learn in MOOLLM)
+    - Career track and performance
+    - Relationships (new friends from MOOLLM, mapped to neighbor IDs)
+
+    What doesn't go back (MOOLLM-only):
+    - mind_mirror, soul_philosophy, emoji_identity, description
+    - These live in CHARACTER.yml and have no binary representation
+    """
+    mgr = _load_save(args.file)
+    uplift_path = Path(args.uplift_yml)
+    if not uplift_path.is_file():
+        print(f"ERROR: {uplift_path} not found", file=sys.stderr)
+        sys.exit(1)
+
+    # Parse the SIMS-UPLIFT.yml
+    data = _parse_uplift_yml(uplift_path.read_text())
+
+    nid = data.get("neighbor_id")
+    if nid is None or nid not in mgr.neighbors:
+        # Try to find by name
+        name = data.get("name", "")
+        if name:
+            nid, n = _find(mgr, name)
+        else:
+            print(f"ERROR: No neighbor_id in uplift file and no name to search", file=sys.stderr)
+            sys.exit(1)
+
+    changes = 0
+
+    # Write traits
+    for trait_name in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
+        val = data.get("traits", {}).get(trait_name)
+        if val is not None:
+            raw = max(0, min(int(val), 10)) * 100
+            if mgr.set_sim_personality(nid, trait_name, raw):
+                changes += 1
+
+    # Write skills
+    for skill_name in VISIBLE_SKILLS:
+        val = data.get("skills", {}).get(skill_name)
+        if val is not None:
+            raw = max(0, min(int(val), 10)) * 100
+            if mgr.set_sim_skill(nid, skill_name, raw):
+                changes += 1
+
+    # Write career
+    career = data.get("career", {})
+    track_name = career.get("track", "").lower()
+    # Reverse lookup career track name to ID
+    track_id = None
+    for tid, tname in CAREER_TRACKS.items():
+        if tname.lower().replace("/", "_") == track_name or tname.lower() == track_name:
+            track_id = tid
+            break
+    perf = career.get("performance")
+    if track_id is not None or perf is not None:
+        mgr.set_sim_career(nid, job_type=track_id, job_performance=perf)
+        changes += 1
+
+    # Write family budget
+    budget = data.get("family_budget")
+    family_id = data.get("family_id")
+    if budget is not None and family_id is not None and family_id in mgr.families:
+        mgr.set_family_money(family_id, int(budget))
+        changes += 1
+
+    if changes > 0:
+        mgr.save()
+        print(f"Homecoming complete. {changes} fields written to {args.file}")
+        print(f"Welcome home, {data.get('name', 'Sim')}.")
+    else:
+        print("No changes to write.")
+
+
+def _parse_uplift_yml(text):
+    """Parse a SIMS-UPLIFT.yml file into a flat dict for homecoming.
+
+    Returns a dict with keys: neighbor_id, name, traits, skills, career,
+    family_id, family_budget, etc.
+    """
+    result = {"traits": {}, "skills": {}, "career": {}}
+    section = None
+
+    for line in text.split("\n"):
+        stripped = line.split("#")[0].rstrip()
+        if not stripped:
+            continue
+        indent = len(line) - len(line.lstrip())
+
+        # Top-level sections
+        if indent == 0 and stripped.endswith(":") and not stripped.startswith(" "):
+            word = stripped[:-1].strip()
+            if word in ("source", "identity", "traits", "skills", "career", "relationships"):
+                section = word
+                continue
+            else:
+                section = None
+                continue
+
+        if ":" not in stripped:
+            continue
+
+        key, _, val = stripped.partition(":")
+        key = key.strip()
+        val = val.strip()
+        if not val or val == "{}":
+            continue
+
+        # Try numeric
+        try:
+            num = int(val)
+        except ValueError:
+            num = None
+
+        if section == "source":
+            if key == "neighbor_id" and num is not None:
+                result["neighbor_id"] = num
+            elif key == "guid" and num is not None:
+                result["guid"] = num
+            elif key == "family_id" and num is not None:
+                result["family_id"] = num
+            elif key == "family_budget" and num is not None:
+                result["family_budget"] = num
+            elif key == "file":
+                result["source_file"] = val
+        elif section == "identity":
+            if key == "name":
+                result["name"] = val
+            elif key in ("age", "gender", "skin_color", "zodiac"):
+                result[key] = val
+        elif section == "traits":
+            if num is not None:
+                result["traits"][key] = num
+        elif section == "skills":
+            if num is not None:
+                result["skills"][key] = num
+        elif section == "career":
+            if key == "track":
+                result["career"]["track"] = val
+            elif key == "performance" and num is not None:
+                result["career"]["performance"] = num
+
+    return result
 
 
 def cmd_sync(args):
