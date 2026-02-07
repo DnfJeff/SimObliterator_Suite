@@ -88,7 +88,7 @@ class NBRS(IffChunk):
         
         neigh.unknown1 = io.read_int32()
         if neigh.unknown1 != 1:
-            return neigh
+            return None  # Not a valid neighbor entry; return None, not empty object
         
         neigh.version = io.read_int32()
         
