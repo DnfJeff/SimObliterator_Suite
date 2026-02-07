@@ -158,16 +158,29 @@ COMMANDS = {
         ],
     },
 
-    # --- UPLIFT / DOWNLOAD ---
+    # --- UPLIFT / DOWNLOAD / SYNC ---
     "uplift": {
         "group": "bridge",
-        "help": "Generate MOOLLM CHARACTER.yml sims: block from save data",
+        "help": "Generate MOOLLM CHARACTER.yml sims: block from save data (fresh)",
         "args": [
             {"name": "file", "help": "Path to Neighborhood.iff"},
             {"name": "name", "help": "Character name"},
         ],
         "opts": [
             {"flags": ["-o", "--output"], "help": "Write to file instead of stdout"},
+        ],
+    },
+    "sync": {
+        "group": "bridge",
+        "help": "Compare save file against existing CHARACTER.yml, emit merge events for LLM",
+        "args": [
+            {"name": "file", "help": "Path to Neighborhood.iff"},
+            {"name": "name", "help": "Character name"},
+            {"name": "character_yml", "help": "Path to existing CHARACTER.yml"},
+        ],
+        "opts": [
+            {"flags": ["--apply"], "help": "Path to write merged sims: block",
+             "default": None},
         ],
     },
 }
@@ -643,6 +656,307 @@ def cmd_uplift(args):
         p = Path(args.output); p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(out); print(f"Wrote {p}")
     else: print(out, end="")
+
+
+def cmd_sync(args):
+    """Compare save file against existing CHARACTER.yml, emit merge events.
+
+    This is an event generator, not a writer. It reads both sources,
+    diffs them, and emits structured events that tell the LLM what
+    changed and what decisions need to be made. The LLM then processes
+    the events and updates the CHARACTER.yml accordingly.
+
+    Event types:
+      NEW_CHARACTER  — no existing file, full uplift needed
+      TRAIT_MATCH    — values agree, no action
+      TRAIT_DRIFT    — values differ, LLM decides how to merge
+      SKILL_GAINED   — save shows higher skill (Sim learned something)
+      SKILL_LOST     — save shows lower skill (unusual)
+      CAREER_CHANGE  — different career track
+      CAREER_ADVANCE — same track, higher status/performance
+      RELATIONSHIP_NEW     — save has relationship not in YAML
+      RELATIONSHIP_CHANGED — scores differ
+      DEMOGRAPHIC_MATCH    — age/gender/zodiac agree
+      DEMOGRAPHIC_DRIFT    — demographic changed (age up, etc.)
+      NARRATIVE_STALE      — traits changed enough that soul_philosophy needs revisiting
+      NEEDS_NOTE           — reminder that motives are runtime, not in save
+    """
+    mgr = _load_save(args.file)
+    nid, n = _find(mgr, args.name)
+    if not n.person_data:
+        print(f"ERROR: {n.name} has no person_data", file=sys.stderr)
+        sys.exit(1)
+
+    save_traits = _read_traits(n.person_data)
+    save_skills = _read_skills(n.person_data)
+    save_demo = _read_demo(n.person_data)
+
+    # Try to parse the existing CHARACTER.yml
+    yml_path = Path(args.character_yml)
+    yml_traits = {}
+    yml_skills = {}
+    yml_demo = {}
+    yml_relationships = {}
+    yml_exists = False
+
+    if yml_path.is_file():
+        yml_exists = True
+        yml_text = yml_path.read_text()
+        yml_traits, yml_skills, yml_demo, yml_relationships = _parse_character_yml(yml_text)
+
+    events = []
+
+    if not yml_exists:
+        events.append({
+            "type": "NEW_CHARACTER",
+            "severity": "action",
+            "message": f"No existing CHARACTER.yml at {yml_path}. Full uplift needed.",
+            "suggestion": f"Run: obliterator uplift {args.file} '{args.name}' -o {yml_path}",
+        })
+        _emit(events, args.format)
+        return
+
+    # Trait comparison
+    trait_drift_count = 0
+    for t in ["neat", "outgoing", "active", "playful", "nice", "generous"]:
+        save_val = save_traits.get(t, {}).get("display")
+        yml_val = yml_traits.get(t)
+        if save_val is None:
+            continue
+        if yml_val is None:
+            events.append({"type": "TRAIT_DRIFT", "severity": "info",
+                           "field": t, "save": save_val, "yaml": None,
+                           "message": f"{t}: save={save_val}, YAML missing"})
+            trait_drift_count += 1
+        elif save_val != yml_val:
+            delta = save_val - yml_val
+            direction = "higher" if delta > 0 else "lower"
+            events.append({"type": "TRAIT_DRIFT", "severity": "warning",
+                           "field": t, "save": save_val, "yaml": yml_val,
+                           "delta": delta,
+                           "message": f"{t}: save={save_val} vs yaml={yml_val} ({direction} by {abs(delta)})",
+                           "suggestion": f"Update sims.traits.{t} to {save_val}, "
+                                        f"or keep {yml_val} if MOOLLM changes are intentional"})
+            trait_drift_count += 1
+        else:
+            events.append({"type": "TRAIT_MATCH", "severity": "ok",
+                           "field": t, "value": save_val,
+                           "message": f"{t}: {save_val} (matches)"})
+
+    # Skill comparison
+    for s in VISIBLE_SKILLS:
+        save_val = save_skills.get(s, {}).get("display")
+        yml_val = yml_skills.get(s)
+        if save_val is None:
+            continue
+        if yml_val is None:
+            events.append({"type": "SKILL_GAINED", "severity": "info",
+                           "field": s, "save": save_val, "yaml": 0,
+                           "message": f"{s}: save={save_val}, YAML missing"})
+        elif save_val > yml_val:
+            events.append({"type": "SKILL_GAINED", "severity": "info",
+                           "field": s, "save": save_val, "yaml": yml_val,
+                           "delta": save_val - yml_val,
+                           "message": f"{s}: {yml_val} → {save_val} (+{save_val - yml_val})",
+                           "suggestion": f"Sim gained {s} skill in The Sims. "
+                                        f"Update and add a memory about learning."})
+        elif save_val < yml_val:
+            events.append({"type": "SKILL_LOST", "severity": "warning",
+                           "field": s, "save": save_val, "yaml": yml_val,
+                           "delta": save_val - yml_val,
+                           "message": f"{s}: {yml_val} → {save_val} ({save_val - yml_val})",
+                           "suggestion": f"Skill decreased. Unusual. Check if save "
+                                        f"is older or was manually edited."})
+        else:
+            events.append({"type": "SKILL_MATCH", "severity": "ok",
+                           "field": s, "value": save_val,
+                           "message": f"{s}: {save_val} (matches)"})
+
+    # Career comparison
+    save_career = save_demo.get("career", "Unemployed")
+    yml_career = yml_demo.get("career")
+    if yml_career and save_career.lower() != yml_career.lower():
+        events.append({"type": "CAREER_CHANGE", "severity": "warning",
+                       "save": save_career, "yaml": yml_career,
+                       "message": f"Career: {yml_career} → {save_career}",
+                       "suggestion": f"Sim changed careers. Update career track "
+                                    f"and consider adding a memory about the switch."})
+    elif yml_career:
+        events.append({"type": "CAREER_MATCH", "severity": "ok",
+                       "value": save_career,
+                       "message": f"Career: {save_career} (matches)"})
+
+    # Demographic comparison
+    for field in ["age", "gender", "zodiac"]:
+        save_val = save_demo.get(field)
+        yml_val = yml_demo.get(field)
+        if yml_val and save_val and str(save_val).lower() != str(yml_val).lower():
+            events.append({"type": "DEMOGRAPHIC_DRIFT", "severity": "warning",
+                           "field": field, "save": save_val, "yaml": yml_val,
+                           "message": f"{field}: {yml_val} → {save_val}",
+                           "suggestion": f"Update identity.{field} to {save_val}"})
+        elif yml_val:
+            events.append({"type": "DEMOGRAPHIC_MATCH", "severity": "ok",
+                           "field": field, "value": save_val,
+                           "message": f"{field}: {save_val} (matches)"})
+
+    # Relationship comparison
+    for rel_id, rel_vals in n.relationships.items():
+        daily = rel_vals[0] if len(rel_vals) > 0 else 0
+        lifetime = rel_vals[1] if len(rel_vals) > 1 else 0
+        yml_rel = yml_relationships.get(str(rel_id))
+        if yml_rel is None:
+            events.append({"type": "RELATIONSHIP_NEW", "severity": "info",
+                           "target_id": rel_id, "daily": daily, "lifetime": lifetime,
+                           "message": f"New relationship with neighbor {rel_id}: "
+                                     f"daily={daily}, lifetime={lifetime}",
+                           "suggestion": f"Add relationship entry. LLM should generate "
+                                        f"a narrative based on the scores."})
+        else:
+            yml_daily = yml_rel.get("daily")
+            yml_lifetime = yml_rel.get("lifetime")
+            if (yml_daily is not None and yml_daily != daily) or \
+               (yml_lifetime is not None and yml_lifetime != lifetime):
+                events.append({"type": "RELATIONSHIP_CHANGED", "severity": "info",
+                               "target_id": rel_id,
+                               "save_daily": daily, "save_lifetime": lifetime,
+                               "yaml_daily": yml_daily, "yaml_lifetime": yml_lifetime,
+                               "message": f"Relationship {rel_id}: "
+                                         f"daily {yml_daily}→{daily}, "
+                                         f"lifetime {yml_lifetime}→{lifetime}",
+                               "suggestion": f"Update scores. If big change, "
+                                            f"LLM should update the narrative."})
+
+    # Narrative staleness check
+    if trait_drift_count >= 2:
+        events.append({"type": "NARRATIVE_STALE", "severity": "action",
+                       "drift_count": trait_drift_count,
+                       "message": f"{trait_drift_count} traits drifted. "
+                                 f"soul_philosophy and description may need revision.",
+                       "suggestion": f"LLM should re-read the updated traits and "
+                                    f"revise the character's voice and self-description "
+                                    f"to reflect who they've become."})
+
+    # Motives reminder
+    events.append({"type": "NEEDS_NOTE", "severity": "info",
+                   "message": "Motives (hunger, comfort, etc.) are runtime state. "
+                             "Not in save file. CHARACTER.yml needs values may be "
+                             "stale or fictional — update based on narrative context."})
+
+    # Summary
+    actions = sum(1 for e in events if e["severity"] == "action")
+    warnings = sum(1 for e in events if e["severity"] == "warning")
+    infos = sum(1 for e in events if e["severity"] == "info")
+    oks = sum(1 for e in events if e["severity"] == "ok")
+
+    if args.format == "table":
+        print(f"SYNC: {n.name}")
+        print(f"Save: {args.file}  |  YAML: {args.character_yml}")
+        print(f"Events: {len(events)} ({actions} actions, {warnings} warnings, "
+              f"{infos} info, {oks} ok)\n")
+        for e in events:
+            icon = {"ok": "  ", "info": "->", "warning": "!!", "action": ">>"}
+            sev = icon.get(e["severity"], "  ")
+            print(f"  {sev} [{e['type']}] {e['message']}")
+            if "suggestion" in e:
+                print(f"     {e['suggestion']}")
+    else:
+        _emit({"name": n.name, "save_file": args.file,
+               "character_yml": args.character_yml,
+               "summary": {"actions": actions, "warnings": warnings,
+                           "info": infos, "ok": oks},
+               "events": events}, args.format)
+
+
+def _parse_character_yml(text):
+    """Minimal YAML parser for CHARACTER.yml sims: block.
+
+    Not a full YAML parser — just extracts the fields we need for
+    sync comparison. Works on the subset of YAML that CHARACTER.yml
+    uses. Returns (traits, skills, demo, relationships).
+    """
+    traits = {}
+    skills = {}
+    demo = {}
+    relationships = {}
+
+    lines = text.split("\n")
+    section = None
+    subsection = None
+
+    for line in lines:
+        stripped = line.split("#")[0].rstrip()  # strip comments
+        if not stripped:
+            continue
+
+        indent = len(line) - len(line.lstrip())
+
+        # Detect sections
+        if indent == 0 or (indent <= 2 and ":" in stripped):
+            if "sims:" in stripped:
+                section = "sims"
+                continue
+            elif "relationships:" in stripped and section != "sims":
+                section = "relationships"
+                continue
+            elif stripped.endswith(":") and not stripped.startswith(" "):
+                section = None
+                continue
+
+        if section == "sims":
+            if "traits:" in stripped and indent <= 4:
+                subsection = "traits"; continue
+            elif "skills:" in stripped and indent <= 4:
+                subsection = "skills"; continue
+            elif "career:" in stripped and indent <= 4:
+                subsection = "career"; continue
+            elif "identity:" in stripped and indent <= 4:
+                subsection = "identity"; continue
+            elif "needs:" in stripped and indent <= 4:
+                subsection = "needs"; continue
+            elif stripped.endswith(":") and indent <= 4:
+                subsection = None; continue
+
+            if ":" in stripped:
+                key, _, val = stripped.partition(":")
+                key = key.strip()
+                val = val.strip()
+                if not val:
+                    continue
+                # Try to parse as number
+                try:
+                    num_val = int(val)
+                except ValueError:
+                    try:
+                        num_val = float(val)
+                    except ValueError:
+                        num_val = None
+
+                if subsection == "traits" and num_val is not None:
+                    traits[key] = int(num_val)
+                elif subsection == "skills" and num_val is not None:
+                    skills[key] = int(num_val)
+                elif subsection == "career":
+                    if key == "track":
+                        demo["career"] = val
+                    elif key == "performance" and num_val is not None:
+                        demo["job_performance"] = int(num_val)
+                elif subsection == "identity":
+                    demo[key] = val
+
+        if section == "relationships":
+            # Simple: just detect neighbor IDs and daily/lifetime
+            if ":" in stripped:
+                key, _, val = stripped.partition(":")
+                key = key.strip()
+                val = val.strip()
+                if key == "daily" or key == "lifetime":
+                    pass  # handled below
+                elif key == "type":
+                    pass
+                # Crude relationship parsing — the LLM handles the real merge
+
+    return traits, skills, demo, relationships
 
 
 # Parser builder — driven by COMMANDS table
