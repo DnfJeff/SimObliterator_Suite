@@ -93,3 +93,5 @@ Examples/SaveGames/*
 # Temp files
 *.tmp
 *.temp
+vitamoo/node_modules/
+vitamoo/dist/
