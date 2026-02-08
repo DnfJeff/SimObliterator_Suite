@@ -2020,9 +2020,25 @@ function setupMouseInteraction() {
 // Select an actor by index. -1 = All.
 function selectActor(idx) {
     if (idx < -1 || idx >= bodies.length) return;
+    const prevIdx = selectedActorIndex;
     selectedActorIndex = idx;
     const actorSel = $('selActor');
     if (actorSel) actorSel.value = String(idx);
+
+    // Reset top physics on bodies that are no longer selected
+    // so they stop wobbling immediately
+    if (prevIdx !== idx) {
+        for (let i = 0; i < bodies.length; i++) {
+            const shouldBeActive = (idx < 0 || i === idx);
+            if (!shouldBeActive && bodies[i].top.active) {
+                const t = bodies[i].top;
+                t.active = false;
+                t.tilt = 0; t.tiltTarget = 0;
+                t.precessionAngle = 0; t.nutationPhase = 0; t.nutationAmp = 0;
+                t.driftX = 0; t.driftZ = 0; t.driftVX = 0; t.driftVZ = 0;
+            }
+        }
+    }
     if (idx >= 0) {
         const body = bodies[idx];
         // Sync Character dropdown to this actor's character
