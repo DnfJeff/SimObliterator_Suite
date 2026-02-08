@@ -1485,13 +1485,14 @@ function renderFrame() {
                 const rx = hx * cosD - hz * sinD;
                 const rz = hx * sinD + hz * cosD;
                 const wx = rx + selBody.x;
-                const wy = hy + 1.5; // float well above the head
+                const wy = hy + 3.0; // float well above the head
                 const wz = rz + selBody.z;
 
-                // Gentle bob + steady spin
-                const bobTime = performance.now() * 0.002;
-                const bob = Math.sin(bobTime) * 0.12;
-                const plumbRot = bobTime * 1.5;
+                // Spin at half revolution per second (matching original HouseViewer.cpp)
+                // theta = time * 0.001 * 2pi * 0.5
+                const now = performance.now();
+                const plumbRot = now * 0.001 * Math.PI;
+                const bob = Math.sin(now * 0.002) * 0.12;
 
                 // Classic Sims green
                 renderer.drawDiamond(wx, wy + bob, wz, 0.18, plumbRot, 0.2, 1.0, 0.2, 0.9);
