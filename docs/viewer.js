@@ -2362,9 +2362,9 @@ async function applyAnimationToActor(animName, actorIndex) {
 function setDistance(preset) {
     const zoomSlider = $('zoom');
     switch (preset) {
-        case 'far':    zoomSlider.value = 180; break;
-        case 'medium': zoomSlider.value = 100; break;
-        case 'near':   zoomSlider.value = 50; break;
+        case 'far':    zoomSlider.value = 300; break;
+        case 'medium': zoomSlider.value = 140; break;
+        case 'near':   zoomSlider.value = 70; break;
     }
     document.querySelectorAll('.dist-btn').forEach(b => b.classList.remove('active'));
     const btn = document.querySelector(`.dist-btn[data-dist="${preset}"]`);
