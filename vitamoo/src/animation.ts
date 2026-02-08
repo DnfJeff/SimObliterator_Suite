@@ -124,13 +124,8 @@ export class Practice {
                 nextFrame = this.repeatMode === RepeatMode.Loop ? 0 : frame;
             }
 
-            // Apply translation: lerp between frame and nextFrame.
-            // Skip root bone translation for non-moving skills to keep feet planted.
-            // In the original game, the pathfinder compensated for root movement;
-            // in the viewer we suppress it to prevent sliding.
-            const isRoot = !bone.parent;
-            const suppressRootTranslation = isRoot && !skill.isMoving;
-            if (motion.hasTranslation && skill.translations.length > 0 && !suppressRootTranslation) {
+            // Apply translation: lerp between frame and nextFrame
+            if (motion.hasTranslation && skill.translations.length > 0) {
                 const i0 = motion.translationsOffset + frame;
                 const i1 = motion.translationsOffset + nextFrame;
                 if (i0 < skill.translations.length) {
