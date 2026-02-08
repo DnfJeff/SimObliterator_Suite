@@ -346,7 +346,7 @@ details summary h3 {
     padding: 28px 36px;
     max-width: 520px;
     max-height: 85vh;
-    overflow-y: auto;
+    overflow-y: scroll;
     scrollbar-width: thin; /* Firefox */
     scrollbar-color: var(--accent) var(--bg-input); /* Firefox */
     color: var(--text-primary);
