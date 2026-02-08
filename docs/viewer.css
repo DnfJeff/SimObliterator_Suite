@@ -311,7 +311,7 @@ kbd {
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.5px;
-    min-width: 90px;
+    width: 100px;
     text-align: center;
 }
 #btnHelp:hover { opacity: 0.85; }
