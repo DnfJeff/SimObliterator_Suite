@@ -81,7 +81,7 @@ let lastDragTime = 0;
 let dragMoved = false;
 let dragButton = 0;           // 0=left (spin+zoom), 2=right (spin+orbit)
 const DRAG_THRESHOLD = 3;     // pixels before it counts as drag vs click
-const FRICTION = 0.98;        // velocity decay per frame (lower = slows faster)
+const FRICTION = 0.993;       // velocity decay per frame (higher = spins longer)
 // Held key state for smooth per-frame arrow key input
 const _keysHeld = { up: false, down: false, left: false, right: false, leftStart: 0, rightStart: 0 };
 const VELOCITY_SMOOTHING = 0.3; // low-pass filter for mouse velocity
@@ -454,8 +454,15 @@ function populateMenus() {
     fillSelect($('selHeadTex'), applyFilter(headTexNames, 'headTex'), decodeTexName);
     fillSelect($('selHandTex'), applyFilter(handTexNames, 'handTex'), decodeTexName);
 
-    // Animations
-    fillSelect($('selAnim'), Object.keys(content.skills));
+    // Animations — only show loops and sustained animations, not start/stop/stand transitions
+    const loopableSkills = Object.keys(content.skills).filter(name => {
+        const lower = name.toLowerCase();
+        return !lower.includes('-start') && !lower.includes('-stop') &&
+               !lower.includes('-walkon') && !lower.includes('-walkoff') &&
+               !lower.includes('-divein') && !lower.includes('-jumpin') &&
+               lower !== 'a2o-stand';
+    });
+    fillSelect($('selAnim'), loopableSkills);
 
     // Character dropdown
     if (contentIndex?.characters) {
@@ -1180,6 +1187,57 @@ function initSpinSound() {
     spinFormants = createVoiceChain();
     spinOsc = spinFormants.glottal;
     spinGain = spinFormants.masterGain;
+}
+
+// Brief Simlish vocal greeting when selecting actors.
+// Uses the selected actor(s) voice params for a short "aah!" exclamation.
+function simlishGreet(actorIdx) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    const dur = 0.25; // short exclamation
+
+    const greetBodies = [];
+    if (actorIdx >= 0 && actorIdx < bodies.length) {
+        greetBodies.push(bodies[actorIdx]);
+    } else if (actorIdx < 0) {
+        // All mode: up to 6 voices for a nice chord, not all 40
+        const step = Math.max(1, Math.floor(bodies.length / 6));
+        for (let i = 0; i < bodies.length; i += step) greetBodies.push(bodies[i]);
+    }
+    if (greetBodies.length === 0) return;
+
+    const vol = 0.15 / Math.sqrt(greetBodies.length);
+    for (const b of greetBodies) {
+        const v = b.personData?.voice;
+        const pitch = (v?.pitch || 100) + (Math.random() - 0.5) * 20;
+
+        const osc = audioCtx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(pitch * 1.2, now);
+        osc.frequency.linearRampToValueAtTime(pitch * 0.9, now + dur);
+
+        const filt = audioCtx.createBiquadFilter();
+        filt.type = 'bandpass';
+        filt.frequency.setValueAtTime(800, now);
+        filt.frequency.linearRampToValueAtTime(500, now + dur);
+        filt.Q.value = 3;
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(vol, now + 0.02);
+        gain.gain.linearRampToValueAtTime(vol * 0.7, now + dur * 0.6);
+        gain.gain.linearRampToValueAtTime(0, now + dur);
+
+        const pan = audioCtx.createStereoPanner();
+        pan.pan.value = Math.max(-1, Math.min(1, (b.x || 0) / 5));
+
+        osc.connect(filt);
+        filt.connect(gain);
+        gain.connect(pan);
+        pan.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + dur + 0.05);
+    }
 }
 
 // Create per-body voice chains for scene mode (call after audioCtx exists)
@@ -2089,6 +2147,9 @@ function selectActor(idx) {
         // Entering All mode — every body will get rotYDeg, subtract from each
         for (const b of bodies) b.spinOffset -= rotYDeg;
     }
+
+    // Vocal greeting: selected actors say a brief "aah!" on selection
+    simlishGreet(idx);
 
     // Deselected bodies: set tiltTarget to 0 so they settle smoothly
     for (let i = 0; i < bodies.length; i++) {
