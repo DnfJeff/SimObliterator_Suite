@@ -1066,7 +1066,10 @@ function initSpinSound() {
 }
 
 // Ensure audio is initialized on any user interaction
-function ensureAudio() { initSpinSound(); }
+function ensureAudio() {
+    initSpinSound();
+    if (audioCtx?.state === 'suspended') audioCtx.resume();
+}
 document.addEventListener('click', ensureAudio, { once: true });
 document.addEventListener('mousedown', ensureAudio, { once: true });
 document.addEventListener('keydown', ensureAudio, { once: true });
