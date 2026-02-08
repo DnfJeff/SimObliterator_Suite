@@ -424,6 +424,12 @@ function tickTop() {
     const spinSpeed = Math.abs(rotationVelocity);
 
     if (spinSpeed > TOP_SPIN_THRESHOLD) {
+        if (!top.active) {
+            // Just activated — pick a random launch direction
+            const launchAngle = Math.random() * Math.PI * 2;
+            top.driftVX += Math.sin(launchAngle) * spinSpeed * 0.02;
+            top.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.02;
+        }
         top.active = true;
         top.tiltTarget = Math.min(spinSpeed * TOP_TILT_SCALE, TOP_MAX_TILT);
     } else if (top.active) {
@@ -452,15 +458,27 @@ function tickTop() {
     top.nutationPhase += TOP_NUTATION_FREQ * 0.05;
     top.nutationAmp += (top.tilt * TOP_NUTATION_SCALE - top.nutationAmp) * 0.1;
 
-    // Drift: tilt causes the character to slide off-center
+    // Drift: tilt pushes the character off-center
     const tiltDirX = Math.sin(top.precessionAngle);
     const tiltDirZ = Math.cos(top.precessionAngle);
     top.driftVX += tiltDirX * top.tilt * TOP_DRIFT_FORCE;
     top.driftVZ += tiltDirZ * top.tilt * TOP_DRIFT_FORCE;
 
-    // Gravity bowl: pulls back toward center (quadratic restoring force)
-    top.driftVX -= top.driftX * TOP_GRAVITY;
-    top.driftVZ -= top.driftZ * TOP_GRAVITY;
+    // Orbital tangential force: perpendicular to the line from center to character
+    // This makes the drift spiral/orbit rather than bounce straight back
+    const dist = Math.sqrt(top.driftX * top.driftX + top.driftZ * top.driftZ);
+    if (dist > 0.01) {
+        const orbitalStrength = spinSpeed * 0.00015;
+        // Perpendicular direction (tangent to circle around center)
+        const spinSign = rotationVelocity > 0 ? 1 : -1;
+        top.driftVX += (-top.driftZ / dist) * orbitalStrength * spinSign;
+        top.driftVZ += (top.driftX / dist) * orbitalStrength * spinSign;
+    }
+
+    // Gravity bowl: pulls back toward center — stronger when far out
+    const gravStrength = TOP_GRAVITY * (1 + dist * 0.5);
+    top.driftVX -= top.driftX * gravStrength;
+    top.driftVZ -= top.driftZ * gravStrength;
 
     // Friction on drift
     top.driftVX *= TOP_DRIFT_FRICTION;

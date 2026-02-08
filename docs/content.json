@@ -183,7 +183,7 @@
     "leftHand": "xskin-hmlo-L_HAND-HANDML",
     "rightHand": "xskin-hmro-R_HAND-HANDMR",
     "handTexture": "HUAOdrk",
-    "animation": "a2o-dance-inplace-twistloop"
+      "animation": "a2o-test-animation5"
   },
 
   "people": [
@@ -197,7 +197,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-dance-inplace-twistloop"
+      "animation": "a2o-test-animation5"
     },
     {
       "name": "Mom (Ponytail)",
