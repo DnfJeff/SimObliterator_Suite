@@ -458,32 +458,8 @@ async function loadScene(sceneIndex) {
                 else boneMap.set(bone.name, bone);
             }
 
-            let texture = null;
-            if (part.tex) {
-                const texKey = part.tex;
-                if (!content.textures[texKey]) {
-                    for (const ext of ['.png', '.bmp']) {
-                        try {
-                            const texResp = await fetch('data/' + texKey + ext);
-                            if (texResp.ok) {
-                                if (ext === '.png') {
-                                    const img = new Image();
-                                    img.src = URL.createObjectURL(await texResp.blob());
-                                    await new Promise(r => { img.onload = r; });
-                                    texture = loadTexture(renderer.context, img);
-                                } else {
-                                    const buf = await texResp.arrayBuffer();
-                                    texture = loadTexture(renderer.context, buf);
-                                }
-                                content.textures[texKey] = texture;
-                                break;
-                            }
-                        } catch (e) { }
-                    }
-                } else {
-                    texture = content.textures[texKey];
-                }
-            }
+            // Use the same getTexture() as solo mode — returns cached WebGLTexture
+            const texture = part.tex ? await getTexture(part.tex) : null;
             body.meshes.push({ mesh, boneMap, texture });
         }
 
