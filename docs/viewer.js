@@ -1758,7 +1758,7 @@ function setupMouseInteraction() {
 
             const zoomSlider = $('zoom');
             let zoomVal = parseFloat(zoomSlider.value) + dy * 0.25;
-            zoomVal = Math.max(15, Math.min(200, zoomVal));
+            zoomVal = Math.max(15, Math.min(400, zoomVal));
             zoomSlider.value = zoomVal;
         }
 
@@ -1828,7 +1828,7 @@ function setupMouseInteraction() {
             delta = e.deltaY * 0.15;
         }
         let val = parseFloat(zoomSlider.value) + delta;
-        val = Math.max(15, Math.min(200, val));
+        val = Math.max(15, Math.min(400, val));
         zoomSlider.value = val;
         renderFrame();
     }, { passive: false });
@@ -1840,7 +1840,7 @@ function setupMouseInteraction() {
         const zoomSlider = $('zoom');
         // e.scale: >1 = zoom in, <1 = zoom out
         let val = parseFloat(zoomSlider.value) / e.scale;
-        val = Math.max(15, Math.min(200, val));
+        val = Math.max(15, Math.min(400, val));
         zoomSlider.value = val;
         renderFrame();
     });
@@ -1970,7 +1970,21 @@ function stepAnimation(direction) {
     if (idx < 1) idx = sel.options.length - 1;
     if (idx >= sel.options.length) idx = 1;
     sel.selectedIndex = idx;
-    updateScene();
+    if (activeScene && selectedActorIndex >= 0) {
+        applyAnimationToActor(sel.value, selectedActorIndex);
+    } else {
+        updateScene();
+    }
+}
+
+// Change a specific actor's animation in the current scene
+async function applyAnimationToActor(animName, actorIndex) {
+    if (actorIndex < 0 || actorIndex >= bodies.length) return;
+    if (!animName) return;
+    const body = bodies[actorIndex];
+    if (!body.skeleton) return;
+    body.practice = await loadAnimationForBody(animName, body.skeleton, `actor "${body.actorName}"`);
+    renderFrame();
 }
 
 // SimShow distance presets: Far, Medium, Near
@@ -2046,11 +2060,19 @@ function setupFilters() {
 
 // Wire up all event listeners
 function setupEventListeners() {
-    // Selection changes trigger scene rebuild
+    // Selection changes trigger scene rebuild (solo mode details)
     for (const id of ['selSkeleton', 'selBody', 'selHead', 'selLeftHand', 'selRightHand',
-                       'selBodyTex', 'selHeadTex', 'selHandTex', 'selAnim']) {
+                       'selBodyTex', 'selHeadTex', 'selHandTex']) {
         $(id).addEventListener('change', updateScene);
     }
+    // Animation dropdown: in scene mode with selected actor, change that actor's anim
+    $('selAnim').addEventListener('change', () => {
+        if (activeScene && selectedActorIndex >= 0) {
+            applyAnimationToActor($('selAnim').value, selectedActorIndex);
+        } else {
+            updateScene();
+        }
+    });
 
     // Camera controls trigger immediate re-render
     for (const id of ['rotY', 'rotX', 'zoom', 'speed']) {
@@ -2137,6 +2159,15 @@ function setupEventListeners() {
     canvas.addEventListener('keydown', e => {
         if (e.key === 'ArrowLeft') { stepAnimation(-1); e.preventDefault(); }
         if (e.key === 'ArrowRight') { stepAnimation(1); e.preventDefault(); }
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            const zoomSlider = $('zoom');
+            const delta = e.key === 'ArrowUp' ? -10 : 10;
+            let val = parseFloat(zoomSlider.value) + delta;
+            val = Math.max(15, Math.min(400, val));
+            zoomSlider.value = val;
+            renderFrame();
+            e.preventDefault();
+        }
         if (e.key === ' ') { togglePause(); e.preventDefault(); }
     });
 
