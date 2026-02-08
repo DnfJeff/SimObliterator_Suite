@@ -1776,8 +1776,8 @@ function animationLoop(timestamp) {
         const holdTime = _keysHeld.left
             ? (now - _keysHeld.leftStart) / 1000
             : (now - _keysHeld.rightStart) / 1000;
-        // Ramp: starts at 0.5 deg/frame, maxes at ~8 deg/frame after 3 seconds
-        const speed = 0.5 + Math.min(holdTime * 2.5, 8.0);
+        // Ramp: starts at 0.5 deg/frame, maxes at ~16 deg/frame after 3 seconds
+        const speed = 0.5 + Math.min(holdTime * 5.0, 16.0);
         rotationVelocity = dir * speed;
         needsRender = true;
     }
