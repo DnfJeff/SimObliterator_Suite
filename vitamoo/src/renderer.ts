@@ -25,7 +25,10 @@ uniform sampler2D uTexture;
 uniform bool uHasTexture;
 uniform vec3 uLightDir;
 void main() {
-    float light = max(dot(normalize(vNormal), normalize(uLightDir)), 0.2);
+    vec3 n = normalize(vNormal);
+    vec3 L = normalize(uLightDir);
+    float diffuse = max(dot(n, L), 0.0);
+    float light = 0.25 + 0.75 * diffuse;
     if (uHasTexture) {
         vec4 texColor = texture2D(uTexture, vTexCoord);
         gl_FragColor = vec4(texColor.rgb * light, texColor.a);
@@ -35,6 +38,7 @@ void main() {
 }`;
 
 export class Renderer {
+    private static loggedMeshes = new Set<string>();
     private gl: WebGLRenderingContext;
     private program: WebGLProgram;
     private aPosition: number;
@@ -52,6 +56,8 @@ export class Renderer {
         this.gl = gl;
 
         gl.enable(gl.DEPTH_TEST);
+        // The Sims SKN text format stores CCW winding (matching OpenGL/WebGL).
+        gl.frontFace(gl.CCW);
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.BACK);
 
@@ -75,14 +81,31 @@ export class Renderer {
     }
 
     setCamera(fov: number, aspect: number, near: number, far: number,
-              eyeX: number, eyeY: number, eyeZ: number): void {
+              eyeX: number, eyeY: number, eyeZ: number,
+              targetX = 0, targetY = 0.5, targetZ = 0): void {
         const gl = this.gl;
         const proj = perspective(fov, aspect, near, far);
-        const view = lookAt(eyeX, eyeY, eyeZ, 0, 0.5, 0, 0, 1, 0);
+        const view = lookAt(eyeX, eyeY, eyeZ, targetX, targetY, targetZ, 0, 1, 0);
         gl.uniformMatrix4fv(this.uProjection, false, proj);
         gl.uniformMatrix4fv(this.uModelView, false, view);
-        gl.uniform3f(this.uLightDir, 0.5, 1.0, 0.3);
+        // Light follows the camera: main light from eye direction + slight upward bias
+        const lx = eyeX - targetX, ly = eyeY - targetY + 0.5, lz = eyeZ - targetZ;
+        const ll = Math.sqrt(lx * lx + ly * ly + lz * lz) || 1;
+        gl.uniform3f(this.uLightDir, lx / ll, ly / ll, lz / ll);
     }
+
+    // Toggle backface culling. Enable once face winding is confirmed correct.
+    setCulling(enable: boolean): void {
+        if (enable) {
+            this.gl.enable(this.gl.CULL_FACE);
+            this.gl.cullFace(this.gl.BACK);
+        } else {
+            this.gl.disable(this.gl.CULL_FACE);
+        }
+    }
+
+    // Expose GL context for external texture operations
+    get context(): WebGLRenderingContext { return this.gl; }
 
     // Draw a deformed mesh. Call after deformMesh() produces transformed vertices.
     drawMesh(mesh: MeshData, vertices: Vec3[], normals: Vec3[],
@@ -95,6 +118,7 @@ export class Renderer {
         const uvData: number[] = [];
         const indexData: number[] = [];
 
+        let nullVerts = 0;
         for (let i = 0; i < vertices.length; i++) {
             const v = vertices[i];
             const n = normals[i];
@@ -104,6 +128,7 @@ export class Renderer {
                 normData.push(n.x, n.y, n.z);
                 uvData.push(uv.x, uv.y);
             } else {
+                nullVerts++;
                 posData.push(0, 0, 0);
                 normData.push(0, 1, 0);
                 uvData.push(0, 0);
@@ -112,6 +137,17 @@ export class Renderer {
 
         for (const face of mesh.faces) {
             indexData.push(face.a, face.b, face.c);
+        }
+
+        // Check for out-of-range indices (only on first draw per mesh)
+        if (!Renderer.loggedMeshes.has(mesh.name)) {
+            Renderer.loggedMeshes.add(mesh.name);
+            const maxIdx = vertices.length - 1;
+            const badIndices = indexData.filter(i => i < 0 || i > maxIdx);
+            console.log(`[drawMesh] "${mesh.name}" verts=${vertices.length} nullVerts=${nullVerts} tris=${mesh.faces.length} indices=${indexData.length} uvs=${mesh.uvs.length} badIndices=${badIndices.length} hasTex=${!!texture}`,
+                { posRange: posData.length > 0 ? { min: Math.min(...posData), max: Math.max(...posData) } : 'empty',
+                  samplePos: posData.slice(0, 9),
+                  sampleIdx: indexData.slice(0, 9) });
         }
 
         // Upload to GPU

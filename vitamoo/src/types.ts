@@ -1,5 +1,45 @@
 // VitaMoo core types — data structures for skeleton, mesh, and animation.
-// Clean-room TypeScript, translated from C# patterns.
+//
+// The naming vocabulary is an extended metaphor of body and performance,
+// from the original VitaBoy C++ code (Don Hopkins, Maxis, 1997),
+// inspired by Ken Perlin's "Improv" system for scripting interactive
+// actors in virtual worlds (Perlin & Goldberg, SIGGRAPH '96).
+//
+// Improv separated character animation into an Animation Engine (layered,
+// continuous, non-repetitive motions with smooth transitions) and a
+// Behavior Engine (rules governing how actors communicate and decide).
+// Actions were organized into compositing groups — actions in the same
+// group competed (one fades in, others fade out), while actions in
+// different groups layered like image compositing (back to front).
+// Perlin's key insight: "the author thinks of motion as being layered,
+// just as composited images can be layered back to front. The difference
+// is that whereas an image maps pixels to colors, an action maps DOFs
+// to values."
+//
+// Vitaboy's Practice/Skill/Motion system implements this same layered
+// architecture: Practices have priorities, opaque practices occlude
+// lower-priority ones on the same bones, and multiple practices blend
+// via weighted averaging. The vocabulary below carries Improv's spirit
+// into a game engine that shipped to millions:
+//
+//   Skeleton  — bone hierarchy (the body's structure)
+//   Bone      — translated/rotated coordinate system node
+//   Skin      — a mesh attached to a bone, rendered in its coordinate system
+//   Suit      — a named set of Skins (an outfit)
+//   Dressing  — binding a Suit to a Skeleton (the act of wearing)
+//   Skill     — a named set of Motions (a learned ability)
+//   Practice  — binding a Skill to a Skeleton (doing the skill)
+//   Motion    — translation/rotation keyframe stream for one bone
+//
+// You "dress" a Skeleton in a Suit (creating a Dressing), and a Skeleton
+// "practices" a Skill (creating a Practice). The language makes the API
+// self-documenting.
+//
+// The animation data lives in shared buffers rather than per-motion:
+// "All the data of all the motions are shared and managed by the Skill,
+// so they can all be read in quickly as one chunk." This reduces
+// fragmentation and load time — each Motion just stores offsets into
+// the Skill's flat translation and rotation arrays.
 
 export interface Vec2 { x: number; y: number }
 export interface Vec3 { x: number; y: number; z: number }
@@ -66,7 +106,12 @@ export function quatNormalize(q: Quat): Quat {
     return { x: q.x / len, y: q.y / len, z: q.z / len, w: q.w / len };
 }
 
-// Bone in a skeleton hierarchy
+// "The Bone class represents a translated and rotated coordinate system.
+// Bones are assembled into a skeletal tree, in a threaded list. Each bone
+// has a name, as well as a parent name of the bone to which it's attached.
+// A bone inherits its parent's coordinate system, then adds its translation
+// followed by its rotation, to calculate the coordinate system in which the
+// skins are rendered, then passes that transformation on to its children."
 export interface BoneData {
     name: string;
     parentName: string;
@@ -99,7 +144,14 @@ export interface SkeletonData {
 // Triangle face
 export interface Face { a: number; b: number; c: number }
 
-// How vertices bind to a bone
+// "These index into the parallel vectors DeformableMesh::vertices and
+// DeformableMesh::transformedVertices, as well as the 'partial' parallel
+// vectors DeformableMesh::textureVertices and DeformableMesh::blendData.
+// There is one of these for every bone used by a deformable mesh."
+// The bound vertices (firstVertex..firstVertex+vertexCount-1) live in the
+// first chunk of the vertex array, parallel to the UV array.
+// The blended vertices (firstBlendedVertex..) live in the second chunk,
+// parallel to the blendBindings array.
 export interface BoneBinding {
     boneIndex: number;
     firstVertex: number;
@@ -108,13 +160,22 @@ export interface BoneBinding {
     blendedVertexCount: number;
 }
 
-// Blend between two vertex positions
+// "These are used at run-time, in the vector DeformableMesh::blendData,
+// and at export time by the class BlendedVertex."
+// Weight is fixed-point in the file format (0x8000 = 1.0), stored as float here.
+// "I mean to change the weight to floating point. That will require
+// re-exporting all the 3drt content, though." — never done, shipped as-is.
 export interface BlendBinding {
     otherVertexIndex: number;
     weight: number;
 }
 
-// A deformable mesh (body part)
+// "This is the run-time structure that represents a deformable mesh.
+// They are created in the exporter, written out to the file, and read
+// back into the game."
+// Vertex layout: [bound verts 0..uvs.length-1] [blended verts uvs.length..vertices.length-1]
+// "The texture vertices only apply to the first chunk of bound vertices.
+// The second chunk of blended vertices has a parallel vector blendData instead."
 export interface MeshData {
     name: string;
     textureName: string;
@@ -154,9 +215,15 @@ export interface MotionData {
     translationsOffset: number;
     rotationsOffset: number;
     props: Map<string, string>;
+    timeProps: Map<number, Map<string, string>>;
 }
 
-// A skill is a named animation containing motions for multiple bones
+// "The Skill class represents a named set of Motions that can be applied
+// to the Bones of a Skeleton by creating a Practice."
+// Translation and rotation data are stored in shared buffers — each Motion
+// stores offsets into these flat arrays. "All the data of all the motions
+// are shared and managed by the Skill, so they can all be read in quickly
+// as one chunk."
 export interface SkillData {
     name: string;
     animationFileName: string;

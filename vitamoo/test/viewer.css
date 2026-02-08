@@ -1,0 +1,312 @@
+/* VitaMoo character viewer — modern reimplementation of SimShow (Maxis, 1999).
+ * Original SimShow by Don Hopkins. This CSS styles the WebGL viewer. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-panel: #16213e;
+    --bg-input: #0f3460;
+    --bg-status: #111;
+    --text-primary: #e0e0e0;
+    --text-dim: #999;
+    --text-muted: #666;
+    --text-section: #555;
+    --accent: #7fdbca;
+    --border: #333;
+    --active-bg: #0f3460;
+}
+
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Header */
+header {
+    padding: 10px 16px;
+    padding-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+header h1 {
+    font-size: 18px;
+    color: var(--accent);
+    margin: 0;
+}
+
+header .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Main layout: sidebar + viewer */
+.layout {
+    display: flex;
+    height: calc(100vh - 44px);
+}
+
+/* Left sidebar — character controls */
+.sidebar {
+    width: 280px;
+    background: var(--bg-panel);
+    overflow-y: auto;
+    padding: 8px;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+/* Viewer area */
+.viewer {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+canvas {
+    flex: 1;
+    display: block;
+    outline: none;
+}
+
+canvas:focus {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Control bar below viewport */
+.controls {
+    padding: 6px 16px;
+    background: var(--bg-panel);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.controls label {
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.controls input[type=range] {
+    width: 80px;
+}
+
+.controls button {
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.controls button:hover {
+    border-color: var(--accent);
+}
+
+.controls button.active {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+/* Status bar */
+.status {
+    padding: 6px 16px;
+    font-size: 12px;
+    color: #888;
+    background: var(--bg-status);
+}
+
+/* Sidebar groups */
+.group {
+    margin-bottom: 10px;
+}
+
+.group h3 {
+    font-size: 11px;
+    color: var(--text-section);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 0;
+}
+
+/* Dropdowns */
+select {
+    width: 100%;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 4px;
+    border-radius: 3px;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+select:focus {
+    outline: 1px solid var(--accent);
+}
+
+/* Filter panel */
+.filter-panel {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    padding: 6px;
+    margin-bottom: 6px;
+}
+
+.filter-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+
+.filter-row label {
+    font-size: 10px;
+    color: var(--text-dim);
+    min-width: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.filter-btn {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.filter-btn.active {
+    background: var(--accent);
+    color: var(--bg-primary);
+    border-color: var(--accent);
+}
+
+/* File/mesh list */
+.file-list {
+    list-style: none;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.file-list li {
+    padding: 2px 6px;
+    cursor: pointer;
+    border-radius: 2px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.file-list li:hover {
+    background: var(--active-bg);
+    color: var(--text-primary);
+}
+
+.file-list li.active {
+    background: var(--active-bg);
+    color: var(--accent);
+}
+
+/* Drop zone */
+.drop-zone {
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    text-align: center;
+    color: var(--text-section);
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+.drop-zone.over {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Details foldout */
+details {
+    margin-bottom: 10px;
+}
+
+details summary {
+    cursor: pointer;
+    padding: 4px 0;
+    color: var(--text-section);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    list-style: none;
+}
+
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+details summary::before {
+    content: '\25b6 ';
+    font-size: 8px;
+    display: inline-block;
+    transition: transform 0.15s;
+}
+
+details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+details summary h3 {
+    display: inline;
+    font-size: 11px;
+    color: var(--text-section);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* People preset cards (horizontal scroll) */
+.people-strip {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0;
+}
+
+.person-card {
+    flex-shrink: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.person-card:hover {
+    border-color: var(--accent);
+    color: var(--text-primary);
+}
+
+.person-card.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(127, 219, 202, 0.1);
+}

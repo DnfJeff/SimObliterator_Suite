@@ -1,331 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VitaMoo</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; }
-h1 { padding: 10px 16px; font-size: 18px; color: #7fdbca; display: flex; align-items: center; gap: 8px; }
-h1 span { font-size: 12px; color: #666; }
-.layout { display: flex; height: calc(100vh - 44px); }
-.sidebar { width: 260px; background: #16213e; overflow-y: auto; padding: 8px; font-size: 13px; }
-.viewer { flex: 1; display: flex; flex-direction: column; }
-canvas { flex: 1; display: block; }
-.controls { padding: 6px 16px; background: #16213e; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.controls label { font-size: 12px; color: #999; display: flex; align-items: center; gap: 4px; }
-.controls input[type=range] { width: 80px; }
-.status { padding: 6px 16px; font-size: 12px; color: #888; background: #111; }
-.group { margin-bottom: 10px; }
-.group h3 { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; padding: 4px 0; }
-select { width: 100%; background: #0f3460; color: #e0e0e0; border: 1px solid #333; padding: 4px; border-radius: 3px; font-size: 12px; margin-bottom: 4px; }
-select:focus { outline: 1px solid #7fdbca; }
-.file-list { list-style: none; max-height: 120px; overflow-y: auto; }
-.file-list li { padding: 2px 6px; cursor: pointer; border-radius: 2px; font-size: 12px; color: #aaa; }
-.file-list li:hover { background: #0f3460; color: #e0e0e0; }
-.file-list li.active { background: #0f3460; color: #7fdbca; }
-.drop-zone { border: 1px dashed #333; border-radius: 4px; padding: 12px; text-align: center; color: #555; font-size: 11px; margin-bottom: 8px; }
-.drop-zone.over { border-color: #7fdbca; color: #7fdbca; }
-</style>
+<link rel="stylesheet" href="viewer.css">
 </head>
 <body>
 
-<h1>VitaMoo <span>character viewer</span></h1>
+<header>
+  <h1>VitaMoo</h1>
+  <span class="subtitle">character viewer</span>
+</header>
 
 <div class="layout">
   <div class="sidebar">
     <div class="drop-zone" id="dropZone">Drop .cmx .skn .bmp .png files</div>
 
+    <!-- People presets — top level -->
     <div class="group">
-      <h3>Skeleton</h3>
-      <select id="selSkeleton"><option value="">-- select --</option></select>
+      <h3>People</h3>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button class="filter-btn" id="btnPersonPrev" title="Previous person">&lt;</button>
+        <select id="selPerson" style="flex:1"><option value="">-- preset --</option></select>
+        <button class="filter-btn" id="btnPersonNext" title="Next person">&gt;</button>
+      </div>
     </div>
 
-    <div class="group">
-      <h3>Body</h3>
-      <select id="selBody"><option value="">-- none --</option></select>
-      <select id="selBodyTex"><option value="">-- texture --</option></select>
-    </div>
-
-    <div class="group">
-      <h3>Head</h3>
-      <select id="selHead"><option value="">-- none --</option></select>
-      <select id="selHeadTex"><option value="">-- texture --</option></select>
-    </div>
-
-    <div class="group">
-      <h3>Hands</h3>
-      <select id="selLeftHand"><option value="">-- left --</option></select>
-      <select id="selRightHand"><option value="">-- right --</option></select>
-      <select id="selHandTex"><option value="">-- texture --</option></select>
-    </div>
-
+    <!-- Animation — top level -->
     <div class="group">
       <h3>Animation</h3>
-      <select id="selAnim"><option value="">-- idle --</option></select>
+      <div style="display:flex;gap:4px;align-items:center">
+        <button class="filter-btn" id="btnAnimPrev" title="Previous (Left arrow)">&lt;</button>
+        <select id="selAnim" style="flex:1"><option value="">-- idle --</option></select>
+        <button class="filter-btn" id="btnAnimNext" title="Next (Right arrow)">&gt;</button>
+      </div>
     </div>
 
-    <div class="group">
-      <h3>All Meshes</h3>
-      <ul class="file-list" id="meshList"></ul>
-    </div>
+    <!-- Details foldout — closed by default -->
+    <details id="detailsFoldout">
+      <summary><h3 style="display:inline">Details</h3></summary>
+
+      <!-- Filters inside the foldout -->
+      <div class="group" style="margin-top:8px">
+        <h3>Filter <label style="float:right;font-size:10px;color:#666"><input type="checkbox" id="filterToggle"> enable</label></h3>
+        <div class="filter-panel">
+          <div class="filter-row">
+            <label>Sex</label>
+            <button class="filter-btn" data-filter="sex" data-value="M">Male</button>
+            <button class="filter-btn" data-filter="sex" data-value="F">Female</button>
+          </div>
+          <div class="filter-row">
+            <label>Age</label>
+            <button class="filter-btn" data-filter="age" data-value="A">Adult</button>
+            <button class="filter-btn" data-filter="age" data-value="C">Child</button>
+          </div>
+          <div class="filter-row">
+            <label>Body</label>
+            <button class="filter-btn" data-filter="bodyType" data-value="Fit">Fit</button>
+            <button class="filter-btn" data-filter="bodyType" data-value="Fat">Fat</button>
+            <button class="filter-btn" data-filter="bodyType" data-value="Skn">Skinny</button>
+          </div>
+          <div class="filter-row">
+            <label>Skin</label>
+            <button class="filter-btn" data-filter="skinTone" data-value="drk">Dark</button>
+            <button class="filter-btn" data-filter="skinTone" data-value="med">Medium</button>
+            <button class="filter-btn" data-filter="skinTone" data-value="lgt">Light</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Skeleton</h3>
+        <select id="selSkeleton"><option value="">-- select --</option></select>
+      </div>
+
+      <div class="group">
+        <h3>Body</h3>
+        <select id="selBody"><option value="">-- none --</option></select>
+        <select id="selBodyTex"><option value="">-- texture --</option></select>
+      </div>
+
+      <div class="group">
+        <h3>Head</h3>
+        <select id="selHead"><option value="">-- none --</option></select>
+        <select id="selHeadTex"><option value="">-- texture --</option></select>
+      </div>
+
+      <div class="group">
+        <h3>Hands</h3>
+        <select id="selLeftHand"><option value="">-- left --</option></select>
+        <select id="selRightHand"><option value="">-- right --</option></select>
+        <select id="selHandTex"><option value="">-- texture --</option></select>
+      </div>
+    </details>
   </div>
 
   <div class="viewer">
     <canvas id="viewport"></canvas>
     <div class="controls">
+      <button class="dist-btn" data-dist="far">Far</button>
+      <button class="dist-btn active" data-dist="medium">Med</button>
+      <button class="dist-btn" data-dist="near">Near</button>
       <label>Rotate <input type="range" id="rotY" min="0" max="360" value="30"></label>
-      <label>Tilt <input type="range" id="rotX" min="-45" max="45" value="10"></label>
-      <label>Zoom <input type="range" id="zoom" min="10" max="80" value="35"></label>
-      <label>Speed <input type="range" id="speed" min="0" max="200" value="100"></label>
+      <label>Tilt <input type="range" id="rotX" min="-89" max="89" value="10"></label>
+      <label>Zoom <input type="range" id="zoom" min="1" max="200" value="70"></label>
+      <label>Speed <input type="range" id="speed" min="0" max="500" value="100"></label>
+      <button class="filter-btn" id="btnPause" title="Pause/Resume (Space)">Pause</button>
     </div>
     <div class="status" id="status">Loading content index...</div>
   </div>
 </div>
 
-<script type="module">
-import { parseCMX, parseSKN } from '../dist/parser.js';
-import { buildSkeleton, updateTransforms, deformMesh, findBone } from '../dist/skeleton.js';
-import { Renderer } from '../dist/renderer.js';
-import { parseBMP, loadTexture } from '../dist/texture.js';
-
-const $ = id => document.getElementById(id);
-const status = $('status');
-const canvas = $('viewport');
-
-// All loaded content, keyed by filename
-const content = {
-    skeletons: {},   // name -> SkeletonData
-    suits: {},       // name -> SuitData
-    skills: {},      // name -> SkillData
-    meshes: {},      // name -> MeshData
-    textures: {},    // name -> filename
-};
-
-// Current selection state
-let renderer = null;
-let activeSkeleton = null;  // Bone[]
-let activeMeshes = [];      // {mesh, bones}[]
-
-function initRenderer() {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    try { renderer = new Renderer(canvas); }
-    catch (e) { status.textContent = 'WebGL error: ' + e.message; }
-}
-
-// Populate a <select> from an array of filenames
-function fillSelect(sel, files, labelFn) {
-    // Keep the first "-- none --" option
-    while (sel.options.length > 1) sel.remove(1);
-    for (const f of files) {
-        const opt = document.createElement('option');
-        opt.value = f;
-        opt.textContent = labelFn ? labelFn(f) : f.replace(/\.(cmx|skn|bmp|png)$/i, '');
-        sel.appendChild(opt);
-    }
-}
-
-// Load content index and populate menus
-async function loadContentIndex() {
-    try {
-        const resp = await fetch('content.json');
-        const idx = await resp.json();
-
-        // Load all CMX files (skeletons, suits, animations)
-        const allCmx = [...(idx.skeletons||[]), ...(idx.suits||[]), ...(idx.animations||[])];
-        for (const name of allCmx) {
-            try {
-                const r = await fetch('data/' + name);
-                if (!r.ok) continue;
-                const cmx = parseCMX(await r.text());
-                cmx.skeletons.forEach(s => content.skeletons[s.name] = s);
-                cmx.suits.forEach(s => content.suits[s.name] = s);
-                cmx.skills.forEach(s => content.skills[s.name] = s);
-            } catch (e) { console.warn(name, e); }
-        }
-
-        // Load all SKN meshes
-        for (const name of (idx.meshes||[])) {
-            try {
-                const r = await fetch('data/' + name);
-                if (!r.ok) continue;
-                const mesh = parseSKN(await r.text());
-                content.meshes[mesh.name] = mesh;
-            } catch (e) { console.warn(name, e); }
-        }
-
-        // Note texture filenames (loaded on demand)
-        for (const name of [...(idx.textures_bmp||[]), ...(idx.textures_png||[])]) {
-            const base = name.replace(/\.(bmp|png)$/i, '');
-            if (!content.textures[base]) content.textures[base] = name;
-        }
-
-        // Populate skeleton dropdown
-        fillSelect($('selSkeleton'), Object.keys(content.skeletons));
-
-        // Populate body mesh dropdown (filter for BODY meshes)
-        const bodyMeshes = Object.keys(content.meshes).filter(n => n.includes('BODY'));
-        fillSelect($('selBody'), bodyMeshes);
-
-        // Head meshes
-        const headMeshes = Object.keys(content.meshes).filter(n => n.includes('HEAD'));
-        fillSelect($('selHead'), headMeshes);
-
-        // Hand meshes
-        const leftHands = Object.keys(content.meshes).filter(n => n.includes('L_HAND'));
-        const rightHands = Object.keys(content.meshes).filter(n => n.includes('R_HAND'));
-        fillSelect($('selLeftHand'), leftHands);
-        fillSelect($('selRightHand'), rightHands);
-
-        // Hand textures
-        const handTexNames = Object.keys(content.textures).filter(n => n.startsWith('HU'));
-        fillSelect($('selHandTex'), handTexNames);
-
-        // Body textures
-        const bodyTexNames = Object.keys(content.textures).filter(n => n.startsWith('B'));
-        fillSelect($('selBodyTex'), bodyTexNames);
-
-        // Head textures
-        const headTexNames = Object.keys(content.textures).filter(n => n.startsWith('C'));
-        fillSelect($('selHeadTex'), headTexNames);
-
-        // Animations
-        fillSelect($('selAnim'), Object.keys(content.skills));
-
-        // Mesh list (all)
-        const meshList = $('meshList');
-        for (const [name, mesh] of Object.entries(content.meshes)) {
-            const li = document.createElement('li');
-            li.textContent = name;
-            li.onclick = () => {
-                meshList.querySelectorAll('li').forEach(l => l.classList.remove('active'));
-                li.classList.add('active');
-                status.textContent = `${name}: ${mesh.vertices.length} verts, ${mesh.faces.length} tris, bones: ${mesh.boneNames.join(', ')}`;
-            };
-            meshList.appendChild(li);
-        }
-
-        const nSkel = Object.keys(content.skeletons).length;
-        const nSuit = Object.keys(content.suits).length;
-        const nSkill = Object.keys(content.skills).length;
-        const nMesh = Object.keys(content.meshes).length;
-        const nTex = Object.keys(content.textures).length;
-        status.textContent = `Ready: ${nSkel} skeletons, ${nSuit} suits, ${nSkill} animations, ${nMesh} meshes, ${nTex} textures`;
-
-    } catch (e) {
-        status.textContent = 'Failed to load content.json: ' + e.message;
-    }
-}
-
-// When selections change, rebuild the scene
-function updateScene() {
-    const skelName = $('selSkeleton').value;
-    if (!skelName || !content.skeletons[skelName]) {
-        activeSkeleton = null;
-        activeMeshes = [];
-        renderFrame();
-        return;
-    }
-
-    activeSkeleton = buildSkeleton(content.skeletons[skelName]);
-    updateTransforms(activeSkeleton);
-    const boneMap = new Map();
-    activeSkeleton.forEach(b => boneMap.set(b.name, b));
-
-    activeMeshes = [];
-
-    // Add selected body mesh
-    const bodyName = $('selBody').value;
-    if (bodyName && content.meshes[bodyName]) {
-        activeMeshes.push({ mesh: content.meshes[bodyName], boneMap });
-    }
-
-    // Add selected head mesh
-    const headName = $('selHead').value;
-    if (headName && content.meshes[headName]) {
-        activeMeshes.push({ mesh: content.meshes[headName], boneMap });
-    }
-
-    // Add hand meshes
-    const lhName = $('selLeftHand').value;
-    if (lhName && content.meshes[lhName]) {
-        activeMeshes.push({ mesh: content.meshes[lhName], boneMap });
-    }
-    const rhName = $('selRightHand').value;
-    if (rhName && content.meshes[rhName]) {
-        activeMeshes.push({ mesh: content.meshes[rhName], boneMap });
-    }
-
-    const parts = activeMeshes.map(m => m.mesh.name.split('-').pop()).join(', ');
-    status.textContent = `Skeleton: ${skelName} (${activeSkeleton.length} bones) | Parts: ${parts || 'none'}`;
-    renderFrame();
-}
-
-function renderFrame() {
-    if (!renderer) return;
-    renderer.clear();
-
-    const zoom = parseFloat($('zoom').value) / 10;
-    const rotY = parseFloat($('rotY').value) * Math.PI / 180;
-    const rotX = parseFloat($('rotX').value) * Math.PI / 180;
-    const dist = zoom;
-    const eyeY = 0.8 + Math.sin(rotX) * dist;
-    renderer.setCamera(50, canvas.width / canvas.height, 0.01, 50,
-                       Math.sin(rotY) * dist, eyeY, Math.cos(rotY) * dist);
-
-    for (const { mesh, boneMap } of activeMeshes) {
-        if (activeSkeleton) {
-            const { vertices, normals } = deformMesh(mesh, activeSkeleton, boneMap);
-            renderer.drawMesh(mesh, vertices, normals);
-        } else {
-            renderer.drawMesh(mesh, mesh.vertices, mesh.normals);
-        }
-    }
-}
-
-// Wire up all selection changes
-for (const id of ['selSkeleton', 'selBody', 'selHead', 'selLeftHand', 'selRightHand', 'selAnim']) {
-    $(id).addEventListener('change', updateScene);
-}
-for (const id of ['rotY', 'rotX', 'zoom', 'speed']) {
-    $(id).addEventListener('input', renderFrame);
-}
-
-// Drag and drop (for additional files beyond the bundled ones)
-const dropZone = $('dropZone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
-dropZone.addEventListener('drop', async e => {
-    e.preventDefault();
-    dropZone.classList.remove('over');
-    for (const file of e.dataTransfer.files) {
-        const ext = file.name.split('.').pop().toLowerCase();
-        if (ext === 'cmx') {
-            const cmx = parseCMX(await file.text());
-            cmx.skeletons.forEach(s => { content.skeletons[s.name] = s; });
-            cmx.suits.forEach(s => { content.suits[s.name] = s; });
-            cmx.skills.forEach(s => { content.skills[s.name] = s; });
-            status.textContent = `Loaded ${file.name}`;
-        } else if (ext === 'skn') {
-            const mesh = parseSKN(await file.text());
-            content.meshes[mesh.name] = mesh;
-            status.textContent = `Loaded ${file.name}: ${mesh.vertices.length} verts`;
-        }
-    }
-    // Refresh dropdowns
-    fillSelect($('selSkeleton'), Object.keys(content.skeletons));
-    fillSelect($('selBody'), Object.keys(content.meshes).filter(n => n.includes('BODY')));
-    fillSelect($('selHead'), Object.keys(content.meshes).filter(n => n.includes('HEAD')));
-});
-
-window.addEventListener('resize', () => {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    renderFrame();
-});
-
-initRenderer();
-loadContentIndex();
-</script>
+<script type="module" src="viewer.js"></script>
 </body>
 </html>
