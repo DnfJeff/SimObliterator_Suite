@@ -622,18 +622,18 @@ const top = {
     driftVZ: 0,
 };
 
-// CARTOON PHYSICS: Tasmanian Devil mode
-const TOP_SPIN_THRESHOLD = 0.8;   // barely flick and they're off
-const TOP_TILT_SCALE = 0.08;     // aggressive tilt response
-const TOP_MAX_TILT = 1.5;        // ~86 degrees — nearly horizontal, Taz-style
-const TOP_PRECESSION_RATE = 0.05; // fast gyroscopic orbit
-const TOP_NUTATION_FREQ = 5.5;    // rapid wobble — that Taz jitter
-const TOP_NUTATION_SCALE = 0.4;   // huge wobble amplitude
-const TOP_DRIFT_FORCE = 0.0015;   // careens wildly off-center
-const TOP_GRAVITY = 0.002;        // weak gravity — long crazy orbits before return
-const TOP_DRIFT_FRICTION = 0.975; // less friction — keeps momentum longer
-const TOP_TILT_DECAY = 0.94;      // holds the lean — doesn't snap back quickly
-const TOP_SETTLE_RATE = 0.12;     // snaps INTO tilt fast (instant cartoon reaction)
+// CARTOON PHYSICS: tamed Taz — still fun but less extreme
+const TOP_SPIN_THRESHOLD = 1.0;   // needs a decent flick to trigger
+const TOP_TILT_SCALE = 0.05;     // moderate tilt response (was 0.08)
+const TOP_MAX_TILT = 1.0;        // ~57 degrees max lean (was 1.5 / 86 deg)
+const TOP_PRECESSION_RATE = 0.04; // moderate gyroscopic orbit
+const TOP_NUTATION_FREQ = 4.5;    // wobble frequency
+const TOP_NUTATION_SCALE = 0.3;   // wobble amplitude (was 0.4)
+const TOP_DRIFT_FORCE = 0.0008;   // moderate drift off-center (was 0.0015)
+const TOP_GRAVITY = 0.003;        // stronger gravity — pulls back sooner (was 0.002)
+const TOP_DRIFT_FRICTION = 0.97;  // more friction on drift (was 0.975)
+const TOP_TILT_DECAY = 0.95;      // settles back a bit faster
+const TOP_SETTLE_RATE = 0.10;     // still snappy into tilt
 
 // Tick top physics for a given top-state object.
 // All bodies share the same rotationVelocity input but each has independent state.
