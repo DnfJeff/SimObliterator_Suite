@@ -454,15 +454,8 @@ function populateMenus() {
     fillSelect($('selHeadTex'), applyFilter(headTexNames, 'headTex'), decodeTexName);
     fillSelect($('selHandTex'), applyFilter(handTexNames, 'handTex'), decodeTexName);
 
-    // Animations — only show loops and sustained animations, not start/stop/stand transitions
-    const loopableSkills = Object.keys(content.skills).filter(name => {
-        const lower = name.toLowerCase();
-        return !lower.includes('-start') && !lower.includes('-stop') &&
-               !lower.includes('-walkon') && !lower.includes('-walkoff') &&
-               !lower.includes('-divein') && !lower.includes('-jumpin') &&
-               lower !== 'a2o-stand';
-    });
-    fillSelect($('selAnim'), loopableSkills);
+    // Animations (non-looping anims already removed from content.json and data/)
+    fillSelect($('selAnim'), Object.keys(content.skills));
 
     // Character dropdown
     if (contentIndex?.characters) {

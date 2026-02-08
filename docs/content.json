@@ -59,7 +59,6 @@
     "child-censor.cmx"
   ],
   "animations": [
-    "adult-stand.cmx",
     "adult-idle1.cmx",
     "adult-idle2.cmx",
     "adult-idle3.cmx",
@@ -82,8 +81,7 @@
     "ross-walking-loop.cmx",
     "c2o-idle1.cmx",
     "c2o-salute.cmx",
-    "c2o-tv1-surf.cmx",
-    "c2o-tv1-watchlaugh-stand.cmx"
+    "c2o-tv1-surf.cmx"
   ],
   "meshes": [
     "xskin-b001fafat_01-PELVIS-BODY.skn",
@@ -376,7 +374,6 @@
     "xskill-A2O-idle6.cfp",
     "xskill-A2O-idle7.cfp",
     "xskill-A2O-idle8.cfp",
-    "xskill-A2O-stand.cfp",
     "xskill-A2O-test-animation.cfp",
     "xskill-A2O-test-animation2.cfp",
     "xskill-A2O-test-animation3.cfp",
@@ -386,25 +383,15 @@
     "xskill-A2O-walking-fast-loop.cfp",
     "xskill-A2O-walking-frantic-loop.cfp",
     "xskill-A2O-walking-loop.cfp",
-    "xskill-A2O-walking-start.cfp",
     "xskill-a2o-dance-inplace-twistloop.cfp",
-    "xskill-a2o-pool-dive-divein.cfp",
-    "xskill-a2o-pool-dive-jumpin.cfp",
     "xskill-a2o-pool-dive-waitloop.cfp",
-    "xskill-a2o-pool-dive-walkoff.cfp",
-    "xskill-a2o-pool-dive-walkon.cfp",
     "xskill-a2o-running-loop.cfp",
-    "xskill-a2o-running-start.cfp",
-    "xskill-a2o-running-stop.cfp",
     "xskill-a2o-walking-female-loop.cfp",
-    "xskill-a2o-walking-female-start.cfp",
-    "xskill-a2o-walking-female-stop.cfp",
     "xskill-adult-bored1.cfp",
     "xskill-adult-idle6.cfp",
     "xskill-c2o-idle1.cfp",
     "xskill-c2o-salute.cfp",
-    "xskill-c2o-tv1-surf.cfp",
-    "xskill-c2o-tv1-watchlaugh-stand.cfp"
+    "xskill-c2o-tv1-surf.cfp"
   ],
   "textures_png": [
     "B002FAFitdrk_Mom01.png",
