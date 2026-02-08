@@ -498,10 +498,21 @@ async function loadAnimationForBody(animName, skeleton) {
     let skill = content.skills[animName];
 
     if (!skill) {
-        // Search by name field (skills are keyed by their internal name)
+        // Search by internal name field (case-insensitive)
+        const lower = animName.toLowerCase();
         skill = Object.values(content.skills).find(
-            s => s.name?.toLowerCase() === animName.toLowerCase()
+            s => s.name?.toLowerCase() === lower
         );
+        // Substring match: "adult-dance-inplace-twistloop" matches "a2o-dance-inplace-twistloop"
+        if (!skill) {
+            // Strip common prefixes and try matching the tail
+            const stripped = lower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
+            skill = Object.values(content.skills).find(s => {
+                const sLower = (s.name || '').toLowerCase();
+                const sStripped = sLower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
+                return sStripped === stripped || sLower.includes(stripped) || stripped.includes(sLower.replace(/^a2o-/, ''));
+            });
+        }
     }
 
     if (!skill) {
@@ -515,9 +526,13 @@ async function loadAnimationForBody(animName, skeleton) {
                 for (const s of data.skills || []) content.skills[s.name] = s;
             } catch (e) { }
         }
-        skill = Object.values(content.skills).find(
-            s => s.name?.toLowerCase() === animName.toLowerCase()
-        );
+        const lower = animName.toLowerCase();
+        const stripped = lower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
+        skill = Object.values(content.skills).find(s => {
+            const sLower = (s.name || '').toLowerCase();
+            const sStripped = sLower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
+            return sLower === lower || sStripped === stripped;
+        });
     }
 
     if (!skill?.motions?.length) {
@@ -898,7 +913,7 @@ function getVoiceType() {
     if (isChild && isFemale) return { basePitch: 240, pitchRange: 40, formantScale: 1.35, breathiness: 0.20, chorusSize: 1 };
     if (isChild)             return { basePitch: 220, pitchRange: 45, formantScale: 1.30, breathiness: 0.18, chorusSize: 1 };
     if (isFemale)            return { basePitch: 180, pitchRange: 50, formantScale: 1.15, breathiness: 0.18, chorusSize: 1 };
-    return                          { basePitch: 70, pitchRange: 28, formantScale: 0.85, breathiness: 0.10, chorusSize: 1 };
+    return                          { basePitch: 50, pitchRange: 20, formantScale: 0.75, breathiness: 0.10, chorusSize: 1 };
 }
 
 function updateSpinSound() {
