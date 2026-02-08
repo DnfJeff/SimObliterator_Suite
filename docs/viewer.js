@@ -2131,6 +2131,28 @@ function selectActor(idx) {
     updateActorEditingUI();
 }
 
+// Step through scenes, wrapping.
+function stepScene(dir) {
+    const sel = $('selScene');
+    if (!sel || sel.options.length <= 1) return;
+    let selIdx = sel.selectedIndex + dir;
+    if (selIdx < 0) selIdx = sel.options.length - 1;
+    if (selIdx >= sel.options.length) selIdx = 0;
+    sel.selectedIndex = selIdx;
+    const val = parseInt(sel.value);
+    if (!isNaN(val)) loadScene(val);
+}
+
+// Step through actors. -1 = All, wraps.
+function stepActor(dir) {
+    if (bodies.length === 0) return;
+    const minIdx = bodies.length > 1 ? -1 : 0;
+    let idx = selectedActorIndex + dir;
+    if (idx < minIdx) idx = bodies.length - 1;
+    if (idx >= bodies.length) idx = minIdx;
+    selectActor(idx);
+}
+
 // Sync Character/Animation dropdowns to reflect current selection.
 // All mode with mixed values: show "-- many --". All same: show that value.
 // Single actor: show their values. Never disable anything.
@@ -2452,17 +2474,7 @@ function setupEventListeners() {
     });
 
     // Actor prev/next buttons and dropdown (scene mode only)
-    function stepActor(dir) {
-        if (bodies.length === 0) return;
-        // Range: -1 (All) through bodies.length-1
-        // But if only 1 body, skip All entirely
-        const minIdx = bodies.length > 1 ? -1 : 0;
-        let idx = selectedActorIndex + dir;
-        if (idx < minIdx) idx = bodies.length - 1;
-        if (idx >= bodies.length) idx = minIdx;
-        selectActor(idx);
-    }
-    // selectActor is module-level (defined above setupEventListeners)
+    // stepActor and selectActor are module-level (defined above setupEventListeners)
     const btnActorPrev = $('btnActorPrev');
     const btnActorNext = $('btnActorNext');
     if (btnActorPrev) btnActorPrev.addEventListener('click', () => stepActor(-1));
@@ -2473,19 +2485,7 @@ function setupEventListeners() {
         if (!isNaN(idx)) selectActor(idx);
     });
 
-    // Scene prev/next/select
-    function stepScene(dir) {
-        const sel = $('selScene');
-        if (!sel || sel.options.length <= 1) return;
-        // Navigate through all options (scenes + Solo at end)
-        let selIdx = sel.selectedIndex + dir;
-        if (selIdx < 0) selIdx = sel.options.length - 1;
-        if (selIdx >= sel.options.length) selIdx = 0;
-        sel.selectedIndex = selIdx;
-        const val = sel.value;
-        if (val === '') { exitScene(); return; }
-        loadScene(parseInt(val));
-    }
+    // Scene prev/next/select — stepScene is module-level
     const btnScenePrev = $('btnScenePrev');
     const btnSceneNext = $('btnSceneNext');
     if (btnScenePrev) btnScenePrev.addEventListener('click', () => stepScene(-1));
@@ -2568,29 +2568,19 @@ function setupEventListeners() {
             e.preventDefault();
         }
 
-        // Letter keys: map a-z to animations in the dropdown
-        if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z' && !e.ctrlKey && !e.metaKey) {
-            const sel = $('selAnim');
-            // Options include placeholder at index 0, real anims start at 1
-            const animCount = sel.options.length - 1;
-            if (animCount > 0) {
-                const letterIdx = e.key.charCodeAt(0) - 97; // a=0, b=1, ...
-                const animIdx = (letterIdx % animCount) + 1; // +1 to skip placeholder
-                sel.selectedIndex = animIdx;
-                const animName = sel.value;
-                if (animName) {
-                    if (activeScene && selectedActorIndex < 0) {
-                        // All mode: set all actors to this animation
-                        for (let i = 0; i < bodies.length; i++) applyAnimationToActor(animName, i);
-                    } else if (activeScene && selectedActorIndex >= 0) {
-                        applyAnimationToActor(animName, selectedActorIndex);
-                    } else {
-                        updateScene();
-                    }
-                }
-                e.preventDefault();
-            }
-        }
+        // Navigation keys:
+        // n/p = next/prev scene
+        // a/d = prev/next actor (Shift+a/d for prev)
+        // w/s = prev/next character
+        // q/e = prev/next animation
+        if (e.key === 'n') { stepScene(1); e.preventDefault(); }
+        if (e.key === 'p') { stepScene(-1); e.preventDefault(); }
+        if (e.key === 'a') { stepActor(-1); e.preventDefault(); }
+        if (e.key === 'd') { stepActor(1); e.preventDefault(); }
+        if (e.key === 'w') { stepCharacter(-1); e.preventDefault(); }
+        if (e.key === 's') { stepCharacter(1); e.preventDefault(); }
+        if (e.key === 'q') { stepAnimation(-1); e.preventDefault(); }
+        if (e.key === 'e') { stepAnimation(1); e.preventDefault(); }
 
         // Track held arrow keys for smooth per-frame input
         if (e.key === 'ArrowUp') { _keysHeld.up = true; e.preventDefault(); }
