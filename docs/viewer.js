@@ -566,8 +566,8 @@ function updateSpinSound() {
     const speed = Math.abs(rotationVelocity);
 
     if (speed > 0.5) {
-        // Map spin speed to pitch: 80Hz (slow) to 400Hz (fast)
-        const pitch = 80 + Math.min(speed, 15) * 22;
+        // Map spin speed to pitch: 100Hz (slow) to 800Hz (screaming fast)
+        const pitch = 100 + Math.min(speed, 15) * 50;
         const now = audioCtx.currentTime;
         spinOsc.frequency.setTargetAtTime(pitch, now, 0.05);
         spinOsc._osc2.frequency.setTargetAtTime(pitch, now, 0.05);
