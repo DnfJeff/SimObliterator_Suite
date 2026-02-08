@@ -714,20 +714,20 @@
           "animation": "a2o-test-animation"
         },
         {
-          "actor": "Brick Mancastle",
-          "character": "Dad (Fit)",
+          "actor": "Fawn Luxington",
+          "character": "Mercedes",
           "x": 0,
           "z": 0,
           "direction": 0,
-          "animation": "a2o-test-animation5"
+          "animation": "a2o-test-animation2"
         },
         {
           "actor": "Quincy Vape III",
-          "character": "Hipster",
+          "character": "Grandpa",
           "x": 3.5,
           "z": 0,
           "direction": 0,
-          "animation": "a2o-test-animation3"
+          "animation": "a2o-energetic1"
         }
       ]
     },
