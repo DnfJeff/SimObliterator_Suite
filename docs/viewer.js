@@ -1400,9 +1400,19 @@ function renderFrame() {
     for (let bi = 0; bi < bodiesToRender.length; bi++) {
         const body = bodiesToRender[bi];
         const bTop = body.top || top;
-        // Scene mode: rotY spins each body around its own center (added to base direction)
-        // Solo mode: direction is 0 (camera does the orbiting)
-        const spinDeg = sceneMode ? (body.direction || 0) + rotYDeg : 0;
+        // Scene mode: rotY spins bodies around their own centers.
+        // If a specific actor is selected, only that actor gets the drag spin.
+        // If "All" is selected (-1), everyone spins together.
+        // Solo mode: direction is 0 (camera does the orbiting).
+        let spinDeg = 0;
+        if (sceneMode) {
+            const baseDir = body.direction || 0;
+            if (selectedActorIndex < 0 || bi === selectedActorIndex) {
+                spinDeg = baseDir + rotYDeg;
+            } else {
+                spinDeg = baseDir;
+            }
+        }
         const bodyDir = spinDeg * Math.PI / 180;
         const cosD = Math.cos(bodyDir);
         const sinD = Math.sin(bodyDir);
@@ -1485,7 +1495,7 @@ function renderFrame() {
                 const rx = hx * cosD - hz * sinD;
                 const rz = hx * sinD + hz * cosD;
                 const wx = rx + selBody.x;
-                const wy = hy + 3.0; // float well above the head
+                const wy = hy + 1.5; // float above the head
                 const wz = rz + selBody.z;
 
                 // Spin at half revolution per second (matching original HouseViewer.cpp)
@@ -1626,7 +1636,9 @@ function pickActorAtScreen(screenX, screenY) {
         if (!b.skeleton) continue;
 
         // Get approximate center: body world position at waist height
-        const spinDeg = (b.direction || 0) + rotYDeg;
+        // Match render logic: only selected or all get rotY spin
+        const baseDir = b.direction || 0;
+        const spinDeg = (selectedActorIndex < 0 || i === selectedActorIndex) ? baseDir + rotYDeg : baseDir;
         const bodyDir = spinDeg * Math.PI / 180;
 
         // Use SPINE1 bone if available, else just body position
@@ -1867,13 +1879,23 @@ function selectActor(idx) {
 
 // Enable/disable actor editing controls based on whether a specific actor is selected
 function updateActorEditingUI() {
-    const hasActor = activeScene && selectedActorIndex >= 0;
+    const inScene = !!activeScene;
+    const hasActor = inScene && selectedActorIndex >= 0;
+    const disabled = !hasActor && inScene;
+    // Character controls
     const charSel = $('selCharacter');
-    const btnPrev = $('btnCharacterPrev');
-    const btnNext = $('btnCharacterNext');
-    if (charSel) charSel.disabled = !hasActor && !!activeScene;
-    if (btnPrev) btnPrev.disabled = !hasActor && !!activeScene;
-    if (btnNext) btnNext.disabled = !hasActor && !!activeScene;
+    const charPrev = $('btnCharacterPrev');
+    const charNext = $('btnCharacterNext');
+    if (charSel) charSel.disabled = disabled;
+    if (charPrev) charPrev.disabled = disabled;
+    if (charNext) charNext.disabled = disabled;
+    // Animation controls
+    const animSel = $('selAnim');
+    const animPrev = $('btnAnimPrev');
+    const animNext = $('btnAnimNext');
+    if (animSel) animSel.disabled = disabled;
+    if (animPrev) animPrev.disabled = disabled;
+    if (animNext) animNext.disabled = disabled;
 }
 
 // Step through character presets
