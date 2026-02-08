@@ -2573,6 +2573,17 @@ function setupEventListeners() {
         // a/d = prev/next actor (Shift+a/d for prev)
         // w/s = prev/next character
         // q/e = prev/next animation
+        // Help
+        if (e.key === '?' || e.key === 'h') {
+            const hd = $('helpDialog');
+            if (hd) hd.style.display = hd.style.display === 'flex' ? 'none' : 'flex';
+            e.preventDefault();
+        }
+        if (e.key === 'Escape') {
+            const hd = $('helpDialog');
+            if (hd && hd.style.display === 'flex') { hd.style.display = 'none'; e.preventDefault(); }
+        }
+
         if (e.key === 'n') { stepScene(1); e.preventDefault(); }
         if (e.key === 'p') { stepScene(-1); e.preventDefault(); }
         if (e.key === 'a') { stepActor(-1); e.preventDefault(); }
@@ -2594,6 +2605,18 @@ function setupEventListeners() {
         if (e.key === 'ArrowLeft') { _keysHeld.left = false; _keysHeld.leftStart = 0; e.preventDefault(); }
         if (e.key === 'ArrowRight') { _keysHeld.right = false; _keysHeld.rightStart = 0; e.preventDefault(); }
     });
+
+    // Help dialog
+    const btnHelp = $('btnHelp');
+    const helpDialog = $('helpDialog');
+    const btnHelpClose = $('btnHelpClose');
+    if (btnHelp && helpDialog) {
+        btnHelp.addEventListener('click', () => helpDialog.style.display = 'flex');
+        btnHelpClose?.addEventListener('click', () => helpDialog.style.display = 'none');
+        helpDialog.addEventListener('click', e => {
+            if (e.target === helpDialog) helpDialog.style.display = 'none';
+        });
+    }
 
     // Mouse drag interaction on canvas
     setupMouseInteraction();
