@@ -375,16 +375,13 @@ details summary h3 {
     padding: 3px 0 3px 16px;
 }
 .help-keys td:first-child {
-    width: 145px;
-    padding-left: 16px;
     white-space: nowrap;
     text-align: right;
+    padding-right: 14px;
     color: var(--text-dim);
-    vertical-align: top;
 }
 .help-keys td:last-child {
-    padding-left: 14px;
-    vertical-align: top;
+    width: 100%;
 }
 kbd {
     display: inline-block;
