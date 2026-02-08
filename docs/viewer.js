@@ -1936,7 +1936,6 @@ function setupMouseInteraction() {
         lastDragTime = performance.now();
         smoothedVelocity = 0;
         canvas.style.cursor = 'grabbing';
-        canvas.focus();
         initSpinSound(); // init audio on first gesture (browser policy)
 
         // Click-to-pick: immediately select actor on mousedown (left button only)
@@ -2441,11 +2440,19 @@ function setupEventListeners() {
     // Space = cycle between All and last selected actor
     // 0 = pause, 1/2/3/4 = speed (normal/fast/faster/fastest)
     // Up/Down = smooth zoom, Left/Right = ramp spin velocity
-    canvas.tabIndex = 0;
-    let _lastSelectedBeforeAll = 0; // remember last picked actor for space toggle
-    // _savedSpeed is module-level (below)
+    // Keyboard events on window so they work regardless of focus.
+    // Skip when a <select> or <input> has focus (user is picking from dropdown).
+    const _isInputFocused = () => {
+        const tag = document.activeElement?.tagName;
+        return tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA';
+    };
 
-    canvas.addEventListener('keydown', e => {
+    // Auto-focus canvas on mouse enter so wheel zoom works immediately
+    canvas.addEventListener('mouseenter', () => canvas.focus());
+    canvas.tabIndex = 0;
+
+    window.addEventListener('keydown', e => {
+        if (_isInputFocused()) return;
         if (e.key === ' ') {
             // Space: next actor (same as Next button).
             // If spinning, transfer momentum to per-body spin velocity.
@@ -2495,7 +2502,7 @@ function setupEventListeners() {
         if (e.key === 'ArrowLeft') { _keysHeld.left = true; _keysHeld.leftStart = _keysHeld.leftStart || performance.now(); e.preventDefault(); }
         if (e.key === 'ArrowRight') { _keysHeld.right = true; _keysHeld.rightStart = _keysHeld.rightStart || performance.now(); e.preventDefault(); }
     });
-    canvas.addEventListener('keyup', e => {
+    window.addEventListener('keyup', e => {
         if (e.key === 'ArrowUp') { _keysHeld.up = false; e.preventDefault(); }
         if (e.key === 'ArrowDown') { _keysHeld.down = false; e.preventDefault(); }
         if (e.key === 'ArrowLeft') { _keysHeld.left = false; _keysHeld.leftStart = 0; e.preventDefault(); }
