@@ -9,10 +9,10 @@ body { user-select: none; -webkit-user-select: none; }
     --bg-panel: #16213e;
     --bg-input: #0f3460;
     --bg-status: #111;
-    --text-primary: #e0e0e0;
-    --text-dim: #999;
-    --text-muted: #666;
-    --text-section: #555;
+    --text-primary: #f0f0f0;
+    --text-dim: #ccc;
+    --text-muted: #aaa;
+    --text-section: #bbb;
     --accent: #7fdbca;
     --border: #333;
     --active-bg: #0f3460;
@@ -40,8 +40,9 @@ header h1 {
 }
 
 header .subtitle {
-    font-size: 12px;
-    color: var(--text-muted);
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 600;
 }
 
 /* Main layout: sidebar + viewer */
@@ -141,7 +142,7 @@ canvas:focus-visible {
 
 .group h3 {
     font-size: 11px;
-    color: var(--text-section);
+    color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 1px;
     padding: 4px 0;
