@@ -135,12 +135,8 @@ export class Practice {
                 }
             }
 
-            // Apply rotation: slerp between frame and nextFrame.
-            // Skip root bone rotation for non-turning skills to prevent foot sliding.
-            // The isTurning flag indicates the skill intentionally rotates the character.
-            const isRoot = !bone.parent;
-            const suppressRootRotation = isRoot && !skill.isMoving;
-            if (motion.hasRotation && skill.rotations.length > 0 && !suppressRootRotation) {
+            // Apply rotation: slerp between frame and nextFrame
+            if (motion.hasRotation && skill.rotations.length > 0) {
                 const i0 = motion.rotationsOffset + frame;
                 const i1 = motion.rotationsOffset + nextFrame;
                 if (i0 < skill.rotations.length) {
