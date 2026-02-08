@@ -372,6 +372,31 @@
 
   "scenes": [
     {
+      "name": "Flash Crowd",
+      "cast": [
+        { "person": "Dad (Fit)",          "x": -8,   "z":  6,   "direction": 23,  "animation": "a2o-test-animation5" },
+        { "person": "Mercedes",           "x": -4,   "z":  7,   "direction": 310, "animation": "a2o-test-animation2" },
+        { "person": "Biker Dude",         "x":  1,   "z":  5.5, "direction": 170, "animation": "a2o-walking-frantic-loop" },
+        { "person": "Grandma",            "x":  5,   "z":  7,   "direction": 45,  "animation": "a2o-test-animation5" },
+        { "person": "Hipster",            "x":  9,   "z":  6,   "direction": 200, "animation": "a2o-test-animation3" },
+        { "person": "Mom (Ponytail)",     "x": -7,   "z":  2,   "direction": 90,  "animation": "a2o-dance-inplace-twistloop" },
+        { "person": "The Slob",           "x": -2.5, "z":  1.5, "direction": 260, "animation": "a2o-energetic1" },
+        { "person": "Peg",                "x":  3,   "z":  2.5, "direction": 15,  "animation": "a2o-approve" },
+        { "person": "Lizard King",        "x":  7,   "z":  1,   "direction": 140, "animation": "a2o-test-animation6" },
+        { "person": "Fat Lady Summer",    "x": -6,   "z": -2,   "direction": 330, "animation": "a2o-dance-inplace-twistloop" },
+        { "person": "Ross (Bald)",        "x": -1,   "z": -3,   "direction": 70,  "animation": "a2o-test-animation" },
+        { "person": "The Boss",           "x":  4,   "z": -2.5, "direction": 185, "animation": "a2o-test-animation4" },
+        { "person": "Deb",                "x":  8.5, "z": -3,   "direction": 290, "animation": "a2o-walking-loop" },
+        { "person": "Grandpa",            "x": -4,   "z": -5.5, "direction": 120, "animation": "a2o-energetic1" },
+        { "person": "Dad (Fit)",          "x":  0.5, "z": -6,   "direction": 225, "animation": "a2o-walking-frantic-loop" },
+        { "person": "Mercedes",           "x":  6,   "z": -6.5, "direction": 350, "animation": "a2o-dance-inplace-twistloop" },
+        { "person": "Biker Dude",         "x": -8,   "z": -7.5, "direction": 55,  "animation": "a2o-test-animation4" },
+        { "person": "Mom (Ponytail)",     "x":  3,   "z": -8,   "direction": 160, "animation": "a2o-test-animation" },
+        { "person": "Hipster",            "x":  9,   "z": -7,   "direction": 270, "animation": "a2o-energetic1" },
+        { "person": "Lizard King",        "x": -3,   "z": -9,   "direction": 95,  "animation": "a2o-test-animation6" }
+      ]
+    },
+    {
       "name": "Simopolis",
       "cast": [
         { "person": "Dad (Fit)",          "x": -6,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation5" },
