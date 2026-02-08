@@ -34,7 +34,7 @@ let contentIndex = null;
 let renderer = null;
 let activeSkeleton = null;  // Bone[] (primary body for solo mode)
 let activeMeshes = [];      // {mesh, boneMap, texture}[] (primary body)
-let cameraTarget = { x: 0, y: 1.5, z: 0 };
+let cameraTarget = { x: 0, y: 2.5, z: 0 };
 
 // Animation playback
 let activePractice = null;    // Practice instance (primary body)
@@ -481,7 +481,7 @@ async function loadScene(sceneIndex) {
         let cx = 0, cz = 0;
         for (const b of bodies) { cx += b.x; cz += b.z; }
         cx /= bodies.length; cz /= bodies.length;
-        cameraTarget = { x: cx, y: 1.5, z: cz };
+        cameraTarget = { x: cx, y: 2.5, z: cz };
     }
 
     animationTime = 0;
@@ -532,8 +532,9 @@ async function loadAnimationForBody(animName, skeleton) {
     }
 
     if (!cfpData) return null;
-    const keyframes = parseCFP(cfpData);
-    const practice = new Practice(skill, keyframes, skeleton);
+    // Apply CFP keyframe data to the skill's motions (same as solo loader)
+    parseCFP(cfpData, skill);
+    const practice = new Practice(skill, skeleton);
     practice.tick(0);
     updateTransforms(skeleton);
     return practice;
@@ -978,7 +979,7 @@ function buildCfpIndex() {
 // Compute camera target from skeleton bone positions
 function computeCameraTarget() {
     if (!activeSkeleton || activeSkeleton.length === 0) {
-        cameraTarget = { x: 0, y: 1.5, z: 0 };
+        cameraTarget = { x: 0, y: 2.5, z: 0 };
         return;
     }
     let minY = Infinity, maxY = -Infinity;
