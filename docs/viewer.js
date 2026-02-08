@@ -2067,18 +2067,34 @@ function setupMouseInteraction() {
 function selectActor(idx) {
     if (idx < -1 || idx >= bodies.length) return;
     const prevIdx = selectedActorIndex;
+    if (prevIdx === idx) return; // no change
     selectedActorIndex = idx;
     const actorSel = $('selActor');
     if (actorSel) actorSel.value = String(idx);
 
+    // Bake the global rotY into spinOffset when switching actors so nobody jumps.
+    // The selected actor gets rotYDeg added in rendering; when deselecting, absorb it.
+    const rotYDeg = parseFloat($('rotY')?.value || '0');
+    if (prevIdx >= 0 && prevIdx < bodies.length) {
+        // Old actor was getting rotYDeg — bake it into their spinOffset
+        bodies[prevIdx].spinOffset += rotYDeg;
+    } else if (prevIdx < 0) {
+        // Was All mode — every body was getting rotYDeg, bake into each
+        for (const b of bodies) b.spinOffset += rotYDeg;
+    }
+    if (idx >= 0 && idx < bodies.length) {
+        // New actor will get rotYDeg — subtract it from their spinOffset
+        bodies[idx].spinOffset -= rotYDeg;
+    } else if (idx < 0) {
+        // Entering All mode — every body will get rotYDeg, subtract from each
+        for (const b of bodies) b.spinOffset -= rotYDeg;
+    }
+
     // Deselected bodies: set tiltTarget to 0 so they settle smoothly
-    // (tickTopFor will decay them naturally via TOP_TILT_DECAY)
-    if (prevIdx !== idx) {
-        for (let i = 0; i < bodies.length; i++) {
-            const shouldBeActive = (idx < 0 || i === idx);
-            if (!shouldBeActive && bodies[i].top.active) {
-                bodies[i].top.tiltTarget = 0;
-            }
+    for (let i = 0; i < bodies.length; i++) {
+        const shouldBeActive = (idx < 0 || i === idx);
+        if (!shouldBeActive && bodies[i].top.active) {
+            bodies[i].top.tiltTarget = 0;
         }
     }
     if (idx >= 0) {
