@@ -348,34 +348,6 @@ async function loadContentIndex() {
 }
 
 function populateMenus() {
-    // Skeletons
-    fillSelect($('selSkeleton'), Object.keys(content.skeletons));
-
-
-    // Body meshes
-    const allBodies = Object.keys(content.meshes).filter(n =>
-        n.includes('BODY') || n.includes('KBODYNAKED'));
-    fillSelect($('selBody'), allBodies, decodeMeshName);
-
-    // Head meshes (exclude SPECS accessories)
-    const allHeads = Object.keys(content.meshes).filter(n =>
-        n.includes('HEAD') && !n.includes('SPECS'));
-    fillSelect($('selHead'), allHeads, decodeMeshName);
-
-    // Hand meshes
-    const leftHands = Object.keys(content.meshes).filter(n => n.includes('L_HAND'));
-    const rightHands = Object.keys(content.meshes).filter(n => n.includes('R_HAND'));
-    fillSelect($('selLeftHand'), leftHands, decodeMeshName);
-    fillSelect($('selRightHand'), rightHands, decodeMeshName);
-
-    // Textures
-    const bodyTexNames = Object.keys(content.textures).filter(n => /^B\d/.test(n));
-    const headTexNames = Object.keys(content.textures).filter(n => /^C\d/.test(n));
-    const handTexNames = Object.keys(content.textures).filter(n => n.startsWith('HU'));
-    fillSelect($('selBodyTex'), bodyTexNames, decodeTexName);
-    fillSelect($('selHeadTex'), headTexNames, decodeTexName);
-    fillSelect($('selHandTex'), handTexNames, decodeTexName);
-
     // Animations: filter out non-looping transitions that sneak in from multi-skill CMX files
     const skillBlacklist = ['twiststart', 'twiststop', '-start', '-stop', '-walkon', '-walkoff', '-divein', '-jumpin', 'a2o-stand', 'c2o-'];
     const showableSkills = Object.keys(content.skills).filter(name => {
