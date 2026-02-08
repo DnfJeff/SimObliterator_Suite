@@ -419,8 +419,12 @@ function populateMenus() {
     fillSelect($('selHeadTex'), applyFilter(headTexNames, 'headTex'), decodeTexName);
     fillSelect($('selHandTex'), applyFilter(handTexNames, 'handTex'), decodeTexName);
 
-    // Animations (non-looping anims already removed from content.json and data/)
-    fillSelect($('selAnim'), Object.keys(content.skills));
+    // Animations: filter out non-looping transitions that sneak in from multi-skill CMX files
+    const showableSkills = Object.keys(content.skills).filter(name => {
+        const l = name.toLowerCase();
+        return !l.includes('twiststart') && !l.includes('twiststop') && !l.includes('-start') && !l.includes('-stop');
+    });
+    fillSelect($('selAnim'), showableSkills);
 
     // Character dropdown
     if (contentIndex?.characters) {
