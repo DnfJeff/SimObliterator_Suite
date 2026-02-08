@@ -2088,7 +2088,7 @@ function setupMouseInteraction() {
 function selectActor(idx) {
     if (idx < -1 || idx >= bodies.length) return;
     const prevIdx = selectedActorIndex;
-    if (prevIdx === idx) return; // no change
+    if (prevIdx === idx) { simlishGreet(idx); return; } // same actor, just greet
     selectedActorIndex = idx;
     const actorSel = $('selActor');
     if (actorSel) actorSel.value = String(idx);
