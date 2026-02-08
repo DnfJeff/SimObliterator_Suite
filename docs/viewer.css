@@ -344,8 +344,8 @@ details summary h3 {
     border: 1px solid var(--accent);
     border-radius: 12px;
     padding: 20px 28px;
-    max-width: 680px;
-    width: 95vw;
+    max-width: 480px;
+    width: 92vw;
     color: var(--text-primary);
 }
 .help-content h2 {
@@ -375,14 +375,16 @@ details summary h3 {
     padding: 3px 0 3px 16px;
 }
 .help-keys td:first-child {
-    width: 130px;
+    width: 145px;
     padding-left: 16px;
     white-space: nowrap;
     text-align: right;
     color: var(--text-dim);
+    vertical-align: top;
 }
 .help-keys td:last-child {
-    padding-left: 12px;
+    padding-left: 14px;
+    vertical-align: top;
 }
 kbd {
     display: inline-block;
