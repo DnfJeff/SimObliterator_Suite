@@ -2,6 +2,7 @@
  * Original SimShow by Don Hopkins. This CSS styles the WebGL viewer. */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+body { user-select: none; -webkit-user-select: none; }
 
 :root {
     --bg-primary: #1a1a2e;
@@ -400,19 +401,6 @@ kbd {
     text-align: center;
     line-height: 1.5;
 }
-.help-close {
-    display: block;
-    margin: 12px auto 0;
-    padding: 8px 28px;
-    background: var(--accent);
-    color: var(--bg-primary);
-    border: none;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-}
-.help-close:hover { opacity: 0.85; }
 
 #btnHelp {
     position: fixed;
@@ -428,6 +416,8 @@ kbd {
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.5px;
+    min-width: 90px;
+    text-align: center;
 }
 #btnHelp:hover { opacity: 0.85; }
 

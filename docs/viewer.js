@@ -2580,13 +2580,12 @@ function setupEventListeners() {
         // q/e = prev/next animation
         // Help
         if (e.key === '?' || e.key === 'h') {
-            const hd = $('helpDialog');
-            if (hd) hd.style.display = hd.style.display === 'flex' ? 'none' : 'flex';
+            $('btnHelp')?.click();
             e.preventDefault();
         }
         if (e.key === 'Escape') {
             const hd = $('helpDialog');
-            if (hd && hd.style.display === 'flex') { hd.style.display = 'none'; e.preventDefault(); }
+            if (hd && hd.style.display === 'flex') { $('btnHelp')?.click(); e.preventDefault(); }
         }
 
         if (e.key === 'n') { stepScene(1); e.preventDefault(); }
@@ -2611,15 +2610,18 @@ function setupEventListeners() {
         if (e.key === 'ArrowRight') { _keysHeld.right = false; _keysHeld.rightStart = 0; e.preventDefault(); }
     });
 
-    // Help dialog
+    // Help dialog — button toggles between Help?!? and Wow!
     const btnHelp = $('btnHelp');
     const helpDialog = $('helpDialog');
-    const btnHelpClose = $('btnHelpClose');
     if (btnHelp && helpDialog) {
-        btnHelp.addEventListener('click', () => helpDialog.style.display = 'flex');
-        btnHelpClose?.addEventListener('click', () => helpDialog.style.display = 'none');
+        const toggleHelp = () => {
+            const showing = helpDialog.style.display === 'flex';
+            helpDialog.style.display = showing ? 'none' : 'flex';
+            btnHelp.textContent = showing ? 'Help?!?' : 'Wow!!!';
+        };
+        btnHelp.addEventListener('click', toggleHelp);
         helpDialog.addEventListener('click', e => {
-            if (e.target === helpDialog) helpDialog.style.display = 'none';
+            if (e.target === helpDialog) toggleHelp();
         });
     }
 
