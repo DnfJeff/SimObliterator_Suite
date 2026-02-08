@@ -491,17 +491,23 @@ async function loadScene(sceneIndex) {
     renderFrame();
 }
 
-// Load an animation (Practice) for a specific body's skeleton
+// Load an animation (Practice) for a specific body's skeleton.
+// Uses the same CFP loading path as the solo loader in updateScene().
 async function loadAnimationForBody(animName, skeleton) {
-    // Find the CMX that defines this skill
-    const allAnims = Object.values(content.skills);
-    let skill = allAnims.find(s => s.name?.toLowerCase() === animName.toLowerCase());
+    // Find the skill by name in already-loaded skills
+    let skill = content.skills[animName];
 
     if (!skill) {
-        // Try loading the animation CMX
+        // Search by name field (skills are keyed by their internal name)
+        skill = Object.values(content.skills).find(
+            s => s.name?.toLowerCase() === animName.toLowerCase()
+        );
+    }
+
+    if (!skill) {
+        // Try loading all animation CMXs to find the skill
         for (const cmxFile of contentIndex.animations || []) {
-            const cmxName = cmxFile.replace('.cmx', '');
-            if (content.skills[cmxName]) continue;
+            if (content.skills[cmxFile.replace('.cmx', '')]) continue;
             try {
                 const resp = await fetch('data/' + cmxFile);
                 const text = await resp.text();
@@ -509,34 +515,42 @@ async function loadAnimationForBody(animName, skeleton) {
                 for (const s of data.skills || []) content.skills[s.name] = s;
             } catch (e) { }
         }
-        skill = Object.values(content.skills).find(s => s.name?.toLowerCase() === animName.toLowerCase());
+        skill = Object.values(content.skills).find(
+            s => s.name?.toLowerCase() === animName.toLowerCase()
+        );
     }
 
-    if (!skill?.motions?.length) return null;
+    if (!skill?.motions?.length) {
+        console.warn(`[loadAnimationForBody] skill not found: ${animName}`);
+        return null;
+    }
 
-    // Load CFP for the first motion
-    const motion = skill.motions[0];
-    const cfpKey = 'xskill-' + motion.animationFileName;
-    let cfpData = cfpCache.get(cfpKey.toLowerCase());
-    if (!cfpData) {
-        const actual = cfpIndex.get(cfpKey.toLowerCase());
-        if (actual) {
+    // Load CFP using the same key scheme as the solo loader
+    const cfpName = skill.animationFileName;
+    if (cfpName && !cfpCache.has(cfpName) && (skill.numTranslations > 0 || skill.numRotations > 0)) {
+        const cfpFile = cfpIndex.get(cfpName.toLowerCase());
+        if (cfpFile) {
             try {
-                const resp = await fetch('data/' + actual);
+                const resp = await fetch('data/' + cfpFile);
                 if (resp.ok) {
-                    cfpData = await resp.arrayBuffer();
-                    cfpCache.set(cfpKey.toLowerCase(), cfpData);
+                    cfpCache.set(cfpName, await resp.arrayBuffer());
                 }
             } catch (e) { }
         }
     }
 
-    if (!cfpData) return null;
-    // Apply CFP keyframe data to the skill's motions (same as solo loader)
-    parseCFP(cfpData, skill);
+    const buffer = cfpCache.get(cfpName);
+    if (buffer) {
+        skill.translations = [];
+        skill.rotations = [];
+        parseCFP(buffer, skill);
+    }
+
     const practice = new Practice(skill, skeleton);
-    practice.tick(0);
-    updateTransforms(skeleton);
+    if (practice.ready) {
+        practice.tick(0);
+        updateTransforms(skeleton);
+    }
     return practice;
 }
 
