@@ -254,35 +254,28 @@ export class Renderer {
                 r: number, g: number, b: number, alpha = 1.0): void {
         const gl = this.gl;
 
-        // 6 vertices: top, bottom, 4 equatorial points rotated by rotY
-        const cosR = Math.cos(rotY);
-        const sinR = Math.sin(rotY);
+        // N equatorial points + top + bottom, rotated by rotY
+        const N = 6; // facet count
         const s = size;
         const h = size * 2.2; // tall diamond shape
 
-        // Equatorial points (rotated around Y)
-        const eq = [
-            { x:  s * cosR, y: 0, z:  s * sinR },
-            { x: -s * sinR, y: 0, z:  s * cosR },
-            { x: -s * cosR, y: 0, z: -s * sinR },
-            { x:  s * sinR, y: 0, z: -s * cosR },
-        ];
+        const eq: { x: number; y: number; z: number }[] = [];
+        for (let i = 0; i < N; i++) {
+            const a = rotY + (i / N) * Math.PI * 2;
+            eq.push({ x: s * Math.cos(a), y: 0, z: s * Math.sin(a) });
+        }
         const top = { x: 0, y: h, z: 0 };
         const bot = { x: 0, y: -h, z: 0 };
 
-        // 8 triangles: 4 top faces + 4 bottom faces
-        const tris = [
+        // 2*N triangles: N top faces + N bottom faces
+        const tris: { x: number; y: number; z: number }[] = [];
+        for (let i = 0; i < N; i++) {
+            const next = (i + 1) % N;
             // Top pyramid (CCW from outside)
-            eq[0], eq[1], top,
-            eq[1], eq[2], top,
-            eq[2], eq[3], top,
-            eq[3], eq[0], top,
+            tris.push(eq[i], eq[next], top);
             // Bottom pyramid (CCW from outside)
-            eq[1], eq[0], bot,
-            eq[2], eq[1], bot,
-            eq[3], eq[2], bot,
-            eq[0], eq[3], bot,
-        ];
+            tris.push(eq[next], eq[i], bot);
+        }
 
         const posData = new Float32Array(tris.length * 3);
         const normData = new Float32Array(tris.length * 3);
