@@ -1456,6 +1456,7 @@ function stepPerson(direction) {
     if (idx < 0) idx = contentIndex.people.length - 1;
     if (idx >= contentIndex.people.length) idx = 0;
     sel.value = String(idx);
+    exitScene();
     applyPerson(idx);
 }
 
