@@ -1047,14 +1047,21 @@ function tickTopFor(t) {
 function tickTop() { tickTopFor(top); }
 
 // Tick all bodies' top physics (scene mode): same spin input, independent chaos
-// Tick top physics only for bodies that are actually spinning.
-// When a specific actor is selected, only that actor gets top physics.
-// When All is selected, everyone does.
+// Tick top physics. Selected bodies get full spin input.
+// Unselected bodies still tick if active (so they can settle smoothly)
+// but with zero spin speed so they decay to rest.
 function tickAllBodiesTop() {
     if (bodies.length > 0) {
+        const savedVelocity = rotationVelocity;
         for (let i = 0; i < bodies.length; i++) {
-            if (selectedActorIndex < 0 || i === selectedActorIndex) {
+            const isSelected = (selectedActorIndex < 0 || i === selectedActorIndex);
+            if (isSelected) {
                 tickTopFor(bodies[i].top);
+            } else if (bodies[i].top.active) {
+                // Tick with zero velocity so it settles smoothly
+                rotationVelocity = 0;
+                tickTopFor(bodies[i].top);
+                rotationVelocity = savedVelocity;
             }
         }
     } else {
@@ -1998,10 +2005,9 @@ function setupMouseInteraction() {
         if (dragButton === 0 && dragMoved) {
             // Left button release with momentum — carry the smoothed velocity
             rotationVelocity = smoothedVelocity;
-        } else if (dragButton === 0 && !dragMoved) {
-            // Click without drag — stop spinning (pick already happened on mousedown)
-            rotationVelocity = 0;
         }
+        // Click without drag: don't kill rotationVelocity — let it decay naturally.
+        // Pick already happened on mousedown.
         // Right button: no momentum, just stops
     });
 
@@ -2049,17 +2055,13 @@ function selectActor(idx) {
     const actorSel = $('selActor');
     if (actorSel) actorSel.value = String(idx);
 
-    // Reset top physics on bodies that are no longer selected
-    // so they stop wobbling immediately
+    // Deselected bodies: set tiltTarget to 0 so they settle smoothly
+    // (tickTopFor will decay them naturally via TOP_TILT_DECAY)
     if (prevIdx !== idx) {
         for (let i = 0; i < bodies.length; i++) {
             const shouldBeActive = (idx < 0 || i === idx);
             if (!shouldBeActive && bodies[i].top.active) {
-                const t = bodies[i].top;
-                t.active = false;
-                t.tilt = 0; t.tiltTarget = 0;
-                t.precessionAngle = 0; t.nutationPhase = 0; t.nutationAmp = 0;
-                t.driftX = 0; t.driftZ = 0; t.driftVX = 0; t.driftVZ = 0;
+                bodies[i].top.tiltTarget = 0;
             }
         }
     }
