@@ -600,25 +600,46 @@ async function loadScene(sceneIndex) {
     // All bodies are built, all practices are ready — now make them live.
     bodies = newBodies;
 
-    // Populate Actor dropdown from cast, with "All" at top
+    // Populate Actor dropdown from cast.
+    // 1 actor: no "All", auto-select the only actor.
+    // 2+ actors: "All" at top, default to All.
     const actorSel = $('selActor');
     const actorGroup = $('actorGroup');
     if (actorSel) {
         while (actorSel.options.length) actorSel.remove(0);
-        const allOpt = document.createElement('option');
-        allOpt.value = '-1';
-        allOpt.textContent = `All (${bodies.length})`;
-        actorSel.appendChild(allOpt);
+        if (bodies.length > 1) {
+            const allOpt = document.createElement('option');
+            allOpt.value = '-1';
+            allOpt.textContent = `All (${bodies.length})`;
+            actorSel.appendChild(allOpt);
+        }
         for (let i = 0; i < bodies.length; i++) {
             const opt = document.createElement('option');
             opt.value = String(i);
             opt.textContent = bodies[i].actorName;
             actorSel.appendChild(opt);
         }
-        selectedActorIndex = -1; // "All" by default
-        actorSel.value = '-1';
+        if (bodies.length === 1) {
+            selectedActorIndex = 0;
+            actorSel.value = '0';
+        } else {
+            selectedActorIndex = -1;
+            actorSel.value = '-1';
+        }
     }
     if (actorGroup) actorGroup.style.display = bodies.length > 0 ? '' : 'none';
+
+    // Sync dropdowns to the selected actor (or neutral if All)
+    if (selectedActorIndex >= 0 && bodies[selectedActorIndex]) {
+        const body = bodies[selectedActorIndex];
+        if (body.personData && contentIndex?.characters) {
+            const charIdx = contentIndex.characters.findIndex(c => c.name === body.personData.name);
+            if (charIdx >= 0) $('selCharacter').value = String(charIdx);
+        }
+        if (body.practice?.skill?.name) {
+            setSelectValue('selAnim', body.practice.skill.name);
+        }
+    }
     updateActorEditingUI();
 
     // Set primary body refs for compatibility (camera target, status, etc.)
@@ -1895,23 +1916,32 @@ function selectActor(idx) {
     updateActorEditingUI();
 }
 
-// Enable/disable actor editing controls based on whether a specific actor is selected
+// Enable/disable actor editing controls based on whether a specific actor is selected.
+// When disabled (All mode), show neutral placeholder text in dropdowns.
 function updateActorEditingUI() {
     const inScene = !!activeScene;
     const hasActor = inScene && selectedActorIndex >= 0;
     const disabled = !hasActor && inScene;
+
     // Character controls
     const charSel = $('selCharacter');
     const charPrev = $('btnCharacterPrev');
     const charNext = $('btnCharacterNext');
-    if (charSel) charSel.disabled = disabled;
+    if (charSel) {
+        charSel.disabled = disabled;
+        if (disabled) charSel.value = '';
+    }
     if (charPrev) charPrev.disabled = disabled;
     if (charNext) charNext.disabled = disabled;
+
     // Animation controls
     const animSel = $('selAnim');
     const animPrev = $('btnAnimPrev');
     const animNext = $('btnAnimNext');
-    if (animSel) animSel.disabled = disabled;
+    if (animSel) {
+        animSel.disabled = disabled;
+        if (disabled) animSel.value = '';
+    }
     if (animPrev) animPrev.disabled = disabled;
     if (animNext) animNext.disabled = disabled;
 }
@@ -2144,9 +2174,11 @@ function setupEventListeners() {
     function stepActor(dir) {
         if (bodies.length === 0) return;
         // Range: -1 (All) through bodies.length-1
+        // But if only 1 body, skip All entirely
+        const minIdx = bodies.length > 1 ? -1 : 0;
         let idx = selectedActorIndex + dir;
-        if (idx < -1) idx = bodies.length - 1;
-        if (idx >= bodies.length) idx = -1;
+        if (idx < minIdx) idx = bodies.length - 1;
+        if (idx >= bodies.length) idx = minIdx;
         selectActor(idx);
     }
     // selectActor is module-level (defined above setupEventListeners)
