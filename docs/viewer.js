@@ -426,11 +426,11 @@ function tickTop() {
 
     if (spinSpeed > TOP_SPIN_THRESHOLD) {
         if (!top.active) {
-            // LAUNCH! Explosive random direction like Taz bursting out of a crate
+            // Launch with a moderate random nudge (not too far off-center)
             const launchAngle = Math.random() * Math.PI * 2;
-            top.driftVX += Math.sin(launchAngle) * spinSpeed * 0.05;
-            top.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.05;
-            top.nutationPhase = Math.random() * Math.PI * 2; // random wobble start
+            top.driftVX += Math.sin(launchAngle) * spinSpeed * 0.015;
+            top.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.015;
+            top.nutationPhase = Math.random() * Math.PI * 2;
         }
         top.active = true;
         top.tiltTarget = Math.min(spinSpeed * TOP_TILT_SCALE, TOP_MAX_TILT);

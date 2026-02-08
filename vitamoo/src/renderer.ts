@@ -25,7 +25,12 @@ uniform sampler2D uTexture;
 uniform bool uHasTexture;
 uniform vec3 uLightDir;
 uniform float uAlpha;
+uniform vec3 uFadeColor;
 void main() {
+    if (uFadeColor.r >= 0.0) {
+        gl_FragColor = vec4(uFadeColor, uAlpha);
+        return;
+    }
     vec3 n = normalize(vNormal);
     vec3 L = normalize(uLightDir);
     float diffuse = max(dot(n, L), 0.0);
@@ -51,6 +56,7 @@ export class Renderer {
     private uHasTexture: WebGLUniformLocation;
     private uLightDir: WebGLUniformLocation;
     private uAlpha: WebGLUniformLocation;
+    private uFadeColor: WebGLUniformLocation;
 
     constructor(canvas: HTMLCanvasElement) {
         const gl = canvas.getContext('webgl', { alpha: true, antialias: true, preserveDrawingBuffer: true });
@@ -75,7 +81,9 @@ export class Renderer {
         this.uHasTexture = gl.getUniformLocation(this.program, 'uHasTexture')!;
         this.uLightDir = gl.getUniformLocation(this.program, 'uLightDir')!;
         this.uAlpha = gl.getUniformLocation(this.program, 'uAlpha')!;
-        gl.uniform1f(this.uAlpha, 1.0); // default: fully opaque
+        this.uFadeColor = gl.getUniformLocation(this.program, 'uFadeColor')!;
+        gl.uniform1f(this.uAlpha, 1.0);
+        gl.uniform3f(this.uFadeColor, -1, -1, -1); // sentinel: use normal lighting
     }
 
     clear(r = 0.1, g = 0.1, b = 0.15): void {
@@ -101,9 +109,8 @@ export class Renderer {
         const identity = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
         gl.uniformMatrix4fv(this.uProjection, false, identity);
         gl.uniformMatrix4fv(this.uModelView, false, identity);
-        gl.uniform1i(this.uHasTexture, 0);
-        gl.uniform3f(this.uLightDir, 0, 0, 1); // full-bright normal
         gl.uniform1f(this.uAlpha, alpha);
+        gl.uniform3f(this.uFadeColor, r, g, b); // exact background color
 
         // Fullscreen quad in NDC
         const quadVerts = new Float32Array([
@@ -141,7 +148,8 @@ export class Renderer {
         gl.deleteBuffer(ub);
 
         // Restore
-        gl.uniform1f(this.uAlpha, 1.0); // back to opaque for mesh drawing
+        gl.uniform1f(this.uAlpha, 1.0);
+        gl.uniform3f(this.uFadeColor, -1, -1, -1); // back to normal lighting
         gl.disable(gl.BLEND);
         if (prevDepthTest) gl.enable(gl.DEPTH_TEST);
         if (prevCullFace) gl.enable(gl.CULL_FACE);

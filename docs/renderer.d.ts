@@ -12,6 +12,7 @@ export declare class Renderer {
     private uHasTexture;
     private uLightDir;
     private uAlpha;
+    private uFadeColor;
     constructor(canvas: HTMLCanvasElement);
     clear(r?: number, g?: number, b?: number): void;
     fadeScreen(r?: number, g?: number, b?: number, alpha?: number): void;
