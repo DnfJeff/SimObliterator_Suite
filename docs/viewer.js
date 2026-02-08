@@ -77,7 +77,7 @@ let lastDragTime = 0;
 let dragMoved = false;
 let dragButton = 0;           // 0=left (spin+zoom), 2=right (spin+orbit)
 const DRAG_THRESHOLD = 3;     // pixels before it counts as drag vs click
-const FRICTION = 0.985;       // velocity decay per frame (higher = less friction)
+const FRICTION = 0.98;        // velocity decay per frame (lower = slows faster)
 const VELOCITY_SMOOTHING = 0.3; // low-pass filter for mouse velocity
 let smoothedVelocity = 0;
 
@@ -1349,7 +1349,7 @@ function setupMouseInteraction() {
         }
 
         // Track instantaneous velocity with smoothing (left button only)
-        const instantVelocity = dragButton === 0 ? (-dx * 0.5) / (dt / 16.67) : 0;
+        const instantVelocity = dragButton === 0 ? (-dx * 0.3) / (dt / 16.67) : 0;
         smoothedVelocity = smoothedVelocity * (1 - VELOCITY_SMOOTHING) +
                            instantVelocity * VELOCITY_SMOOTHING;
 
