@@ -90,14 +90,6 @@ let smoothedVelocity = 0;
 // Texture cache: base name -> WebGLTexture
 const textureCache = new Map();
 
-// Filter state (SimShow's sex/age/bodyType/skinTone filtering)
-const filter = {
-    enabled: false,
-    sex: null,       // 'M', 'F', or null (any)
-    age: null,       // 'A' (adult), 'C' (child), or null
-    bodyType: null,  // 'Fit', 'Fat', 'Skn', or null
-    skinTone: null,  // 'drk', 'lgt', 'med', or null
-};
 
 // DOM references
 const statusEl = $('status');
@@ -188,36 +180,6 @@ async function getTexture(baseName) {
     }
 }
 
-// Apply SimShow-style filtering to a list of names.
-// The filter uses the Sims naming convention encoded in filenames.
-function applyFilter(names, category) {
-    if (!filter.enabled) return names;
-
-    return names.filter(name => {
-        const lower = name.toLowerCase();
-
-        // Sex filter
-        if (filter.sex === 'M' && !lower.includes('ma') && !lower.includes('mc') && !lower.includes('uc')) return false;
-        if (filter.sex === 'F' && !lower.includes('fa') && !lower.includes('fc') && !lower.includes('uc')) return false;
-
-        // Age filter
-        if (filter.age === 'A' && (lower.includes('chd') || lower.includes('uc'))) return false;
-        if (filter.age === 'C' && !lower.includes('chd') && !lower.includes('uc')) return false;
-
-        // Body type filter (body meshes and textures only)
-        if (filter.bodyType && (category === 'body' || category === 'bodyTex')) {
-            const bt = filter.bodyType.toLowerCase();
-            if (!lower.includes(bt)) return false;
-        }
-
-        // Skin tone filter (textures only)
-        if (filter.skinTone && (category === 'bodyTex' || category === 'headTex' || category === 'handTex')) {
-            if (!lower.includes(filter.skinTone)) return false;
-        }
-
-        return true;
-    });
-}
 
 // Load content index and populate menus
 async function loadContentIndex() {
@@ -389,21 +351,16 @@ function populateMenus() {
     // Skeletons
     fillSelect($('selSkeleton'), Object.keys(content.skeletons));
 
-    // Auto-select skeleton based on age filter
-    if (filter.enabled && filter.age) {
-        const targetSkel = filter.age === 'C' ? 'child' : 'adult';
-        setSelectValue('selSkeleton', targetSkel);
-    }
 
     // Body meshes
     const allBodies = Object.keys(content.meshes).filter(n =>
         n.includes('BODY') || n.includes('KBODYNAKED'));
-    fillSelect($('selBody'), applyFilter(allBodies, 'body'), decodeMeshName);
+    fillSelect($('selBody'), allBodies, decodeMeshName);
 
     // Head meshes (exclude SPECS accessories)
     const allHeads = Object.keys(content.meshes).filter(n =>
         n.includes('HEAD') && !n.includes('SPECS'));
-    fillSelect($('selHead'), applyFilter(allHeads, 'head'), decodeMeshName);
+    fillSelect($('selHead'), allHeads, decodeMeshName);
 
     // Hand meshes
     const leftHands = Object.keys(content.meshes).filter(n => n.includes('L_HAND'));
@@ -415,9 +372,9 @@ function populateMenus() {
     const bodyTexNames = Object.keys(content.textures).filter(n => /^B\d/.test(n));
     const headTexNames = Object.keys(content.textures).filter(n => /^C\d/.test(n));
     const handTexNames = Object.keys(content.textures).filter(n => n.startsWith('HU'));
-    fillSelect($('selBodyTex'), applyFilter(bodyTexNames, 'bodyTex'), decodeTexName);
-    fillSelect($('selHeadTex'), applyFilter(headTexNames, 'headTex'), decodeTexName);
-    fillSelect($('selHandTex'), applyFilter(handTexNames, 'handTex'), decodeTexName);
+    fillSelect($('selBodyTex'), bodyTexNames, decodeTexName);
+    fillSelect($('selHeadTex'), headTexNames, decodeTexName);
+    fillSelect($('selHandTex'), handTexNames, decodeTexName);
 
     // Animations: filter out non-looping transitions that sneak in from multi-skill CMX files
     const skillBlacklist = ['twiststart', 'twiststop', '-start', '-stop', '-walkon', '-walkoff', '-divein', '-jumpin', 'a2o-stand', 'c2o-'];
@@ -448,23 +405,6 @@ function populateMenus() {
     }
 }
 
-// After filter changes, revalidate all dropdowns: if the current selection
-// is no longer in the list, select the first available option.
-function revalidateDropdowns() {
-    for (const id of ['selSkeleton', 'selBody', 'selHead', 'selLeftHand', 'selRightHand',
-                       'selBodyTex', 'selHeadTex', 'selHandTex']) {
-        const sel = $(id);
-        const current = sel.value;
-        // Check if current value still exists in options
-        let found = false;
-        for (const opt of sel.options) {
-            if (opt.value === current && opt.value) { found = true; break; }
-        }
-        if (!found && sel.options.length > 1) {
-            sel.selectedIndex = 1; // select first real option (skip placeholder)
-        }
-    }
-}
 
 
 // Apply default selections (SimShow's gCharacterTable).
@@ -1304,10 +1244,6 @@ function getVoiceType() {
     let isChild = skel.includes('child') || body.includes('chd') || body.includes('uc');
     let isFemale = body.includes('fa') || body.includes('fc');
 
-    if (!body.includes('ma') && !body.includes('fa') && !body.includes('mc') && !body.includes('fc')) {
-        if (filter.sex === 'F') isFemale = true;
-        if (filter.age === 'C') isChild = true;
-    }
 
     if (isChild && isFemale) return { basePitch: 240, pitchRange: 40, formantScale: 1.35, breathiness: 0.20, chorusSize: 1 };
     if (isChild)             return { basePitch: 220, pitchRange: 45, formantScale: 1.30, breathiness: 0.18, chorusSize: 1 };
@@ -2373,61 +2309,6 @@ function setDistance(preset) {
 }
 
 // Filter button toggle handler
-function setupFilters() {
-    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const key = btn.dataset.filter;
-            const val = btn.dataset.value;
-
-            // Toggle: if already active, deactivate
-            if (filter[key] === val) {
-                filter[key] = null;
-                btn.classList.remove('active');
-            } else {
-                // Deactivate siblings in same filter group
-                document.querySelectorAll(`.filter-btn[data-filter="${key}"]`)
-                    .forEach(b => b.classList.remove('active'));
-                filter[key] = val;
-                btn.classList.add('active');
-            }
-
-            // Remember current selections before repopulating
-            const sel = {
-                skeleton: $('selSkeleton').value,
-                body: $('selBody').value,
-                head: $('selHead').value,
-                bodyTex: $('selBodyTex').value,
-                headTex: $('selHeadTex').value,
-                handTex: $('selHandTex').value,
-            };
-
-            populateMenus();
-
-            // Restore selections if still available
-            setSelectValue('selSkeleton', sel.skeleton);
-            setSelectValue('selBody', sel.body);
-            setSelectValue('selHead', sel.head);
-            setSelectValue('selBodyTex', sel.bodyTex);
-            setSelectValue('selHeadTex', sel.headTex);
-            setSelectValue('selHandTex', sel.handTex);
-
-            // If any selection is no longer valid, pick first available
-            revalidateDropdowns();
-            updateScene();
-        });
-    });
-
-    // Filter enable/disable
-    const filterToggle = $('filterToggle');
-    if (filterToggle) {
-        filterToggle.addEventListener('change', () => {
-            filter.enabled = filterToggle.checked;
-            populateMenus();
-            revalidateDropdowns();
-            updateScene();
-        });
-    }
-}
 
 // Wire up all event listeners
 function setupEventListeners() {
@@ -2637,7 +2518,6 @@ function setupEventListeners() {
     });
 
     // Filters
-    setupFilters();
 }
 
 // Boot
