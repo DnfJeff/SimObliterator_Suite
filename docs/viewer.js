@@ -2521,7 +2521,7 @@ function setupEventListeners() {
             }
             e.preventDefault();
         }
-        const speedKeys = { '1': 10, '2': 25, '3': 50, '4': 75, '5': 100, '6': 150, '7': 250, '8': 375, '9': 500 };
+        const speedKeys = { '1': 25, '2': 50, '3': 100, '4': 150, '5': 200, '6': 300, '7': 400, '8': 500, '9': 700 };
         if (speedKeys[e.key]) {
             paused = false;
             $('speed').value = speedKeys[e.key];
