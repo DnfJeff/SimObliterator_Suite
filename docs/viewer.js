@@ -408,27 +408,29 @@ const top = {
     driftVZ: 0,
 };
 
-const TOP_SPIN_THRESHOLD = 1.5;   // deg/frame to activate
-const TOP_TILT_SCALE = 0.012;     // tilt per unit spin speed
-const TOP_MAX_TILT = 0.7;         // max tilt radians (~40 degrees)
-const TOP_PRECESSION_RATE = 0.02; // precession speed relative to spin
-const TOP_NUTATION_FREQ = 3.5;    // wobble frequency multiplier
-const TOP_NUTATION_SCALE = 0.15;  // wobble amplitude relative to tilt
-const TOP_DRIFT_FORCE = 0.0004;   // drift from tilt
-const TOP_GRAVITY = 0.003;        // bowl restoring force
-const TOP_DRIFT_FRICTION = 0.97;  // drift velocity decay
-const TOP_TILT_DECAY = 0.97;      // tilt decay when slowing down
-const TOP_SETTLE_RATE = 0.05;     // how fast tilt lerps to target
+// CARTOON PHYSICS: Tasmanian Devil mode
+const TOP_SPIN_THRESHOLD = 0.8;   // barely flick and they're off
+const TOP_TILT_SCALE = 0.08;     // aggressive tilt response
+const TOP_MAX_TILT = 1.5;        // ~86 degrees — nearly horizontal, Taz-style
+const TOP_PRECESSION_RATE = 0.05; // fast gyroscopic orbit
+const TOP_NUTATION_FREQ = 5.5;    // rapid wobble — that Taz jitter
+const TOP_NUTATION_SCALE = 0.4;   // huge wobble amplitude
+const TOP_DRIFT_FORCE = 0.0015;   // careens wildly off-center
+const TOP_GRAVITY = 0.002;        // weak gravity — long crazy orbits before return
+const TOP_DRIFT_FRICTION = 0.975; // less friction — keeps momentum longer
+const TOP_TILT_DECAY = 0.94;      // holds the lean — doesn't snap back quickly
+const TOP_SETTLE_RATE = 0.12;     // snaps INTO tilt fast (instant cartoon reaction)
 
 function tickTop() {
     const spinSpeed = Math.abs(rotationVelocity);
 
     if (spinSpeed > TOP_SPIN_THRESHOLD) {
         if (!top.active) {
-            // Just activated — pick a random launch direction
+            // LAUNCH! Explosive random direction like Taz bursting out of a crate
             const launchAngle = Math.random() * Math.PI * 2;
-            top.driftVX += Math.sin(launchAngle) * spinSpeed * 0.02;
-            top.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.02;
+            top.driftVX += Math.sin(launchAngle) * spinSpeed * 0.05;
+            top.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.05;
+            top.nutationPhase = Math.random() * Math.PI * 2; // random wobble start
         }
         top.active = true;
         top.tiltTarget = Math.min(spinSpeed * TOP_TILT_SCALE, TOP_MAX_TILT);
@@ -464,19 +466,22 @@ function tickTop() {
     top.driftVX += tiltDirX * top.tilt * TOP_DRIFT_FORCE;
     top.driftVZ += tiltDirZ * top.tilt * TOP_DRIFT_FORCE;
 
-    // Orbital tangential force: perpendicular to the line from center to character
-    // This makes the drift spiral/orbit rather than bounce straight back
+    // Orbital tangential force: makes the drift spiral/orbit like a cartoon tornado path
     const dist = Math.sqrt(top.driftX * top.driftX + top.driftZ * top.driftZ);
     if (dist > 0.01) {
-        const orbitalStrength = spinSpeed * 0.00015;
-        // Perpendicular direction (tangent to circle around center)
+        const orbitalStrength = spinSpeed * 0.0004; // strong orbital sweep
         const spinSign = rotationVelocity > 0 ? 1 : -1;
         top.driftVX += (-top.driftZ / dist) * orbitalStrength * spinSign;
         top.driftVZ += (top.driftX / dist) * orbitalStrength * spinSign;
     }
 
-    // Gravity bowl: pulls back toward center — stronger when far out
-    const gravStrength = TOP_GRAVITY * (1 + dist * 0.5);
+    // Cartoon jitter: tiny random impulses make the path wobbly and unpredictable
+    const jitter = top.tilt * 0.0003;
+    top.driftVX += (Math.random() - 0.5) * jitter;
+    top.driftVZ += (Math.random() - 0.5) * jitter;
+
+    // Gravity bowl: pulls back toward center — but it's a wide bowl
+    const gravStrength = TOP_GRAVITY * (1 + dist * 0.3);
     top.driftVX -= top.driftX * gravStrength;
     top.driftVZ -= top.driftZ * gravStrength;
 
@@ -527,9 +532,14 @@ let audioCtx = null;
 let spinOsc = null;
 let spinGain = null;
 
-// Simlish "weeee!" — formant synthesis with 3 bandpass-filtered noise+oscillator pairs.
-// The vowel "ee" has formants at F1≈270Hz, F2≈2300Hz, F3≈3000Hz.
-// Pitch shifts up with spin speed for the rising "weeEEEE!" effect.
+// Simlish "weeeoooaaaaawww!" — formant synthesis with tilt-driven dipthong.
+// Precession angle sweeps the vowel through ee->oo->aa->aw as the character
+// leans and orbits. Tilt magnitude controls how far from neutral "ee" it goes.
+// Vowel formant targets (F1, F2, F3 in Hz):
+//   "ee" (wee):  270, 2300, 3000  — upright, tight
+//   "oo" (ooh):  300,  870, 2240  — leaning, rounded
+//   "aa" (aah):  730, 1090, 2440  — max lean, open mouth
+//   "aw" (aww):  570,  840, 2410  — coming back around
 let spinFormants = null; // { oscs, gains, filters, masterGain }
 
 function initSpinSound() {
@@ -554,12 +564,15 @@ function initSpinSound() {
     noise.buffer = noiseBuf;
     noise.loop = true;
 
-    // Source mixer
+    // Source mixer — noise gets its own gain for per-character breathiness control
     const srcGain = audioCtx.createGain();
     srcGain.gain.value = 1;
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.value = 0.15; // default breathiness
     glottal.connect(srcGain);
     glottal2.connect(srcGain);
-    noise.connect(srcGain);
+    noise.connect(noiseGain);
+    noiseGain.connect(srcGain);
 
     // Three formant filters (bandpass) for "ee" vowel
     const formantFreqs = [270, 2300, 3000]; // F1, F2, F3
@@ -593,10 +606,80 @@ function initSpinSound() {
     glottal2.start();
     noise.start();
 
-    spinFormants = { glottal, glottal2, filters, masterGain };
-    // Keep old refs for compatibility
+    spinFormants = { glottal, glottal2, filters, masterGain, noiseGain };
     spinOsc = glottal;
     spinGain = masterGain;
+}
+
+// Four vowel targets around the precession circle (F1, F2, F3)
+const VOWELS = [
+    [270, 2300, 3000],  // "ee" — 0 degrees (front, upright-ish)
+    [300,  870, 2240],  // "oo" — 90 degrees (leaning right)
+    [730, 1090, 2440],  // "aa" — 180 degrees (leaning back, mouth wide open)
+    [570,  840, 2410],  // "aw" — 270 degrees (leaning left, rounding off)
+];
+
+function lerpVowel(angle, tiltAmount) {
+    // angle: 0..2PI precession angle, tiltAmount: 0..1 normalized lean
+    // At tiltAmount=0 we stay on pure "ee". At tiltAmount=1 we sweep full dipthong.
+    const t = angle / (Math.PI * 2); // 0..1
+    const idx = t * 4;
+    const i0 = Math.floor(idx) % 4;
+    const i1 = (i0 + 1) % 4;
+    const frac = idx - Math.floor(idx);
+
+    // Interpolate between adjacent vowels
+    const swept = [
+        VOWELS[i0][0] + (VOWELS[i1][0] - VOWELS[i0][0]) * frac,
+        VOWELS[i0][1] + (VOWELS[i1][1] - VOWELS[i0][1]) * frac,
+        VOWELS[i0][2] + (VOWELS[i1][2] - VOWELS[i0][2]) * frac,
+    ];
+
+    // Blend between neutral "ee" and the swept vowel based on tilt
+    const ee = VOWELS[0];
+    return [
+        ee[0] + (swept[0] - ee[0]) * tiltAmount,
+        ee[1] + (swept[1] - ee[1]) * tiltAmount,
+        ee[2] + (swept[2] - ee[2]) * tiltAmount,
+    ];
+}
+
+// Voice parameters for the current character.
+// First checks the per-person "voice" object from content.json (pitch, range, formant, breathiness).
+// Falls back to auto-detection from body mesh name (MA/FA/MC/FC).
+function getVoiceType() {
+    // Try per-person JSON voice first
+    const peopleSelect = $('selPeople');
+    if (peopleSelect && contentIndex?.people) {
+        const idx = parseInt(peopleSelect.value, 10);
+        const person = contentIndex.people[idx];
+        if (person?.voice) {
+            const v = person.voice;
+            return {
+                basePitch: v.pitch || 100,
+                pitchRange: v.range || 50,
+                formantScale: v.formant || 1.0,
+                breathiness: v.breathiness || 0.15,
+            };
+        }
+    }
+
+    // Auto-detect from body mesh name
+    const body = ($('selBody')?.value || '').toLowerCase();
+    const skel = ($('selSkeleton')?.value || '').toLowerCase();
+
+    let isChild = skel.includes('child') || body.includes('chd') || body.includes('uc');
+    let isFemale = body.includes('fa') || body.includes('fc');
+
+    if (!body.includes('ma') && !body.includes('fa') && !body.includes('mc') && !body.includes('fc')) {
+        if (filter.sex === 'F') isFemale = true;
+        if (filter.age === 'C') isChild = true;
+    }
+
+    if (isChild && isFemale) return { basePitch: 240, pitchRange: 40, formantScale: 1.35, breathiness: 0.20 };
+    if (isChild)             return { basePitch: 220, pitchRange: 45, formantScale: 1.30, breathiness: 0.18 };
+    if (isFemale)            return { basePitch: 180, pitchRange: 50, formantScale: 1.15, breathiness: 0.18 };
+    return                          { basePitch: 100, pitchRange: 50, formantScale: 1.00, breathiness: 0.12 };
 }
 
 function updateSpinSound() {
@@ -606,20 +689,54 @@ function updateSpinSound() {
     const now = audioCtx.currentTime;
 
     if (speed > 0.5) {
-        // Glottal pitch rises with speed: 120Hz (low moan) to 400Hz (high squeal)
-        const pitch = 120 + Math.min(speed, 12) * 24;
-        spinFormants.glottal.frequency.setTargetAtTime(pitch, now, 0.04);
-        spinFormants.glottal2.frequency.setTargetAtTime(pitch, now, 0.04);
+        const voice = getVoiceType();
 
-        // Shift formants up slightly with pitch for natural "wee" rising
-        const shift = 1 + Math.min(speed, 12) * 0.02; // up to 1.24x
-        spinFormants.filters[0].frequency.setTargetAtTime(270 * shift, now, 0.05);
-        spinFormants.filters[1].frequency.setTargetAtTime(2300 * shift, now, 0.05);
-        spinFormants.filters[2].frequency.setTargetAtTime(3000 * shift, now, 0.05);
+        // Tilt amount: how much the character is leaning (0..1)
+        // Use a power curve so even moderate tilts produce audible vowel shift
+        const rawTilt = top.active ? Math.min(top.tilt / TOP_MAX_TILT, 1.0) : 0;
+        const tiltAmount = Math.pow(rawTilt, 0.6); // gamma < 1 = more effect at low tilt
+        const precAngle = top.active ? ((top.precessionAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) : 0;
 
-        // Volume
-        const vol = Math.min(speed / 8, 0.2);
-        spinFormants.masterGain.gain.setTargetAtTime(vol, now, 0.04);
+        // Glottal pitch: character-specific base, rises with speed
+        // Tilt adds a WILD wobbling pitch bend — cartoon yodeling
+        const basePitch = voice.basePitch + Math.min(speed, 15) * voice.pitchRange;
+        const wobbleDepth = tiltAmount * 60; // up to +/-60Hz pitch swing
+        const wobble1 = Math.sin(top.nutationPhase * 2.5) * wobbleDepth;
+        const wobble2 = Math.sin(top.nutationPhase * 1.7 + 1.3) * wobbleDepth * 0.3; // secondary warble
+        const pitch = basePitch + wobble1 + wobble2;
+        spinFormants.glottal.frequency.setTargetAtTime(pitch, now, 0.01);
+        spinFormants.glottal2.frequency.setTargetAtTime(pitch * 1.005, now, 0.01); // wider detune = chaos
+
+        // Per-character breathiness: more air = more noise in the voice
+        if (spinFormants.noiseGain) {
+            const breathBase = voice.breathiness || 0.15;
+            const breathTilt = breathBase + tiltAmount * 0.5; // VERY breathy when careening
+            spinFormants.noiseGain.gain.setTargetAtTime(breathTilt, now, 0.02);
+        }
+
+        // Speed-based formant shift (the base "wee" rising effect)
+        const speedShift = 1 + Math.min(speed, 12) * 0.02;
+
+        // Tilt-driven dipthong: precession angle sweeps through vowel space
+        const [f1, f2, f3] = lerpVowel(precAngle, tiltAmount);
+
+        // Apply speed shift, tilt-driven vowel morph, and voice-type formant scaling
+        const fScale = speedShift * voice.formantScale;
+        // Fast transition time (0.015s) so the vowels respond instantly to wobble
+        spinFormants.filters[0].frequency.setTargetAtTime(f1 * fScale, now, 0.015);
+        spinFormants.filters[1].frequency.setTargetAtTime(f2 * fScale, now, 0.015);
+        spinFormants.filters[2].frequency.setTargetAtTime(f3 * fScale, now, 0.015);
+
+        // Widen Q when mouth opens — at full tilt it's basically yelling into the void
+        const qScale = 1 - tiltAmount * 0.6; // Q drops to 40% at max tilt
+        spinFormants.filters[0].Q.setTargetAtTime(5 * qScale, now, 0.01);
+        spinFormants.filters[1].Q.setTargetAtTime(12 * qScale, now, 0.01);
+        spinFormants.filters[2].Q.setTargetAtTime(8 * qScale, now, 0.01);
+
+        // Volume: LOUDER when tilting — Taz doesn't do things quietly
+        const baseVol = Math.min(speed / 7, 0.25);
+        const tiltBoost = 1 + tiltAmount * 1.2; // up to 120% louder, full cartoon scream
+        spinFormants.masterGain.gain.setTargetAtTime(baseVol * tiltBoost, now, 0.02);
     } else {
         spinFormants.masterGain.gain.setTargetAtTime(0, now, 0.1);
     }
@@ -742,7 +859,18 @@ async function updateScene() {
 
 function renderFrame() {
     if (!renderer) return;
-    renderer.clear();
+
+    // Motion blur: when spinning fast with top physics active, fade previous frame
+    // instead of hard-clearing. Creates ghostly afterimage trails.
+    const spinSpeed = Math.abs(rotationVelocity);
+    if (top.active && spinSpeed > 1.0) {
+        // Alpha = how much background to overlay. Lower = longer trails.
+        // Scale with spin speed: fast spin = long trails, slow = short trails
+        const trailLength = Math.max(0.08, 0.4 - spinSpeed * 0.02);
+        renderer.fadeScreen(0.1, 0.1, 0.15, trailLength);
+    } else {
+        renderer.clear();
+    }
 
     const zoom = parseFloat($('zoom').value) / 10;
     const rotY = parseFloat($('rotY').value) * Math.PI / 180;

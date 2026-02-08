@@ -24,6 +24,7 @@ varying vec3 vNormal;
 uniform sampler2D uTexture;
 uniform bool uHasTexture;
 uniform vec3 uLightDir;
+uniform float uAlpha;
 void main() {
     vec3 n = normalize(vNormal);
     vec3 L = normalize(uLightDir);
@@ -31,9 +32,9 @@ void main() {
     float light = 0.25 + 0.75 * diffuse;
     if (uHasTexture) {
         vec4 texColor = texture2D(uTexture, vTexCoord);
-        gl_FragColor = vec4(texColor.rgb * light, texColor.a);
+        gl_FragColor = vec4(texColor.rgb * light, texColor.a * uAlpha);
     } else {
-        gl_FragColor = vec4(vec3(0.7, 0.7, 0.8) * light, 1.0);
+        gl_FragColor = vec4(vec3(0.7, 0.7, 0.8) * light, uAlpha);
     }
 }`;
 
@@ -49,9 +50,10 @@ export class Renderer {
     private uTexture: WebGLUniformLocation;
     private uHasTexture: WebGLUniformLocation;
     private uLightDir: WebGLUniformLocation;
+    private uAlpha: WebGLUniformLocation;
 
     constructor(canvas: HTMLCanvasElement) {
-        const gl = canvas.getContext('webgl', { alpha: true, antialias: true });
+        const gl = canvas.getContext('webgl', { alpha: true, antialias: true, preserveDrawingBuffer: true });
         if (!gl) throw new Error('WebGL not available');
         this.gl = gl;
 
@@ -72,12 +74,78 @@ export class Renderer {
         this.uTexture = gl.getUniformLocation(this.program, 'uTexture')!;
         this.uHasTexture = gl.getUniformLocation(this.program, 'uHasTexture')!;
         this.uLightDir = gl.getUniformLocation(this.program, 'uLightDir')!;
+        this.uAlpha = gl.getUniformLocation(this.program, 'uAlpha')!;
+        gl.uniform1f(this.uAlpha, 1.0); // default: fully opaque
     }
 
     clear(r = 0.1, g = 0.1, b = 0.15): void {
         const gl = this.gl;
         gl.clearColor(r, g, b, 1);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    }
+
+    // Motion blur: overlay a semi-transparent background-colored quad over the
+    // previous frame. Alpha controls trail length (lower = longer ghostly trails).
+    // Clears only the depth buffer so new geometry draws on top of the faded trails.
+    fadeScreen(r = 0.1, g = 0.1, b = 0.15, alpha = 0.3): void {
+        const gl = this.gl;
+
+        const prevDepthTest = gl.isEnabled(gl.DEPTH_TEST);
+        const prevCullFace = gl.isEnabled(gl.CULL_FACE);
+        gl.disable(gl.DEPTH_TEST);
+        gl.disable(gl.CULL_FACE);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        // Identity matrices so clip coords = NDC
+        const identity = new Float32Array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]);
+        gl.uniformMatrix4fv(this.uProjection, false, identity);
+        gl.uniformMatrix4fv(this.uModelView, false, identity);
+        gl.uniform1i(this.uHasTexture, 0);
+        gl.uniform3f(this.uLightDir, 0, 0, 1); // full-bright normal
+        gl.uniform1f(this.uAlpha, alpha);
+
+        // Fullscreen quad in NDC
+        const quadVerts = new Float32Array([
+            -1,-1,0, 1,-1,0, 1,1,0, -1,-1,0, 1,1,0, -1,1,0
+        ]);
+        const quadNorms = new Float32Array([
+            0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1, 0,0,1
+        ]);
+        const quadUVs = new Float32Array([
+            0,0, 1,0, 1,1, 0,0, 1,1, 0,1
+        ]);
+
+        const pb = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, pb);
+        gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STREAM_DRAW);
+        gl.enableVertexAttribArray(this.aPosition);
+        gl.vertexAttribPointer(this.aPosition, 3, gl.FLOAT, false, 0, 0);
+
+        const nb = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, nb);
+        gl.bufferData(gl.ARRAY_BUFFER, quadNorms, gl.STREAM_DRAW);
+        gl.enableVertexAttribArray(this.aNormal);
+        gl.vertexAttribPointer(this.aNormal, 3, gl.FLOAT, false, 0, 0);
+
+        const ub = gl.createBuffer()!;
+        gl.bindBuffer(gl.ARRAY_BUFFER, ub);
+        gl.bufferData(gl.ARRAY_BUFFER, quadUVs, gl.STREAM_DRAW);
+        gl.enableVertexAttribArray(this.aTexCoord);
+        gl.vertexAttribPointer(this.aTexCoord, 2, gl.FLOAT, false, 0, 0);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        gl.deleteBuffer(pb);
+        gl.deleteBuffer(nb);
+        gl.deleteBuffer(ub);
+
+        // Restore
+        gl.uniform1f(this.uAlpha, 1.0); // back to opaque for mesh drawing
+        gl.disable(gl.BLEND);
+        if (prevDepthTest) gl.enable(gl.DEPTH_TEST);
+        if (prevCullFace) gl.enable(gl.CULL_FACE);
+        gl.clear(gl.DEPTH_BUFFER_BIT);
     }
 
     setCamera(fov: number, aspect: number, near: number, far: number,

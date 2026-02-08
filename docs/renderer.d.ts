@@ -11,8 +11,10 @@ export declare class Renderer {
     private uTexture;
     private uHasTexture;
     private uLightDir;
+    private uAlpha;
     constructor(canvas: HTMLCanvasElement);
     clear(r?: number, g?: number, b?: number): void;
+    fadeScreen(r?: number, g?: number, b?: number, alpha?: number): void;
     setCamera(fov: number, aspect: number, near: number, far: number, eyeX: number, eyeY: number, eyeZ: number, targetX?: number, targetY?: number, targetZ?: number): void;
     setCulling(enable: boolean): void;
     get context(): WebGLRenderingContext;
