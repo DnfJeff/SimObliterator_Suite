@@ -2512,30 +2512,6 @@ function setupEventListeners() {
     // Mouse drag interaction on canvas
     setupMouseInteraction();
 
-    // Drag and drop files
-    const dropZone = $('dropZone');
-    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
-    dropZone.addEventListener('drop', async e => {
-        e.preventDefault();
-        dropZone.classList.remove('over');
-        for (const file of e.dataTransfer.files) {
-            const ext = file.name.split('.').pop().toLowerCase();
-            if (ext === 'cmx') {
-                const cmx = parseCMX(await file.text());
-                cmx.skeletons.forEach(s => { content.skeletons[s.name] = s; });
-                cmx.suits.forEach(s => { content.suits[s.name] = s; });
-                cmx.skills.forEach(s => { content.skills[s.name] = s; });
-                statusEl.textContent = `Loaded ${file.name}`;
-            } else if (ext === 'skn') {
-                const mesh = parseSKN(await file.text());
-                content.meshes[mesh.name] = mesh;
-                statusEl.textContent = `Loaded ${file.name}: ${mesh.vertices.length} verts`;
-            }
-        }
-        populateMenus();
-    });
-
     // Window resize — update canvas size and GL viewport
     window.addEventListener('resize', () => {
         canvas.width = canvas.clientWidth;

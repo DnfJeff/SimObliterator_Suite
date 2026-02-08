@@ -231,21 +231,6 @@ select:focus {
 }
 
 /* Drop zone */
-.drop-zone {
-    border: 1px dashed var(--border);
-    border-radius: 4px;
-    padding: 12px;
-    text-align: center;
-    color: var(--text-section);
-    font-size: 11px;
-    margin-bottom: 8px;
-}
-
-.drop-zone.over {
-    border-color: var(--accent);
-    color: var(--accent);
-}
-
 /* Details foldout */
 details {
     margin-bottom: 10px;
