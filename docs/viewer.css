@@ -310,10 +310,17 @@ details summary h3 {
     color: var(--accent);
 }
 
-.nav-btn:active {
+.nav-btn:active:not(:disabled) {
     background: var(--accent);
     color: var(--bg-primary);
     border-color: var(--accent);
+}
+
+.nav-btn:disabled,
+select:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 /* People preset cards (horizontal scroll) */
