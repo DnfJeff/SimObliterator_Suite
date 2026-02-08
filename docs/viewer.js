@@ -274,8 +274,11 @@ async function loadContentIndex() {
 
         console.log('[loadContentIndex]', counts);
 
-        // Auto-select first person preset (Dad Fit + RomanCrew, same since 1999)
-        if (contentIndex.people?.length) {
+        // Auto-load first scene (Grand Chorus) or fall back to first person
+        if (contentIndex.scenes?.length) {
+            $('selScene').value = '0';
+            await loadScene(0);
+        } else if (contentIndex.people?.length) {
             $('selPerson').value = '0';
             applyPerson(0);
         } else {
@@ -622,10 +625,10 @@ const top = {
     driftVZ: 0,
 };
 
-// CARTOON PHYSICS: tamed Taz — still fun but less extreme
+// CARTOON PHYSICS: Tamed Tazzie — still fun but less extreme
 const TOP_SPIN_THRESHOLD = 1.0;   // needs a decent flick to trigger
-const TOP_TILT_SCALE = 0.05;     // moderate tilt response (was 0.08)
-const TOP_MAX_TILT = 1.0;        // ~57 degrees max lean (was 1.5 / 86 deg)
+const TOP_TILT_SCALE = 0.05;      // moderate tilt response (was 0.08)
+const TOP_MAX_TILT = 1.0;         // ~57 degrees max lean (was 1.5 / 86 deg)
 const TOP_PRECESSION_RATE = 0.04; // moderate gyroscopic orbit
 const TOP_NUTATION_FREQ = 4.5;    // wobble frequency
 const TOP_NUTATION_SCALE = 0.3;   // wobble amplitude (was 0.4)
@@ -1328,7 +1331,7 @@ function setupMouseInteraction() {
             rotSlider.value = rotVal;
 
             const zoomSlider = $('zoom');
-            let zoomVal = parseFloat(zoomSlider.value) + dy * 0.4;
+            let zoomVal = parseFloat(zoomSlider.value) + dy * 0.25;
             zoomVal = Math.max(15, Math.min(200, zoomVal));
             zoomSlider.value = zoomVal;
         }
