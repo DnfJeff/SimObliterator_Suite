@@ -135,32 +135,34 @@
 <div id="helpDialog" style="display:none">
   <div class="help-content">
     <h2>Spin the Sims! 🎮</h2>
-    <div class="help-body">
-      <p class="help-intro">Click and drag to spin! Click a Sim to select them. 💚</p>
-      <table class="help-keys">
-        <tr><th colspan="2">🎬 Navigate</th></tr>
-        <tr><td><kbd>N</kbd> <kbd>P</kbd></td><td>Next / Prev Scene</td></tr>
-        <tr><td><kbd>A</kbd> <kbd>D</kbd></td><td>Prev / Next Actor</td></tr>
-        <tr><td><kbd>W</kbd> <kbd>S</kbd></td><td>Prev / Next Character</td></tr>
-        <tr><td><kbd>Q</kbd> <kbd>E</kbd></td><td>Prev / Next Animation</td></tr>
-        <tr><td><kbd>Space</kbd></td><td>Next Actor (Shift = Prev)</td></tr>
-        <tr><th colspan="2">🎡 Spin &amp; Zoom</th></tr>
-        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Spin (hold to go faster! 🌀)</td></tr>
-        <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Zoom In / Out</td></tr>
-        <tr><td>🖱️ Left Drag</td><td>Spin actor + Zoom</td></tr>
-        <tr><td>🖱️ Right Drag</td><td>Orbit stage (rotate scene) 🎪</td></tr>
-        <tr><td>🖱️ Shift+Drag</td><td>Orbit stage (same as right)</td></tr>
-        <tr><td>🖱️ Click</td><td>Select Actor / All</td></tr>
-        <tr><td>🖱️ Scroll</td><td>Zoom</td></tr>
-        <tr><th colspan="2">⏱️ Speed</th></tr>
-        <tr><td><kbd>1</kbd> <kbd>2</kbd></td><td>Slow motion</td></tr>
-        <tr><td><kbd>3</kbd></td><td>Normal speed</td></tr>
-        <tr><td><kbd>4</kbd>–<kbd>9</kbd></td><td>Fast → LUDICROUS 🚀</td></tr>
-        <tr><td><kbd>0</kbd></td><td>Pause / Unpause ⏸️</td></tr>
-      </table>
-      <p class="help-tip">💡 Select <strong>All</strong> to control everyone at once!<br>
-      🤫 Hold <kbd>←</kbd> or <kbd>→</kbd> then mash <kbd>Space</kbd>...</p>
+    <p class="help-intro">Click and drag to spin! Click a Sim to select them. 💚</p>
+    <div class="help-cols">
+      <div class="help-col">
+        <h3>🎬 Navigate</h3>
+        <kbd>N</kbd><kbd>P</kbd> Scene &nbsp;
+        <kbd>A</kbd><kbd>D</kbd> Actor<br>
+        <kbd>W</kbd><kbd>S</kbd> Character &nbsp;
+        <kbd>Q</kbd><kbd>E</kbd> Animation<br>
+        <kbd>Space</kbd> Next Actor &nbsp; <kbd>Shift</kbd>+<kbd>Space</kbd> Prev
+      </div>
+      <div class="help-col">
+        <h3>🎡 Spin &amp; Zoom</h3>
+        <kbd>←</kbd><kbd>→</kbd> Spin (hold = faster! 🌀)<br>
+        <kbd>↑</kbd><kbd>↓</kbd> Zoom &nbsp; 🖱️ Scroll = Zoom<br>
+        🖱️ Left Drag = Spin+Zoom<br>
+        🖱️ Right/Shift Drag = Orbit stage 🎪<br>
+        🖱️ Click = Select actor
+      </div>
+      <div class="help-col">
+        <h3>⏱️ Speed</h3>
+        <kbd>1</kbd><kbd>2</kbd> Slow &nbsp;
+        <kbd>3</kbd> Normal &nbsp;
+        <kbd>4</kbd>–<kbd>9</kbd> Fast→🚀<br>
+        <kbd>0</kbd> Pause ⏸️ &nbsp; <kbd>H</kbd> This help
+      </div>
     </div>
+    <p class="help-tip">💡 <strong>All</strong> selected = control everyone! &nbsp;
+    🤫 Hold <kbd>←</kbd>/<kbd>→</kbd> + mash <kbd>Space</kbd>...</p>
     <button id="btnHelpClose" class="help-close">Got it! ✨</button>
   </div>
 </div>
