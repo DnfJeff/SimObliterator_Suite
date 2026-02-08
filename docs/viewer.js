@@ -1885,6 +1885,8 @@ function setupMouseInteraction() {
                 selectActor(picked);
             } else if (bodies.length > 1) {
                 selectActor(-1); // click background = All
+            } else {
+                simlishGreet(selectedActorIndex); // solo: greet on background click
             }
         }
 
