@@ -182,7 +182,7 @@
     "leftHand": "xskin-hmlo-L_HAND-HANDML",
     "rightHand": "xskin-hmro-R_HAND-HANDMR",
     "handTexture": "HUAOdrk",
-      "animation": "adult-energetic1"
+      "animation": "a2o-energetic1"
   },
 
   "people": [
@@ -209,7 +209,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-dance-inplace-twistloop",
+      "animation": "a2o-dance-inplace-twistloop",
       "voice": { "pitch": 190, "range": 55, "formant": 1.17, "breathiness": 0.18 }
     },
     {
@@ -248,7 +248,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-walking-frantic-loop",
+      "animation": "a2o-walking-frantic-loop",
       "voice": { "pitch": 35, "range": 15, "formant": 0.65, "breathiness": 0.06 }
     },
     {
@@ -274,7 +274,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-dance-inplace-twistloop",
+      "animation": "a2o-dance-inplace-twistloop",
       "voice": { "pitch": 165, "range": 45, "formant": 1.08, "breathiness": 0.15 }
     },
     {
@@ -287,7 +287,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-energetic1",
+      "animation": "a2o-energetic1",
       "voice": { "pitch": 42, "range": 18, "formant": 0.70, "breathiness": 0.28 }
     },
     {
@@ -313,7 +313,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-energetic1",
+      "animation": "a2o-energetic1",
       "voice": { "pitch": 48, "range": 20, "formant": 0.74, "breathiness": 0.22 }
     },
     {
@@ -326,7 +326,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "ross-walking-loop",
+      "animation": "a2o-walking-loop",
       "voice": { "pitch": 185, "range": 50, "formant": 1.15, "breathiness": 0.16 }
     },
     {
@@ -352,7 +352,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-approve",
+      "animation": "a2o-approve",
       "voice": { "pitch": 175, "range": 45, "formant": 1.12, "breathiness": 0.22 }
     },
     {
@@ -374,22 +374,22 @@
     {
       "name": "Grand Chorus",
       "cast": [
-        { "person": "Dad (Fit)",          "x": -4.5, "z":  2.5, "direction": 0,   "animation": "adult-energetic1" },
-        { "person": "Mom (Ponytail)",     "x": -1.5, "z":  2.5, "direction": 0,   "animation": "adult-dance-inplace-twistloop" },
+        { "person": "Dad (Fit)",          "x": -4.5, "z":  2.5, "direction": 0,   "animation": "a2o-energetic1" },
+        { "person": "Mom (Ponytail)",     "x": -1.5, "z":  2.5, "direction": 0,   "animation": "a2o-dance-inplace-twistloop" },
         { "person": "Ross (Bald)",        "x":  1.5, "z":  2.5, "direction": 0,   "animation": "a2o-test-animation" },
         { "person": "Mercedes",           "x":  4.5, "z":  2.5, "direction": 0,   "animation": "a2o-test-animation2" },
-        { "person": "Grandpa",            "x": -3,   "z": -1.5, "direction": 0,   "animation": "adult-energetic1" },
+        { "person": "Grandpa",            "x": -3,   "z": -1.5, "direction": 0,   "animation": "a2o-energetic1" },
         { "person": "Grandma",            "x":  0,   "z": -1.5, "direction": 0,   "animation": "a2o-test-animation5" },
-        { "person": "Biker Dude",         "x":  3,   "z": -1.5, "direction": 0,   "animation": "adult-walking-frantic-loop" }
+        { "person": "Biker Dude",         "x":  3,   "z": -1.5, "direction": 0,   "animation": "a2o-walking-frantic-loop" }
       ]
     },
     {
       "name": "Dance Party",
       "cast": [
-        { "person": "Dad (Fit)",         "x": -3,   "z":  2,   "direction": 135, "animation": "adult-dance-inplace-twistloop" },
-        { "person": "Mom (Ponytail)",    "x":  3,   "z":  2,   "direction": 225, "animation": "adult-dance-inplace-twistloop" },
+        { "person": "Dad (Fit)",         "x": -3,   "z":  2,   "direction": 135, "animation": "a2o-dance-inplace-twistloop" },
+        { "person": "Mom (Ponytail)",    "x":  3,   "z":  2,   "direction": 225, "animation": "a2o-dance-inplace-twistloop" },
         { "person": "Mercedes",          "x": -3,   "z": -2,   "direction": 45,  "animation": "a2o-test-animation2" },
-        { "person": "Biker Dude",        "x":  3,   "z": -2,   "direction": 315, "animation": "adult-walking-frantic-loop" }
+        { "person": "Biker Dude",        "x":  3,   "z": -2,   "direction": 315, "animation": "a2o-walking-frantic-loop" }
       ]
     },
     {
@@ -404,7 +404,7 @@
       "name": "The Family",
       "cast": [
         { "person": "Dad (Fit)",     "x": -2, "z": 0,  "direction": 0,   "animation": "a2o-test-animation5" },
-        { "person": "Mom (Ponytail)","x":  2, "z": 0,  "direction": 0,   "animation": "adult-dance-inplace-twistloop" }
+        { "person": "Mom (Ponytail)","x":  2, "z": 0,  "direction": 0,   "animation": "a2o-dance-inplace-twistloop" }
       ]
     }
   ]

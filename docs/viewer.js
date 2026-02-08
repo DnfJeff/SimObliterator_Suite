@@ -334,10 +334,22 @@ function populateMenus() {
             i => contentIndex.people[i].name);
     }
 
-    // Scene dropdown
-    if (contentIndex?.scenes) {
-        fillSelect($('selScene'), contentIndex.scenes.map((_, i) => String(i)),
-            i => contentIndex.scenes[i].name);
+    // Scene dropdown: scenes first, Solo at the bottom
+    const sceneSel = $('selScene');
+    if (sceneSel) {
+        while (sceneSel.options.length) sceneSel.remove(0);
+        if (contentIndex?.scenes) {
+            for (let i = 0; i < contentIndex.scenes.length; i++) {
+                const opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = contentIndex.scenes[i].name;
+                sceneSel.appendChild(opt);
+            }
+        }
+        const soloOpt = document.createElement('option');
+        soloOpt.value = '';
+        soloOpt.textContent = 'Solo';
+        sceneSel.appendChild(soloOpt);
     }
 }
 
@@ -1552,15 +1564,14 @@ function setupEventListeners() {
     function stepScene(dir) {
         const sel = $('selScene');
         if (!sel || sel.options.length <= 1) return;
-        let idx = parseInt(sel.value);
-        if (isNaN(idx)) idx = dir > 0 ? 0 : sel.options.length - 2;
-        else idx += dir;
-        // Skip the placeholder option (index 0 in the <select>, value "")
-        const max = sel.options.length - 2; // -1 for 0-based, -1 for placeholder
-        if (idx < 0) idx = max;
-        if (idx > max) idx = 0;
-        sel.value = String(idx);
-        loadScene(idx);
+        // Navigate through all options (scenes + Solo at end)
+        let selIdx = sel.selectedIndex + dir;
+        if (selIdx < 0) selIdx = sel.options.length - 1;
+        if (selIdx >= sel.options.length) selIdx = 0;
+        sel.selectedIndex = selIdx;
+        const val = sel.value;
+        if (val === '') { exitScene(); return; }
+        loadScene(parseInt(val));
     }
     const btnScenePrev = $('btnScenePrev');
     const btnSceneNext = $('btnSceneNext');
