@@ -1065,9 +1065,13 @@ function initSpinSound() {
     spinGain = spinFormants.masterGain;
 }
 
+// Ensure audio is initialized on any user interaction
+function ensureAudio() { initSpinSound(); }
+
 // Brief Simlish vocal greeting when selecting actors.
 // Uses the selected actor(s) voice params for a short "aah!" exclamation.
 function simlishGreet(actorIdx) {
+    ensureAudio();
     if (!audioCtx) return;
     const now = audioCtx.currentTime;
     const dur = 0.25; // short exclamation
