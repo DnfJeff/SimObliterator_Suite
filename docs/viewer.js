@@ -649,7 +649,7 @@ function lerpVowel(angle, tiltAmount) {
 // Falls back to auto-detection from body mesh name (MA/FA/MC/FC).
 function getVoiceType() {
     // Try per-person JSON voice first
-    const peopleSelect = $('selPeople');
+    const peopleSelect = $('selPerson');
     if (peopleSelect && contentIndex?.people) {
         const idx = parseInt(peopleSelect.value, 10);
         const person = contentIndex.people[idx];
@@ -679,7 +679,7 @@ function getVoiceType() {
     if (isChild && isFemale) return { basePitch: 240, pitchRange: 40, formantScale: 1.35, breathiness: 0.20 };
     if (isChild)             return { basePitch: 220, pitchRange: 45, formantScale: 1.30, breathiness: 0.18 };
     if (isFemale)            return { basePitch: 180, pitchRange: 50, formantScale: 1.15, breathiness: 0.18 };
-    return                          { basePitch: 100, pitchRange: 50, formantScale: 1.00, breathiness: 0.12 };
+    return                          { basePitch: 70, pitchRange: 28, formantScale: 0.85, breathiness: 0.10 };
 }
 
 function updateSpinSound() {
@@ -999,7 +999,7 @@ function setupMouseInteraction() {
 
             const zoomSlider = $('zoom');
             let zoomVal = parseFloat(zoomSlider.value) + dy * 0.4;
-            zoomVal = Math.max(1, Math.min(200, zoomVal));
+            zoomVal = Math.max(15, Math.min(200, zoomVal));
             zoomSlider.value = zoomVal;
         }
 
@@ -1061,7 +1061,7 @@ function setupMouseInteraction() {
             delta = e.deltaY * 0.15;
         }
         let val = parseFloat(zoomSlider.value) + delta;
-        val = Math.max(1, Math.min(200, val));
+        val = Math.max(15, Math.min(200, val));
         zoomSlider.value = val;
         renderFrame();
     }, { passive: false });
@@ -1073,7 +1073,7 @@ function setupMouseInteraction() {
         const zoomSlider = $('zoom');
         // e.scale: >1 = zoom in, <1 = zoom out
         let val = parseFloat(zoomSlider.value) / e.scale;
-        val = Math.max(1, Math.min(200, val));
+        val = Math.max(15, Math.min(200, val));
         zoomSlider.value = val;
         renderFrame();
     });

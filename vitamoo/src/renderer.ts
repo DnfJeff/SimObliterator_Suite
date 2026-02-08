@@ -59,7 +59,7 @@ export class Renderer {
     private uFadeColor: WebGLUniformLocation;
 
     constructor(canvas: HTMLCanvasElement) {
-        const gl = canvas.getContext('webgl', { alpha: true, antialias: true, preserveDrawingBuffer: true });
+        const gl = canvas.getContext('webgl', { alpha: false, antialias: true, preserveDrawingBuffer: true });
         if (!gl) throw new Error('WebGL not available');
         this.gl = gl;
 

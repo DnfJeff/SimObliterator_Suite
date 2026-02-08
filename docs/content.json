@@ -24,7 +24,6 @@
     "adult-idle4.cmx", "adult-idle5.cmx", "adult-idle6.cmx", "adult-idle7.cmx", "adult-idle8.cmx",
     "adult-approve.cmx", "adult-bored1.cmx", "adult-energetic1.cmx",
     "adult-dance-inplace-twistloop.cmx", "adult-walking-frantic-loop.cmx",
-    "a2o-running-start.cmx", "a2o-walking-female-start.cmx", "a2o-pool-dive-walkon.cmx",
     "adult-test-animation.cmx", "adult-test-animation2.cmx", "adult-test-animation3.cmx",
     "adult-test-animation4.cmx", "adult-test-animation5.cmx", "adult-test-animation6.cmx",
     "ross-walking-loop.cmx",
@@ -183,7 +182,7 @@
     "leftHand": "xskin-hmlo-L_HAND-HANDML",
     "rightHand": "xskin-hmro-R_HAND-HANDMR",
     "handTexture": "HUAOdrk",
-      "animation": "a2o-test-animation5"
+      "animation": "adult-energetic1"
   },
 
   "people": [
@@ -198,7 +197,7 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation5",
-      "voice": { "pitch": 105, "range": 50, "formant": 1.0, "breathiness": 0.12 }
+      "voice": { "pitch": 75, "range": 30, "formant": 0.88, "breathiness": 0.10 }
     },
     {
       "name": "Mom (Ponytail)",
@@ -210,7 +209,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle1",
+      "animation": "adult-dance-inplace-twistloop",
       "voice": { "pitch": 190, "range": 55, "formant": 1.17, "breathiness": 0.18 }
     },
     {
@@ -224,7 +223,7 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation",
-      "voice": { "pitch": 95, "range": 45, "formant": 0.95, "breathiness": 0.10 }
+      "voice": { "pitch": 68, "range": 28, "formant": 0.85, "breathiness": 0.08 }
     },
     {
       "name": "Mercedes",
@@ -249,8 +248,8 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-bored1",
-      "voice": { "pitch": 85, "range": 40, "formant": 0.90, "breathiness": 0.08 }
+      "animation": "adult-walking-frantic-loop",
+      "voice": { "pitch": 45, "range": 20, "formant": 0.72, "breathiness": 0.06 }
     },
     {
       "name": "Hipster",
@@ -263,7 +262,7 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation3",
-      "voice": { "pitch": 130, "range": 55, "formant": 1.05, "breathiness": 0.22 }
+      "voice": { "pitch": 82, "range": 35, "formant": 0.90, "breathiness": 0.18 }
     },
     {
       "name": "Fat Lady Summer",
@@ -275,7 +274,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle2",
+      "animation": "adult-dance-inplace-twistloop",
       "voice": { "pitch": 165, "range": 45, "formant": 1.08, "breathiness": 0.15 }
     },
     {
@@ -288,8 +287,8 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle4",
-      "voice": { "pitch": 80, "range": 35, "formant": 0.88, "breathiness": 0.25 }
+      "animation": "adult-energetic1",
+      "voice": { "pitch": 58, "range": 22, "formant": 0.78, "breathiness": 0.28 }
     },
     {
       "name": "The Boss",
@@ -302,7 +301,7 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation4",
-      "voice": { "pitch": 90, "range": 40, "formant": 0.92, "breathiness": 0.10 }
+      "voice": { "pitch": 62, "range": 25, "formant": 0.80, "breathiness": 0.08 }
     },
     {
       "name": "The Slob",
@@ -314,8 +313,8 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "adult-bored1",
-      "voice": { "pitch": 88, "range": 38, "formant": 0.93, "breathiness": 0.20 }
+      "animation": "adult-energetic1",
+      "voice": { "pitch": 65, "range": 25, "formant": 0.82, "breathiness": 0.22 }
     },
     {
       "name": "Deb",
@@ -327,7 +326,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle1",
+      "animation": "ross-walking-loop",
       "voice": { "pitch": 185, "range": 50, "formant": 1.15, "breathiness": 0.16 }
     },
     {
@@ -353,7 +352,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle5",
+      "animation": "adult-approve",
       "voice": { "pitch": 175, "range": 45, "formant": 1.12, "breathiness": 0.22 }
     },
     {
@@ -367,7 +366,7 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation6",
-      "voice": { "pitch": 75, "range": 35, "formant": 0.85, "breathiness": 0.08 }
+      "voice": { "pitch": 50, "range": 20, "formant": 0.75, "breathiness": 0.06 }
     }
   ]
 }

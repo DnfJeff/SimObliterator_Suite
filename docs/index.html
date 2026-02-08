@@ -20,20 +20,20 @@
     <!-- People presets — top level -->
     <div class="group">
       <h3>People</h3>
-      <div style="display:flex;gap:4px;align-items:center">
-        <button class="filter-btn" id="btnPersonPrev" title="Previous person">&lt;</button>
-        <select id="selPerson" style="flex:1"><option value="">-- preset --</option></select>
-        <button class="filter-btn" id="btnPersonNext" title="Next person">&gt;</button>
+      <select id="selPerson"><option value="">-- preset --</option></select>
+      <div class="nav-row">
+        <button class="nav-btn" id="btnPersonPrev" title="Previous person">&larr; Prev</button>
+        <button class="nav-btn" id="btnPersonNext" title="Next person">Next &rarr;</button>
       </div>
     </div>
 
     <!-- Animation — top level -->
     <div class="group">
       <h3>Animation</h3>
-      <div style="display:flex;gap:4px;align-items:center">
-        <button class="filter-btn" id="btnAnimPrev" title="Previous (Left arrow)">&lt;</button>
-        <select id="selAnim" style="flex:1"><option value="">-- idle --</option></select>
-        <button class="filter-btn" id="btnAnimNext" title="Next (Right arrow)">&gt;</button>
+      <select id="selAnim"><option value="">-- idle --</option></select>
+      <div class="nav-row">
+        <button class="nav-btn" id="btnAnimPrev" title="Previous (Left arrow)">&larr; Prev</button>
+        <button class="nav-btn" id="btnAnimNext" title="Next (Right arrow)">Next &rarr;</button>
       </div>
     </div>
 
@@ -104,7 +104,7 @@
       <button class="dist-btn" data-dist="near">Near</button>
       <label>Rotate <input type="range" id="rotY" min="0" max="360" value="30"></label>
       <label>Tilt <input type="range" id="rotX" min="-89" max="89" value="10"></label>
-      <label>Zoom <input type="range" id="zoom" min="1" max="200" value="70"></label>
+      <label>Zoom <input type="range" id="zoom" min="15" max="200" value="70"></label>
       <label>Speed <input type="range" id="speed" min="0" max="500" value="100"></label>
       <button class="filter-btn" id="btnPause" title="Pause/Resume (Space)">Pause</button>
     </div>
