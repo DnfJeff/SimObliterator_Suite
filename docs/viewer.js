@@ -1456,6 +1456,48 @@ function renderFrame() {
             }
         }
     }
+
+    // Plumb bob: floating green diamond above the selected actor's head
+    if (sceneMode && selectedActorIndex >= 0 && selectedActorIndex < bodiesToRender.length) {
+        const selBody = bodiesToRender[selectedActorIndex];
+        if (selBody.skeleton) {
+            // Find HEAD bone
+            const headBone = selBody.skeleton.find(b => b.name === 'HEAD');
+            if (headBone) {
+                const bTop = selBody.top || top;
+                const spinDeg = (selBody.direction || 0) + rotYDeg;
+                const bodyDir = spinDeg * Math.PI / 180;
+                const cosD = Math.cos(bodyDir);
+                const sinD = Math.sin(bodyDir);
+
+                // Head position in world space
+                let hx = headBone.worldPosition.x;
+                let hy = headBone.worldPosition.y;
+                let hz = headBone.worldPosition.z;
+
+                // Apply top physics tilt
+                if (bTop.active) {
+                    const tilted = applyTopTransformFor({ x: hx, y: hy, z: hz }, bTop);
+                    hx = tilted.x; hy = tilted.y; hz = tilted.z;
+                }
+
+                // Apply body rotation + position
+                const rx = hx * cosD - hz * sinD;
+                const rz = hx * sinD + hz * cosD;
+                const wx = rx + selBody.x;
+                const wy = hy + 0.7; // float above the head
+                const wz = rz + selBody.z;
+
+                // Gentle bob + spin
+                const bobTime = performance.now() * 0.002;
+                const bob = Math.sin(bobTime) * 0.15;
+                const plumbRot = bobTime * 0.8;
+
+                // Classic Sims green: #3cff3c with slight glow
+                renderer.drawDiamond(wx, wy + bob, wz, 0.15, plumbRot, 0.2, 1.0, 0.2, 0.85);
+            }
+        }
+    }
 }
 const _renderWarnedBodies = new Set();
 

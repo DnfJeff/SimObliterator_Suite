@@ -20,6 +20,7 @@ export declare class Renderer {
     setCulling(enable: boolean): void;
     get context(): WebGLRenderingContext;
     drawMesh(mesh: MeshData, vertices: Vec3[], normals: Vec3[], texture?: WebGLTexture | null): void;
+    drawDiamond(x: number, y: number, z: number, size: number, rotY: number, r: number, g: number, b: number, alpha?: number): void;
     loadTexture(image: HTMLImageElement): WebGLTexture;
     private setBuffer;
     private createProgram;

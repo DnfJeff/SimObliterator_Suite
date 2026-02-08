@@ -202,6 +202,80 @@ export class Renderer {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData), gl.STATIC_DRAW);
         gl.drawElements(gl.TRIANGLES, indexData.length, gl.UNSIGNED_SHORT, 0);
     }
+    // Draw a procedural diamond (octahedron) at a world position.
+    // The classic Sims plumb bob: two pyramids stacked point-to-point.
+    drawDiamond(x, y, z, size, rotY, r, g, b, alpha = 1.0) {
+        const gl = this.gl;
+        // 6 vertices: top, bottom, 4 equatorial points rotated by rotY
+        const cosR = Math.cos(rotY);
+        const sinR = Math.sin(rotY);
+        const s = size;
+        const h = size * 1.4; // taller than wide
+        // Equatorial points (rotated around Y)
+        const eq = [
+            { x: s * cosR, y: 0, z: s * sinR },
+            { x: -s * sinR, y: 0, z: s * cosR },
+            { x: -s * cosR, y: 0, z: -s * sinR },
+            { x: s * sinR, y: 0, z: -s * cosR },
+        ];
+        const top = { x: 0, y: h, z: 0 };
+        const bot = { x: 0, y: -h, z: 0 };
+        // 8 triangles: 4 top faces + 4 bottom faces
+        const tris = [
+            // Top pyramid (CCW from outside)
+            eq[0], eq[1], top,
+            eq[1], eq[2], top,
+            eq[2], eq[3], top,
+            eq[3], eq[0], top,
+            // Bottom pyramid (CCW from outside)
+            eq[1], eq[0], bot,
+            eq[2], eq[1], bot,
+            eq[3], eq[2], bot,
+            eq[0], eq[3], bot,
+        ];
+        const posData = new Float32Array(tris.length * 3);
+        const normData = new Float32Array(tris.length * 3);
+        const uvData = new Float32Array(tris.length * 2);
+        for (let i = 0; i < tris.length; i += 3) {
+            const a = tris[i], b2 = tris[i + 1], c = tris[i + 2];
+            // Face normal
+            const ux = b2.x - a.x, uy = b2.y - a.y, uz = b2.z - a.z;
+            const vx = c.x - a.x, vy = c.y - a.y, vz = c.z - a.z;
+            let nx = uy * vz - uz * vy;
+            let ny = uz * vx - ux * vz;
+            let nz = ux * vy - uy * vx;
+            const nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+            nx /= nl;
+            ny /= nl;
+            nz /= nl;
+            for (let j = 0; j < 3; j++) {
+                const v = tris[i + j];
+                const vi = (i + j) * 3;
+                posData[vi] = v.x + x;
+                posData[vi + 1] = v.y + y;
+                posData[vi + 2] = v.z + z;
+                normData[vi] = nx;
+                normData[vi + 1] = ny;
+                normData[vi + 2] = nz;
+                uvData[(i + j) * 2] = 0;
+                uvData[(i + j) * 2 + 1] = 0;
+            }
+        }
+        // Draw with custom color via uFadeColor
+        gl.uniform3f(this.uFadeColor, r, g, b);
+        gl.uniform1f(this.uAlpha, alpha);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        this.setBuffer(this.aPosition, posData, 3);
+        this.setBuffer(this.aNormal, normData, 3);
+        this.setBuffer(this.aTexCoord, uvData, 2);
+        gl.uniform1i(this.uHasTexture, 0);
+        gl.drawArrays(gl.TRIANGLES, 0, tris.length);
+        // Restore
+        gl.uniform3f(this.uFadeColor, -1, -1, -1);
+        gl.uniform1f(this.uAlpha, 1.0);
+        gl.disable(gl.BLEND);
+    }
     loadTexture(image) {
         const gl = this.gl;
         const tex = gl.createTexture();
