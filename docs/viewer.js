@@ -356,7 +356,7 @@ function populateMenus() {
             i => contentIndex.characters[i].name);
     }
 
-    // Scene dropdown: scenes first, Solo at the bottom
+    // Scene dropdown
     const sceneSel = $('selScene');
     if (sceneSel) {
         while (sceneSel.options.length) sceneSel.remove(0);
@@ -368,10 +368,6 @@ function populateMenus() {
                 sceneSel.appendChild(opt);
             }
         }
-        const soloOpt = document.createElement('option');
-        soloOpt.value = '';
-        soloOpt.textContent = 'Solo';
-        sceneSel.appendChild(soloOpt);
     }
 }
 

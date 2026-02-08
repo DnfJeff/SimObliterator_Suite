@@ -1,178 +1,426 @@
 {
-  "skeletons": ["adult-skeleton.cmx", "child-skeleton.cmx"],
-
+  "skeletons": [
+    "adult-skeleton.cmx",
+    "child-skeleton.cmx"
+  ],
   "suits": [
-    "B001FAFat_01.cmx", "B001FAFit_01.cmx", "B001MAFat_01.cmx", "B001MAFit_01.cmx", "B001MASkn_01.cmx",
-    "B002FAFat_01.cmx", "B002FAFit_01.cmx", "B002MAFat_01.cmx", "B002MAFit_01.cmx",
-    "B003FASkn_01.cmx", "B003MAFat_01.cmx", "B003MAFit_01.cmx",
-    "B004MAFat_01.cmx", "B004MASkn_01.cmx", "B005mafit_01.cmx",
-    "B006FAFat_01.cmx", "B008FAFit_01.cmx", "B009FASkn_01.cmx",
-    "B011FASkn_01.cmx", "B013MASkn_01.cmx", "B014MASkn_01.cmx",
-    "B001UCChd_01.cmx", "B002UCChd_01.cmx",
-    "C001FA_Mercedes.cmx", "C001MA_Ross.cmx", "C002FA_Ponytail.cmx", "C003FA_longhair.cmx",
-    "C003MA_RomanCrew.cmx", "C004MA_Biker.cmx", "C005MA_Hipster.cmx",
-    "C001FC_Amanda.cmx", "C002FC_Lisa.cmx", "C004FC_fan.cmx", "C005FC_tomboy.cmx",
-    "C001MC_ave.cmx", "C002MA_baldfat.cmx", "C002MC_sht.cmx", "C004MC_nerd.cmx",
-    "C005MC_pom.cmx", "C006FA_deb.cmx", "C006MC_round.cmx",
-    "C008FA_peg.cmx", "C012FA_gma2.cmx", "C017FA_bouf.cmx",
-    "HMLO.cmx", "HMRO.cmx", "HULC.cmx", "HULO.cmx", "HULP.cmx", "HURC.cmx", "HURO.cmx", "HURP.cmx",
+    "B001FAFat_01.cmx",
+    "B001FAFit_01.cmx",
+    "B001MAFat_01.cmx",
+    "B001MAFit_01.cmx",
+    "B001MASkn_01.cmx",
+    "B002FAFat_01.cmx",
+    "B002FAFit_01.cmx",
+    "B002MAFat_01.cmx",
+    "B002MAFit_01.cmx",
+    "B003FASkn_01.cmx",
+    "B003MAFat_01.cmx",
+    "B003MAFit_01.cmx",
+    "B004MAFat_01.cmx",
+    "B004MASkn_01.cmx",
+    "B005mafit_01.cmx",
+    "B006FAFat_01.cmx",
+    "B008FAFit_01.cmx",
+    "B009FASkn_01.cmx",
+    "B011FASkn_01.cmx",
+    "B013MASkn_01.cmx",
+    "B014MASkn_01.cmx",
+    "B001UCChd_01.cmx",
+    "B002UCChd_01.cmx",
+    "C001FA_Mercedes.cmx",
+    "C001MA_Ross.cmx",
+    "C002FA_Ponytail.cmx",
+    "C003FA_longhair.cmx",
+    "C003MA_RomanCrew.cmx",
+    "C004MA_Biker.cmx",
+    "C005MA_Hipster.cmx",
+    "C001FC_Amanda.cmx",
+    "C002FC_Lisa.cmx",
+    "C004FC_fan.cmx",
+    "C005FC_tomboy.cmx",
+    "C001MC_ave.cmx",
+    "C002MA_baldfat.cmx",
+    "C002MC_sht.cmx",
+    "C004MC_nerd.cmx",
+    "C005MC_pom.cmx",
+    "C006FA_deb.cmx",
+    "C006MC_round.cmx",
+    "C008FA_peg.cmx",
+    "C012FA_gma2.cmx",
+    "C017FA_bouf.cmx",
+    "HMLO.cmx",
+    "HMRO.cmx",
+    "HULC.cmx",
+    "HULO.cmx",
+    "HULP.cmx",
+    "HURC.cmx",
+    "HURO.cmx",
+    "HURP.cmx",
     "child-censor.cmx"
   ],
-
   "animations": [
-    "adult-stand.cmx", "adult-idle1.cmx", "adult-idle2.cmx", "adult-idle3.cmx",
-    "adult-idle4.cmx", "adult-idle5.cmx", "adult-idle6.cmx", "adult-idle7.cmx", "adult-idle8.cmx",
-    "adult-approve.cmx", "adult-bored1.cmx", "adult-energetic1.cmx",
-    "adult-dance-inplace-twistloop.cmx", "adult-walking-frantic-loop.cmx",
-    "adult-test-animation.cmx", "adult-test-animation2.cmx", "adult-test-animation3.cmx",
-    "adult-test-animation4.cmx", "adult-test-animation5.cmx", "adult-test-animation6.cmx",
+    "adult-stand.cmx",
+    "adult-idle1.cmx",
+    "adult-idle2.cmx",
+    "adult-idle3.cmx",
+    "adult-idle4.cmx",
+    "adult-idle5.cmx",
+    "adult-idle6.cmx",
+    "adult-idle7.cmx",
+    "adult-idle8.cmx",
+    "adult-approve.cmx",
+    "adult-bored1.cmx",
+    "adult-energetic1.cmx",
+    "adult-dance-inplace-twistloop.cmx",
+    "adult-walking-frantic-loop.cmx",
+    "adult-test-animation.cmx",
+    "adult-test-animation2.cmx",
+    "adult-test-animation3.cmx",
+    "adult-test-animation4.cmx",
+    "adult-test-animation5.cmx",
+    "adult-test-animation6.cmx",
     "ross-walking-loop.cmx",
-    "c2o-idle1.cmx", "c2o-salute.cmx", "c2o-tv1-surf.cmx", "c2o-tv1-watchlaugh-stand.cmx"
+    "c2o-idle1.cmx",
+    "c2o-salute.cmx",
+    "c2o-tv1-surf.cmx",
+    "c2o-tv1-watchlaugh-stand.cmx"
   ],
-
   "meshes": [
-    "xskin-b001fafat_01-PELVIS-BODY.skn", "xskin-b001fafit_01-PELVIS-BODY.skn",
-    "xskin-b001mafat_01-PELVIS-BODY.skn", "xskin-b001mafit_01-PELVIS-BODY.skn", "xskin-b001maskn_01-PELVIS-BODY.skn",
-    "xskin-b002fafat_01-PELVIS-BODY.skn", "xskin-b002fafit_01-PELVIS-BODY.skn",
-    "xskin-b002mafat_01-PELVIS-BODY.skn", "xskin-b002mafit_01-PELVIS-BODY.skn",
-    "xskin-b003faskn_01-PELVIS-BODY.skn", "xskin-b003mafat_01-PELVIS-BODY.skn", "xskin-b003mafit_01-PELVIS-BODY.skn",
-    "xskin-b004mafat_01-PELVIS-BODY.skn", "xskin-b004maskn_01-PELVIS-BODY.skn", "xskin-b005mafit_01-PELVIS-BODY.skn",
-    "xskin-b006fafat_01-PELVIS-BODY.skn", "xskin-b008fafit_01-PELVIS-BODY.skn",
-    "xskin-b009faskn_01-PELVIS-BODY.skn", "xskin-b011faskn_01-PELVIS-BODY.skn",
-    "xskin-b013maskn_01-PELVIS-BODY.skn", "xskin-b014maskn_01-PELVIS-BODY.skn",
-    "xskin-C001FA_Mercedes-HEAD-HEAD.skn", "xskin-C001MA_Ross-HEAD-HEADB.skn",
-    "xskin-C002FA_Ponytail-HEAD-HEAD.skn", "xskin-C003FA_longhair-HEAD-HEAD.skn",
-    "xskin-C003MA_RomanCrew-HEAD-HEAD.skn", "xskin-C004MA_biker-HEAD-HEAD.skn",
-    "xskin-c001fc_amanda-HEAD-HEAD.skn", "xskin-c001mc_ave-HEAD-HEAD.skn",
-    "xskin-c002fc_lisa-HEAD-HEAD.skn", "xskin-c002ma_baldfat-HEAD-HEAD.skn", "xskin-c002mc_sht-HEAD-HEAD.skn",
-    "xskin-c004fc_fan-HEAD-HEAD.skn", "xskin-c004mc_nerd-HEAD-HEAD.skn",
-    "xskin-c005fc_tomboy-HEAD-HEAD.skn", "xskin-c005ma_hipster-HEAD-HEAD.skn",
-    "xskin-c005mc_pom-HEAD-HEAD.skn", "xskin-c006fa_deb-HEAD-HEAD.skn", "xskin-c006mc_round-HEAD-HEAD.skn",
-    "xskin-c008fa_peg-HEAD-HEAD.skn", "xskin-c010ma_baldbeard-HEAD-HEAD.skn",
-    "xskin-c012fa_gma2-HEAD-HEAD.skn", "xskin-c017fa_bouf-HEAD-HEAD.skn",
+    "xskin-b001fafat_01-PELVIS-BODY.skn",
+    "xskin-b001fafit_01-PELVIS-BODY.skn",
+    "xskin-b001mafat_01-PELVIS-BODY.skn",
+    "xskin-b001mafit_01-PELVIS-BODY.skn",
+    "xskin-b001maskn_01-PELVIS-BODY.skn",
+    "xskin-b002fafat_01-PELVIS-BODY.skn",
+    "xskin-b002fafit_01-PELVIS-BODY.skn",
+    "xskin-b002mafat_01-PELVIS-BODY.skn",
+    "xskin-b002mafit_01-PELVIS-BODY.skn",
+    "xskin-b003faskn_01-PELVIS-BODY.skn",
+    "xskin-b003mafat_01-PELVIS-BODY.skn",
+    "xskin-b003mafit_01-PELVIS-BODY.skn",
+    "xskin-b004mafat_01-PELVIS-BODY.skn",
+    "xskin-b004maskn_01-PELVIS-BODY.skn",
+    "xskin-b005mafit_01-PELVIS-BODY.skn",
+    "xskin-b006fafat_01-PELVIS-BODY.skn",
+    "xskin-b008fafit_01-PELVIS-BODY.skn",
+    "xskin-b009faskn_01-PELVIS-BODY.skn",
+    "xskin-b011faskn_01-PELVIS-BODY.skn",
+    "xskin-b013maskn_01-PELVIS-BODY.skn",
+    "xskin-b014maskn_01-PELVIS-BODY.skn",
+    "xskin-C001FA_Mercedes-HEAD-HEAD.skn",
+    "xskin-C001MA_Ross-HEAD-HEADB.skn",
+    "xskin-C002FA_Ponytail-HEAD-HEAD.skn",
+    "xskin-C003FA_longhair-HEAD-HEAD.skn",
+    "xskin-C003MA_RomanCrew-HEAD-HEAD.skn",
+    "xskin-C004MA_biker-HEAD-HEAD.skn",
+    "xskin-c001fc_amanda-HEAD-HEAD.skn",
+    "xskin-c001mc_ave-HEAD-HEAD.skn",
+    "xskin-c002fc_lisa-HEAD-HEAD.skn",
+    "xskin-c002ma_baldfat-HEAD-HEAD.skn",
+    "xskin-c002mc_sht-HEAD-HEAD.skn",
+    "xskin-c004fc_fan-HEAD-HEAD.skn",
+    "xskin-c004mc_nerd-HEAD-HEAD.skn",
+    "xskin-c005fc_tomboy-HEAD-HEAD.skn",
+    "xskin-c005ma_hipster-HEAD-HEAD.skn",
+    "xskin-c005mc_pom-HEAD-HEAD.skn",
+    "xskin-c006fa_deb-HEAD-HEAD.skn",
+    "xskin-c006mc_round-HEAD-HEAD.skn",
+    "xskin-c008fa_peg-HEAD-HEAD.skn",
+    "xskin-c010ma_baldbeard-HEAD-HEAD.skn",
+    "xskin-c012fa_gma2-HEAD-HEAD.skn",
+    "xskin-c017fa_bouf-HEAD-HEAD.skn",
     "xskin-c_police-HEAD-HEAD.skn",
-    "xskin-c004mc_nerd-HEAD-NERDSPECS.skn", "xskin-c005ma_hipster-HEAD-SPECS.skn",
-    "xskin-hflo-L_HAND-HANDFL.skn", "xskin-hfro-R_HAND-HANDFR.skn",
-    "xskin-hmlo-L_HAND-HANDML.skn", "xskin-hmro-R_HAND-HANDMR.skn",
-    "xskin-hulc-L_HAND-FISTCL.skn", "xskin-hulo-L_HAND-HANDCL.skn", "xskin-hulp-L_HAND-POINTCL.skn",
-    "xskin-hurc-R_HAND-FISTCR.skn", "xskin-huro-R_HAND-HANDCR.skn", "xskin-hurp-R_HAND-POINTCR.skn",
-    "xskin-b001fcchd_01-PELVIS-BODYCHD.skn", "xskin-b001mcchd_01-PELVIS-BODYCHD.skn",
-    "xskin-b001ucchd_01-PELVIS-KBODYNAKED.skn", "xskin-b002ucchd_01-PELVIS-BODY.skn",
+    "xskin-c004mc_nerd-HEAD-NERDSPECS.skn",
+    "xskin-c005ma_hipster-HEAD-SPECS.skn",
+    "xskin-hflo-L_HAND-HANDFL.skn",
+    "xskin-hfro-R_HAND-HANDFR.skn",
+    "xskin-hmlo-L_HAND-HANDML.skn",
+    "xskin-hmro-R_HAND-HANDMR.skn",
+    "xskin-hulc-L_HAND-FISTCL.skn",
+    "xskin-hulo-L_HAND-HANDCL.skn",
+    "xskin-hulp-L_HAND-POINTCL.skn",
+    "xskin-hurc-R_HAND-FISTCR.skn",
+    "xskin-huro-R_HAND-HANDCR.skn",
+    "xskin-hurp-R_HAND-POINTCR.skn",
+    "xskin-b001fcchd_01-PELVIS-BODYCHD.skn",
+    "xskin-b001mcchd_01-PELVIS-BODYCHD.skn",
+    "xskin-b001ucchd_01-PELVIS-KBODYNAKED.skn",
+    "xskin-b002ucchd_01-PELVIS-BODY.skn",
     "xskin-NUChd_01-PELVIS-BODYU.skn"
   ],
-
   "textures_bmp": [
-    "B001FAFatdrk_summer01.bmp", "B001FAFatlgt_summer01.bmp", "B001FAFatmed_summer01.bmp",
-    "B001FAFitdrk_Shannon01.bmp", "B001FAFitlgt_Shannon01.bmp", "B001FAFitmed_Shannon01.bmp",
-    "B001FCChddrk_girl01.bmp", "B001FCChddrk_girl02.bmp", "B001FCChdlgt_girl01.bmp",
-    "B001FCChdlgt_girl02.bmp", "B001FCChdmed_girl01.bmp", "B001FCChdmed_girl02.bmp",
-    "B001MAFitdrk_relax.bmp", "B001MAFitlgt_relax.bmp", "B001MAFitmed_relax.bmp",
-    "B001MCChddrk_boy01.bmp", "B001MCChddrk_boy02.bmp", "B001MCChdlgt_boy01.bmp",
-    "B001MCChdlgt_boy02.bmp", "B001MCChdmed_boy01.bmp", "B001MCChdmed_boy02.bmp",
-    "B002FAFatdrk_gma1.bmp", "B002FAFatlgt_gma1.bmp", "B002FAFatmed_gma1.bmp",
-    "B002FAFitdrk_Mom01.bmp", "B002FAFitdrk_Mom02.bmp", "B002FAFitlgt_Mom01.bmp",
-    "B002FAFitlgt_mom02.bmp", "B002FAFitmed_Mom02.bmp", "B002FAFitmed_mom01.bmp",
-    "B002MAFatdrk_GPA2.bmp", "B002MAFatdrk_biker01.bmp", "B002MAFatdrk_slob.bmp",
-    "B002MAFatlgt_GPA2.bmp", "B002MAFatlgt_biker01.bmp", "B002MAFatlgt_slob.bmp",
-    "B002MAFatmed_GPA2.bmp", "B002MAFatmed_biker01.bmp", "B002MAFatmed_slob.bmp",
-    "B002MAFitdrk_ROTC.bmp", "B002MAFitdrk_Ross01.bmp",
-    "B002MAFitlgt_ROTC.bmp", "B002MAFitlgt_Ross.bmp", "B002MAFitlgt_casual.bmp",
-    "B002MAFitmed_ROTC.bmp", "B002MAFitmed_casual.bmp",
-    "B002MASkndrk_nerd.bmp", "B002MASknlgt_nerd.bmp", "B002MASknmed_nerd.bmp",
-    "B002MCChddrk_nerd.bmp", "B002MCChddrk_slob.bmp", "B002MCChdlgt_nerd.bmp",
-    "B002MCChdlgt_slob.bmp", "B002MCChdmed_nerd.bmp", "B002MCChdmed_slob.bmp",
-    "B003MAFitdrk_BMOC.bmp", "B003MAFitdrk_Dad01.bmp", "B003MAFitdrk_Dad02.bmp",
-    "B003MAFitdrk_RnB01.bmp", "B003MAFitlgt_BMOC.bmp", "B003MAFitlgt_Dad01.bmp",
-    "B003MAFitlgt_Dad02.bmp", "B003MAFitmed_BMOC.bmp", "B003MAFitmed_Dad02.bmp",
+    "B001FAFatdrk_summer01.bmp",
+    "B001FAFatlgt_summer01.bmp",
+    "B001FAFatmed_summer01.bmp",
+    "B001FAFitdrk_Shannon01.bmp",
+    "B001FAFitlgt_Shannon01.bmp",
+    "B001FAFitmed_Shannon01.bmp",
+    "B001FCChddrk_girl01.bmp",
+    "B001FCChddrk_girl02.bmp",
+    "B001FCChdlgt_girl01.bmp",
+    "B001FCChdlgt_girl02.bmp",
+    "B001FCChdmed_girl01.bmp",
+    "B001FCChdmed_girl02.bmp",
+    "B001MAFitdrk_relax.bmp",
+    "B001MAFitlgt_relax.bmp",
+    "B001MAFitmed_relax.bmp",
+    "B001MCChddrk_boy01.bmp",
+    "B001MCChddrk_boy02.bmp",
+    "B001MCChdlgt_boy01.bmp",
+    "B001MCChdlgt_boy02.bmp",
+    "B001MCChdmed_boy01.bmp",
+    "B001MCChdmed_boy02.bmp",
+    "B002FAFatdrk_gma1.bmp",
+    "B002FAFatlgt_gma1.bmp",
+    "B002FAFatmed_gma1.bmp",
+    "B002FAFitdrk_Mom01.bmp",
+    "B002FAFitdrk_Mom02.bmp",
+    "B002FAFitlgt_Mom01.bmp",
+    "B002FAFitlgt_mom02.bmp",
+    "B002FAFitmed_Mom02.bmp",
+    "B002FAFitmed_mom01.bmp",
+    "B002MAFatdrk_GPA2.bmp",
+    "B002MAFatdrk_biker01.bmp",
+    "B002MAFatdrk_slob.bmp",
+    "B002MAFatlgt_GPA2.bmp",
+    "B002MAFatlgt_biker01.bmp",
+    "B002MAFatlgt_slob.bmp",
+    "B002MAFatmed_GPA2.bmp",
+    "B002MAFatmed_biker01.bmp",
+    "B002MAFatmed_slob.bmp",
+    "B002MAFitdrk_ROTC.bmp",
+    "B002MAFitdrk_Ross01.bmp",
+    "B002MAFitlgt_ROTC.bmp",
+    "B002MAFitlgt_Ross.bmp",
+    "B002MAFitlgt_casual.bmp",
+    "B002MAFitmed_ROTC.bmp",
+    "B002MAFitmed_casual.bmp",
+    "B002MASkndrk_nerd.bmp",
+    "B002MASknlgt_nerd.bmp",
+    "B002MASknmed_nerd.bmp",
+    "B002MCChddrk_nerd.bmp",
+    "B002MCChddrk_slob.bmp",
+    "B002MCChdlgt_nerd.bmp",
+    "B002MCChdlgt_slob.bmp",
+    "B002MCChdmed_nerd.bmp",
+    "B002MCChdmed_slob.bmp",
+    "B003MAFitdrk_BMOC.bmp",
+    "B003MAFitdrk_Dad01.bmp",
+    "B003MAFitdrk_Dad02.bmp",
+    "B003MAFitdrk_RnB01.bmp",
+    "B003MAFitlgt_BMOC.bmp",
+    "B003MAFitlgt_Dad01.bmp",
+    "B003MAFitlgt_Dad02.bmp",
+    "B003MAFitmed_BMOC.bmp",
+    "B003MAFitmed_Dad02.bmp",
     "B003MAFitmed_dad01.bmp",
-    "B004MAFatdrk_Lizrd.bmp", "B004MAFatdrk_boss01.bmp",
-    "B004MAFatlgt_Lizrd.bmp", "B004MAFatlgt_boss01.bmp",
-    "B004MAFatmed_Lizrd.bmp", "B004MAFatmed_boss01.bmp",
-    "B005MAFitdrk_hippy.bmp", "B005MAFitlgt_hippy.bmp", "B005MAFitmed_hippy.bmp",
-    "B006FAFatdrk_TT1.bmp", "B006FAFatlgt_TT1.bmp", "B006FAFatmed_TT1.bmp",
-    "B007FAFitdrk_Deb.bmp", "B007FAFitdrk_Hipy.bmp",
-    "B007FAFitlgt_Deb.bmp", "B007FAFitlgt_Hipy.bmp",
-    "B007FAFitmed_Deb.bmp", "B007FAFitmed_Hipy.bmp",
-    "B008FAFitdrk_TWif.bmp", "B008FAFitlgt_TWif.bmp", "B008FAFitmed_TWif.bmp",
-    "B009FASkndrk_Gma1.bmp", "B009FASkndrk_Libr.bmp",
-    "B009FASknlgt_Gma1.bmp", "B009FASknlgt_Libr.bmp",
-    "B009FASknmed_Gma1.bmp", "B009FASknmed_Libr.bmp",
-    "B009FCChddrk_Nerd.bmp", "B009FCChdlgt_Nerd.bmp", "B009FCChdmed_Nerd.bmp",
-    "B011FASkndrk_PRG.bmp", "B011FASkndrk_tom.bmp",
-    "B011FASknlgt_PRG.bmp", "B011FASknlgt_tom.bmp",
-    "B011FASknmed_PRG.bmp", "B011FASknmed_tom.bmp",
-    "B011FCChddrk_soc01.bmp", "B011FCChddrk_tom.bmp",
-    "B011FCChdlgt_soc01.bmp", "B011FCChdlgt_tom.bmp",
-    "B011FCChdmed_soc01.bmp", "B011FCChdmed_tom.bmp",
-    "B012FAFatdrk_MM.bmp", "B012FAFatlgt_MM.bmp", "B012FAFatmed_MM.bmp",
-    "B013MASkndrk_Gpa.bmp", "B013MASknlgt_Gpa.bmp", "B013MASknmed_Gpa.bmp",
-    "B014MASkndrk_hip01.bmp", "B014MASknlgt_hip01.bmp", "B014MASknmed_hip01.bmp",
-    "C001FAdrk_Sharon.bmp", "C001FAdrk_Sharon2.bmp", "C001FAlgt_Shannon01.bmp", "C001FAmed_Sharon.bmp",
-    "C001FCdrk_Amanda01.bmp", "C001FClgt_Amanda01.bmp", "C001FCmed_Amanda02.bmp",
-    "C001MAdrk_Ross.bmp", "C001MAlgt_Ross.bmp", "C001MAmed_Ross.bmp",
-    "C001MCdrk_ave.bmp", "C001MClgt_ave.bmp", "C001MCmed_ave.bmp",
-    "C002FAdrk_Ponytail3.bmp", "C002FAlgt_mom02.bmp", "C002FAmed_mom.bmp",
-    "C002FCdrk_Lisa.bmp", "C002FClgt_Lisa01.bmp", "C002FCmed_Lisa02.bmp",
-    "C002MAdrk_GPA2.bmp", "C002MAlgt_GPA2.bmp", "C002MAlgt_asian.bmp",
-    "C002MAmed_GPA2.bmp", "C002MAmed_asian.bmp",
-    "C002MCdrk_sht.bmp", "C002MClgt_sht.bmp", "C002MCmed_sht.bmp",
-    "C003FAdrk_fatale.bmp", "C003FAlgt_asian01.bmp", "C003FAlgt_longhair02.bmp",
-    "C003FAmed_alter.bmp", "C003FAmed_asian01.bmp", "C003FCdrk_AA.bmp",
-    "C003MAdrk_RnB01.bmp", "C003MAlgt_Dad02.bmp", "C003MAlgt_alt.bmp", "C003MAmed_Dad01.bmp",
-    "C003MCdrk_poofy.bmp", "C003MClgt_poofy.bmp", "C003MCmed_poofy.bmp",
-    "C004FCdrk_fan.bmp", "C004FClgt_fan.bmp", "C004FCmed_fan.bmp",
-    "C004MAdrk_biker.bmp", "C004MAlgt_biker.bmp", "C004MAmed_biker.bmp",
-    "C004MCdrk_nerd.bmp", "C004MClgt_nerd.bmp", "C004MCmed_nerd.bmp",
-    "C005FCdrk_tomboy.bmp", "C005FClgt_tomboy.bmp", "C005FCmed_tomboy.bmp",
-    "C005MA_HipSpecs.bmp", "C005MAlgt_Hipster.bmp",
-    "C005MCdrk_pom.bmp", "C005MClgt_pom.bmp", "C005MCmed_pom.bmp",
-    "C006FAdrk_deb.bmp", "C006FAlgt_deb.bmp", "C006FAmed_deb.bmp",
-    "C006MCdrk_round.bmp", "C006MClgt_round.bmp", "C006MCmed_round.bmp",
+    "B004MAFatdrk_Lizrd.bmp",
+    "B004MAFatdrk_boss01.bmp",
+    "B004MAFatlgt_Lizrd.bmp",
+    "B004MAFatlgt_boss01.bmp",
+    "B004MAFatmed_Lizrd.bmp",
+    "B004MAFatmed_boss01.bmp",
+    "B005MAFitdrk_hippy.bmp",
+    "B005MAFitlgt_hippy.bmp",
+    "B005MAFitmed_hippy.bmp",
+    "B006FAFatdrk_TT1.bmp",
+    "B006FAFatlgt_TT1.bmp",
+    "B006FAFatmed_TT1.bmp",
+    "B007FAFitdrk_Deb.bmp",
+    "B007FAFitdrk_Hipy.bmp",
+    "B007FAFitlgt_Deb.bmp",
+    "B007FAFitlgt_Hipy.bmp",
+    "B007FAFitmed_Deb.bmp",
+    "B007FAFitmed_Hipy.bmp",
+    "B008FAFitdrk_TWif.bmp",
+    "B008FAFitlgt_TWif.bmp",
+    "B008FAFitmed_TWif.bmp",
+    "B009FASkndrk_Gma1.bmp",
+    "B009FASkndrk_Libr.bmp",
+    "B009FASknlgt_Gma1.bmp",
+    "B009FASknlgt_Libr.bmp",
+    "B009FASknmed_Gma1.bmp",
+    "B009FASknmed_Libr.bmp",
+    "B009FCChddrk_Nerd.bmp",
+    "B009FCChdlgt_Nerd.bmp",
+    "B009FCChdmed_Nerd.bmp",
+    "B011FASkndrk_PRG.bmp",
+    "B011FASkndrk_tom.bmp",
+    "B011FASknlgt_PRG.bmp",
+    "B011FASknlgt_tom.bmp",
+    "B011FASknmed_PRG.bmp",
+    "B011FASknmed_tom.bmp",
+    "B011FCChddrk_soc01.bmp",
+    "B011FCChddrk_tom.bmp",
+    "B011FCChdlgt_soc01.bmp",
+    "B011FCChdlgt_tom.bmp",
+    "B011FCChdmed_soc01.bmp",
+    "B011FCChdmed_tom.bmp",
+    "B012FAFatdrk_MM.bmp",
+    "B012FAFatlgt_MM.bmp",
+    "B012FAFatmed_MM.bmp",
+    "B013MASkndrk_Gpa.bmp",
+    "B013MASknlgt_Gpa.bmp",
+    "B013MASknmed_Gpa.bmp",
+    "B014MASkndrk_hip01.bmp",
+    "B014MASknlgt_hip01.bmp",
+    "B014MASknmed_hip01.bmp",
+    "C001FAdrk_Sharon.bmp",
+    "C001FAdrk_Sharon2.bmp",
+    "C001FAlgt_Shannon01.bmp",
+    "C001FAmed_Sharon.bmp",
+    "C001FCdrk_Amanda01.bmp",
+    "C001FClgt_Amanda01.bmp",
+    "C001FCmed_Amanda02.bmp",
+    "C001MAdrk_Ross.bmp",
+    "C001MAlgt_Ross.bmp",
+    "C001MAmed_Ross.bmp",
+    "C001MCdrk_ave.bmp",
+    "C001MClgt_ave.bmp",
+    "C001MCmed_ave.bmp",
+    "C002FAdrk_Ponytail3.bmp",
+    "C002FAlgt_mom02.bmp",
+    "C002FAmed_mom.bmp",
+    "C002FCdrk_Lisa.bmp",
+    "C002FClgt_Lisa01.bmp",
+    "C002FCmed_Lisa02.bmp",
+    "C002MAdrk_GPA2.bmp",
+    "C002MAlgt_GPA2.bmp",
+    "C002MAlgt_asian.bmp",
+    "C002MAmed_GPA2.bmp",
+    "C002MAmed_asian.bmp",
+    "C002MCdrk_sht.bmp",
+    "C002MClgt_sht.bmp",
+    "C002MCmed_sht.bmp",
+    "C003FAdrk_fatale.bmp",
+    "C003FAlgt_asian01.bmp",
+    "C003FAlgt_longhair02.bmp",
+    "C003FAmed_alter.bmp",
+    "C003FAmed_asian01.bmp",
+    "C003FCdrk_AA.bmp",
+    "C003MAdrk_RnB01.bmp",
+    "C003MAlgt_Dad02.bmp",
+    "C003MAlgt_alt.bmp",
+    "C003MAmed_Dad01.bmp",
+    "C003MCdrk_poofy.bmp",
+    "C003MClgt_poofy.bmp",
+    "C003MCmed_poofy.bmp",
+    "C004FCdrk_fan.bmp",
+    "C004FClgt_fan.bmp",
+    "C004FCmed_fan.bmp",
+    "C004MAdrk_biker.bmp",
+    "C004MAlgt_biker.bmp",
+    "C004MAmed_biker.bmp",
+    "C004MCdrk_nerd.bmp",
+    "C004MClgt_nerd.bmp",
+    "C004MCmed_nerd.bmp",
+    "C005FCdrk_tomboy.bmp",
+    "C005FClgt_tomboy.bmp",
+    "C005FCmed_tomboy.bmp",
+    "C005MA_HipSpecs.bmp",
+    "C005MAlgt_Hipster.bmp",
+    "C005MCdrk_pom.bmp",
+    "C005MClgt_pom.bmp",
+    "C005MCmed_pom.bmp",
+    "C006FAdrk_deb.bmp",
+    "C006FAlgt_deb.bmp",
+    "C006FAmed_deb.bmp",
+    "C006MCdrk_round.bmp",
+    "C006MClgt_round.bmp",
+    "C006MCmed_round.bmp",
     "C007MAdrk_GPA1.bmp",
-    "C008FAdrk_Peg.bmp", "C008FAlgt_Peg.bmp", "C008FAmed_Peg.bmp",
-    "C010MAdrk_baldbeard01.bmp", "C010MAlgt_baldbeard01.bmp", "C010MAmed_baldbeard01.bmp",
-    "C012FAdrk_gma2.bmp", "C012FAlgt_gma2.bmp", "C012FAmed_gma2.bmp",
-    "C017FAdrk_bouf.bmp", "C017FAlgt_asian.bmp", "C017FAlgt_bouf.bmp",
-    "C017FAmed_asian.bmp", "C017FAmed_bouf.bmp",
-    "HFLOdrk.bmp", "HFLOlgt.bmp", "HFLOmed.bmp",
-    "HFROdrk.bmp", "HFROlgt.bmp", "HFROmed.bmp",
-    "HMLOdrk.bmp", "HMLOlgt.bmp", "HMLOmed.bmp",
-    "HMROdrk.bmp", "HMROlgt.bmp", "HMROmed.bmp",
-    "HUACdrk.bmp", "HUAClgt.bmp", "HUACmed.bmp",
-    "HUAOdrk.bmp", "HUAOlgt.bmp", "HUAOmed.bmp",
-    "HUAPdrk.bmp", "HUAPlgt.bmp", "HUAPmed.bmp"
+    "C008FAdrk_Peg.bmp",
+    "C008FAlgt_Peg.bmp",
+    "C008FAmed_Peg.bmp",
+    "C010MAdrk_baldbeard01.bmp",
+    "C010MAlgt_baldbeard01.bmp",
+    "C010MAmed_baldbeard01.bmp",
+    "C012FAdrk_gma2.bmp",
+    "C012FAlgt_gma2.bmp",
+    "C012FAmed_gma2.bmp",
+    "C017FAdrk_bouf.bmp",
+    "C017FAlgt_asian.bmp",
+    "C017FAlgt_bouf.bmp",
+    "C017FAmed_asian.bmp",
+    "C017FAmed_bouf.bmp",
+    "HFLOdrk.bmp",
+    "HFLOlgt.bmp",
+    "HFLOmed.bmp",
+    "HFROdrk.bmp",
+    "HFROlgt.bmp",
+    "HFROmed.bmp",
+    "HMLOdrk.bmp",
+    "HMLOlgt.bmp",
+    "HMLOmed.bmp",
+    "HMROdrk.bmp",
+    "HMROlgt.bmp",
+    "HMROmed.bmp",
+    "HUACdrk.bmp",
+    "HUAClgt.bmp",
+    "HUACmed.bmp",
+    "HUAOdrk.bmp",
+    "HUAOlgt.bmp",
+    "HUAOmed.bmp",
+    "HUAPdrk.bmp",
+    "HUAPlgt.bmp",
+    "HUAPmed.bmp"
   ],
-
   "cfp_files": [
-    "xskill-A2O-approve.cfp", "xskill-A2O-energetic1.cfp",
-    "xskill-A2O-idle1.cfp", "xskill-A2O-idle2.cfp", "xskill-A2O-idle3.cfp",
-    "xskill-A2O-idle4.cfp", "xskill-A2O-idle5.cfp", "xskill-A2O-idle6.cfp",
-    "xskill-A2O-idle7.cfp", "xskill-A2O-idle8.cfp", "xskill-A2O-stand.cfp",
-    "xskill-A2O-test-animation.cfp", "xskill-A2O-test-animation2.cfp",
-    "xskill-A2O-test-animation3.cfp", "xskill-A2O-test-animation4.cfp",
-    "xskill-A2O-test-animation5.cfp", "xskill-A2O-test-animation6.cfp",
-    "xskill-A2O-walking-fast-loop.cfp", "xskill-A2O-walking-frantic-loop.cfp",
-    "xskill-A2O-walking-loop.cfp", "xskill-A2O-walking-start.cfp",
+    "xskill-A2O-approve.cfp",
+    "xskill-A2O-energetic1.cfp",
+    "xskill-A2O-idle1.cfp",
+    "xskill-A2O-idle2.cfp",
+    "xskill-A2O-idle3.cfp",
+    "xskill-A2O-idle4.cfp",
+    "xskill-A2O-idle5.cfp",
+    "xskill-A2O-idle6.cfp",
+    "xskill-A2O-idle7.cfp",
+    "xskill-A2O-idle8.cfp",
+    "xskill-A2O-stand.cfp",
+    "xskill-A2O-test-animation.cfp",
+    "xskill-A2O-test-animation2.cfp",
+    "xskill-A2O-test-animation3.cfp",
+    "xskill-A2O-test-animation4.cfp",
+    "xskill-A2O-test-animation5.cfp",
+    "xskill-A2O-test-animation6.cfp",
+    "xskill-A2O-walking-fast-loop.cfp",
+    "xskill-A2O-walking-frantic-loop.cfp",
+    "xskill-A2O-walking-loop.cfp",
+    "xskill-A2O-walking-start.cfp",
     "xskill-a2o-dance-inplace-twistloop.cfp",
-    "xskill-a2o-pool-dive-divein.cfp", "xskill-a2o-pool-dive-jumpin.cfp",
-    "xskill-a2o-pool-dive-waitloop.cfp", "xskill-a2o-pool-dive-walkoff.cfp",
+    "xskill-a2o-pool-dive-divein.cfp",
+    "xskill-a2o-pool-dive-jumpin.cfp",
+    "xskill-a2o-pool-dive-waitloop.cfp",
+    "xskill-a2o-pool-dive-walkoff.cfp",
     "xskill-a2o-pool-dive-walkon.cfp",
-    "xskill-a2o-running-loop.cfp", "xskill-a2o-running-start.cfp", "xskill-a2o-running-stop.cfp",
-    "xskill-a2o-walking-female-loop.cfp", "xskill-a2o-walking-female-start.cfp",
+    "xskill-a2o-running-loop.cfp",
+    "xskill-a2o-running-start.cfp",
+    "xskill-a2o-running-stop.cfp",
+    "xskill-a2o-walking-female-loop.cfp",
+    "xskill-a2o-walking-female-start.cfp",
     "xskill-a2o-walking-female-stop.cfp",
-    "xskill-adult-bored1.cfp", "xskill-adult-idle6.cfp",
-    "xskill-c2o-idle1.cfp", "xskill-c2o-salute.cfp",
-    "xskill-c2o-tv1-surf.cfp", "xskill-c2o-tv1-watchlaugh-stand.cfp"
+    "xskill-adult-bored1.cfp",
+    "xskill-adult-idle6.cfp",
+    "xskill-c2o-idle1.cfp",
+    "xskill-c2o-salute.cfp",
+    "xskill-c2o-tv1-surf.cfp",
+    "xskill-c2o-tv1-watchlaugh-stand.cfp"
   ],
-
   "textures_png": [
-    "B002FAFitdrk_Mom01.png", "B003MAFitdrk_Dad02.png",
-    "C002FAdrk_Ponytail3.png", "C003MAdrk_RnB01.png",
-    "HUACdrk.png", "HUAClgt.png", "HUACmed.png",
-    "HUAOdrk.png", "HUAOlgt.png", "HUAOmed.png",
-    "HUAPdrk.png", "HUAPlgt.png", "HUAPmed.png"
+    "B002FAFitdrk_Mom01.png",
+    "B003MAFitdrk_Dad02.png",
+    "C002FAdrk_Ponytail3.png",
+    "C003MAdrk_RnB01.png",
+    "HUACdrk.png",
+    "HUAClgt.png",
+    "HUACmed.png",
+    "HUAOdrk.png",
+    "HUAOlgt.png",
+    "HUAOmed.png",
+    "HUAPdrk.png",
+    "HUAPlgt.png",
+    "HUAPmed.png"
   ],
-
   "defaults": {
     "skeleton": "adult",
     "body": "xskin-b003mafit_01-PELVIS-BODY",
@@ -182,9 +430,8 @@
     "leftHand": "xskin-hmlo-L_HAND-HANDML",
     "rightHand": "xskin-hmro-R_HAND-HANDMR",
     "handTexture": "HUAOdrk",
-      "animation": "a2o-energetic1"
+    "animation": "a2o-energetic1"
   },
-
   "characters": [
     {
       "name": "Dad (Fit)",
@@ -197,7 +444,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation5",
-      "voice": { "pitch": 55, "range": 22, "formant": 0.82, "breathiness": 0.10 }
+      "voice": {
+        "pitch": 55,
+        "range": 22,
+        "formant": 0.82,
+        "breathiness": 0.1
+      }
     },
     {
       "name": "Mom (Ponytail)",
@@ -210,7 +462,12 @@
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-dance-inplace-twistloop",
-      "voice": { "pitch": 190, "range": 55, "formant": 1.17, "breathiness": 0.18 }
+      "voice": {
+        "pitch": 190,
+        "range": 55,
+        "formant": 1.17,
+        "breathiness": 0.18
+      }
     },
     {
       "name": "Ross (Bald)",
@@ -223,7 +480,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation",
-      "voice": { "pitch": 50, "range": 20, "formant": 0.78, "breathiness": 0.08 }
+      "voice": {
+        "pitch": 50,
+        "range": 20,
+        "formant": 0.78,
+        "breathiness": 0.08
+      }
     },
     {
       "name": "Mercedes",
@@ -236,7 +498,12 @@
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation2",
-      "voice": { "pitch": 200, "range": 60, "formant": 1.20, "breathiness": 0.20 }
+      "voice": {
+        "pitch": 200,
+        "range": 60,
+        "formant": 1.2,
+        "breathiness": 0.2
+      }
     },
     {
       "name": "Biker Dude",
@@ -249,7 +516,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-walking-frantic-loop",
-      "voice": { "pitch": 35, "range": 15, "formant": 0.65, "breathiness": 0.06 }
+      "voice": {
+        "pitch": 35,
+        "range": 15,
+        "formant": 0.65,
+        "breathiness": 0.06
+      }
     },
     {
       "name": "Hipster",
@@ -262,7 +534,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation3",
-      "voice": { "pitch": 60, "range": 25, "formant": 0.82, "breathiness": 0.18 }
+      "voice": {
+        "pitch": 60,
+        "range": 25,
+        "formant": 0.82,
+        "breathiness": 0.18
+      }
     },
     {
       "name": "Fat Lady Summer",
@@ -275,7 +552,12 @@
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-dance-inplace-twistloop",
-      "voice": { "pitch": 165, "range": 45, "formant": 1.08, "breathiness": 0.15 }
+      "voice": {
+        "pitch": 165,
+        "range": 45,
+        "formant": 1.08,
+        "breathiness": 0.15
+      }
     },
     {
       "name": "Grandpa",
@@ -288,7 +570,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-energetic1",
-      "voice": { "pitch": 42, "range": 18, "formant": 0.70, "breathiness": 0.28 }
+      "voice": {
+        "pitch": 42,
+        "range": 18,
+        "formant": 0.7,
+        "breathiness": 0.28
+      }
     },
     {
       "name": "The Boss",
@@ -301,7 +588,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation4",
-      "voice": { "pitch": 45, "range": 18, "formant": 0.72, "breathiness": 0.08 }
+      "voice": {
+        "pitch": 45,
+        "range": 18,
+        "formant": 0.72,
+        "breathiness": 0.08
+      }
     },
     {
       "name": "The Slob",
@@ -314,7 +606,12 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-energetic1",
-      "voice": { "pitch": 48, "range": 20, "formant": 0.74, "breathiness": 0.22 }
+      "voice": {
+        "pitch": 48,
+        "range": 20,
+        "formant": 0.74,
+        "breathiness": 0.22
+      }
     },
     {
       "name": "Deb",
@@ -327,7 +624,12 @@
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-walking-loop",
-      "voice": { "pitch": 185, "range": 50, "formant": 1.15, "breathiness": 0.16 }
+      "voice": {
+        "pitch": 185,
+        "range": 50,
+        "formant": 1.15,
+        "breathiness": 0.16
+      }
     },
     {
       "name": "Grandma",
@@ -340,7 +642,12 @@
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation5",
-      "voice": { "pitch": 155, "range": 35, "formant": 1.05, "breathiness": 0.28 }
+      "voice": {
+        "pitch": 155,
+        "range": 35,
+        "formant": 1.05,
+        "breathiness": 0.28
+      }
     },
     {
       "name": "Peg",
@@ -353,7 +660,12 @@
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-approve",
-      "voice": { "pitch": 175, "range": 45, "formant": 1.12, "breathiness": 0.22 }
+      "voice": {
+        "pitch": 175,
+        "range": 45,
+        "formant": 1.12,
+        "breathiness": 0.22
+      }
     },
     {
       "name": "Lizard King",
@@ -366,109 +678,616 @@
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
       "animation": "a2o-test-animation6",
-      "voice": { "pitch": 38, "range": 15, "formant": 0.68, "breathiness": 0.06 }
+      "voice": {
+        "pitch": 38,
+        "range": 15,
+        "formant": 0.68,
+        "breathiness": 0.06
+      }
     }
   ],
-
   "scenes": [
     {
-      "name": "Flash Crowd",
+      "name": "Solo",
       "cast": [
-        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -5.5, "z":  5.5, "direction": 23,  "animation": "a2o-test-animation5" },
-        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x": -3,   "z":  6,   "direction": 310, "animation": "a2o-test-animation2" },
-        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x": -0.5, "z":  5.2, "direction": 170, "animation": "a2o-walking-frantic-loop" },
-        { "actor": "Dolly Wonderknit",    "character": "Grandma",         "x":  2,   "z":  6.3, "direction": 45,  "animation": "a2o-test-animation5" },
-        { "actor": "Quincy Vape III",     "character": "Hipster",         "x":  4.5, "z":  5,   "direction": 200, "animation": "a2o-test-animation3" },
-        { "actor": "Tanya Stridewell",    "character": "Deb",             "x":  6.5, "z":  5.8, "direction": 290, "animation": "a2o-walking-loop" },
-        { "actor": "Dirk Powerlunch",     "character": "The Boss",        "x": -6.5, "z":  3,   "direction": 110, "animation": "a2o-test-animation4" },
-        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x": -4,   "z":  2.5, "direction": 90,  "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Gary Nachofingers",   "character": "The Slob",        "x": -1.5, "z":  3.2, "direction": 260, "animation": "a2o-energetic1" },
-        { "actor": "Mildred Starchpress", "character": "Peg",             "x":  1,   "z":  2.8, "direction": 15,  "animation": "a2o-approve" },
-        { "actor": "Vince Rattlesnake",   "character": "Lizard King",     "x":  3.5, "z":  2.5, "direction": 140, "animation": "a2o-test-animation6" },
-        { "actor": "Harold Suspenders",   "character": "Grandpa",         "x":  6,   "z":  3.3, "direction": 330, "animation": "a2o-energetic1" },
-        { "actor": "Petunia Flambe",      "character": "Fat Lady Summer", "x": -5,   "z":  0.5, "direction": 330, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Blaine Cueball",      "character": "Ross (Bald)",     "x": -2.5, "z":  0,   "direction": 70,  "animation": "a2o-test-animation" },
-        { "actor": "Prudence Ironskirt",  "character": "Peg",             "x":  0.5, "z":  0.5, "direction": 195, "animation": "a2o-test-animation3" },
-        { "actor": "Chad Thunderpants",   "character": "Dad (Fit)",       "x":  3,   "z": -0.2, "direction": 225, "animation": "a2o-walking-frantic-loop" },
-        { "actor": "Sable Diamondwrist",  "character": "Mercedes",        "x":  5.5, "z":  0.8, "direction": 350, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Axle Grindhouse",     "character": "Biker Dude",      "x": -6,   "z": -2,   "direction": 55,  "animation": "a2o-test-animation4" },
-        { "actor": "Jasper Coldpress",     "character": "Hipster",         "x": -3.5, "z": -2.5, "direction": 270, "animation": "a2o-energetic1" },
-        { "actor": "Nana Crumbsworth",    "character": "Grandma",         "x": -1,   "z": -2.8, "direction": 160, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Lana Moonbeam",       "character": "Mom (Ponytail)",  "x":  1.5, "z": -2.2, "direction": 80,  "animation": "a2o-test-animation" },
-        { "actor": "Slade Fangsworth",    "character": "Lizard King",     "x":  4,   "z": -2.5, "direction": 95,  "animation": "a2o-test-animation6" },
-        { "actor": "Dwayne Couchfort",    "character": "The Slob",        "x":  6.5, "z": -1.8, "direction": 185, "animation": "a2o-test-animation5" },
-        { "actor": "Rex Boardroom",       "character": "The Boss",        "x": -5.5, "z": -4.5, "direction": 20,  "animation": "a2o-test-animation2" },
-        { "actor": "Jolene Sunpuddle",    "character": "Fat Lady Summer", "x": -3,   "z": -5,   "direction": 145, "animation": "a2o-test-animation5" },
-        { "actor": "Cliff Chromedome",    "character": "Ross (Bald)",     "x": -0.5, "z": -4.8, "direction": 300, "animation": "a2o-walking-frantic-loop" },
-        { "actor": "Tiffany Sparklecoat", "character": "Deb",             "x":  2,   "z": -5.2, "direction": 60,  "animation": "a2o-approve" },
-        { "actor": "Mortimer Wheezeworth","character": "Grandpa",         "x":  4.5, "z": -4.5, "direction": 240, "animation": "a2o-test-animation4" },
-        { "actor": "Diesel McRevs",       "character": "Biker Dude",      "x":  7,   "z": -4,   "direction": 170, "animation": "a2o-test-animation6" },
-        { "actor": "Lance Jawstrong",     "character": "Dad (Fit)",       "x": -4.5, "z": -7,   "direction": 130, "animation": "a2o-energetic1" },
-        { "actor": "Aiden Shroomtea",     "character": "Hipster",         "x": -2,   "z": -7.3, "direction": 35,  "animation": "a2o-test-animation" },
-        { "actor": "Velvet Nightengale",  "character": "Mercedes",        "x":  0.5, "z": -7,   "direction": 210, "animation": "a2o-test-animation3" },
-        { "actor": "Brenda Windchime",    "character": "Mom (Ponytail)",  "x":  3,   "z": -7.5, "direction": 315, "animation": "a2o-test-animation5" },
-        { "actor": "Agnes Frostworth",    "character": "Peg",             "x":  5.5, "z": -6.8, "direction": 75,  "animation": "a2o-energetic1" },
-        { "actor": "Spike Venomtooth",    "character": "Lizard King",     "x": -6.5, "z": -9,   "direction": 250, "animation": "a2o-walking-frantic-loop" },
-        { "actor": "Edna Butterworth",    "character": "Grandma",         "x": -3.5, "z": -9.5, "direction": 5,   "animation": "a2o-test-animation2" },
-        { "actor": "Sterling Pinstripe",  "character": "The Boss",        "x": -0.5, "z": -9.2, "direction": 175, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Earl Beanburrito",    "character": "The Slob",        "x":  2.5, "z": -9,   "direction": 285, "animation": "a2o-test-animation4" },
-        { "actor": "Bertha Sunflower",    "character": "Fat Lady Summer", "x":  5,   "z": -9.5, "direction": 120, "animation": "a2o-test-animation6" },
-        { "actor": "Wilbur Napsalot",     "character": "Grandpa",         "x":  7.5, "z": -8.5, "direction": 340, "animation": "a2o-test-animation" }
-      ]
-    },
-    {
-      "name": "Simopolis",
-      "cast": [
-        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -6,   "z":  4,   "direction": 0, "animation": "a2o-test-animation5" },
-        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x": -2,   "z":  4,   "direction": 0, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Blaine Cueball",      "character": "Ross (Bald)",     "x":  2,   "z":  4,   "direction": 0, "animation": "a2o-test-animation" },
-        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x":  6,   "z":  4,   "direction": 0, "animation": "a2o-test-animation2" },
-        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x": -5,   "z":  0,   "direction": 0, "animation": "a2o-walking-frantic-loop" },
-        { "actor": "Quincy Vape III",     "character": "Hipster",         "x": -1.5, "z":  0,   "direction": 0, "animation": "a2o-test-animation3" },
-        { "actor": "Petunia Flambe",      "character": "Fat Lady Summer", "x":  1.5, "z":  0,   "direction": 0, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Dirk Powerlunch",     "character": "The Boss",        "x":  5,   "z":  0,   "direction": 0, "animation": "a2o-test-animation4" },
-        { "actor": "Harold Suspenders",   "character": "Grandpa",         "x": -4,   "z": -3.5, "direction": 0, "animation": "a2o-energetic1" },
-        { "actor": "Dolly Wonderknit",    "character": "Grandma",         "x": -0.5, "z": -3.5, "direction": 0, "animation": "a2o-test-animation5" },
-        { "actor": "Gary Nachofingers",   "character": "The Slob",        "x":  3,   "z": -3.5, "direction": 0, "animation": "a2o-energetic1" },
-        { "actor": "Tanya Stridewell",    "character": "Deb",             "x":  6.5, "z": -3.5, "direction": 0, "animation": "a2o-walking-loop" },
-        { "actor": "Mildred Starchpress", "character": "Peg",             "x": -3,   "z": -7,   "direction": 0, "animation": "a2o-approve" },
-        { "actor": "Vince Rattlesnake",   "character": "Lizard King",     "x":  3,   "z": -7,   "direction": 0, "animation": "a2o-test-animation6" }
-      ]
-    },
-    {
-      "name": "Grand Chorus",
-      "cast": [
-        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -4.5, "z":  2.5, "direction": 0, "animation": "a2o-energetic1" },
-        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x": -1.5, "z":  2.5, "direction": 0, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Blaine Cueball",      "character": "Ross (Bald)",     "x":  1.5, "z":  2.5, "direction": 0, "animation": "a2o-test-animation" },
-        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x":  4.5, "z":  2.5, "direction": 0, "animation": "a2o-test-animation2" },
-        { "actor": "Harold Suspenders",   "character": "Grandpa",         "x": -3,   "z": -1.5, "direction": 0, "animation": "a2o-energetic1" },
-        { "actor": "Dolly Wonderknit",    "character": "Grandma",         "x":  0,   "z": -1.5, "direction": 0, "animation": "a2o-test-animation5" },
-        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x":  3,   "z": -1.5, "direction": 0, "animation": "a2o-walking-frantic-loop" }
-      ]
-    },
-    {
-      "name": "Dance Party",
-      "cast": [
-        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -3, "z":  2, "direction": 135, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x":  3, "z":  2, "direction": 225, "animation": "a2o-dance-inplace-twistloop" },
-        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x": -3, "z": -2, "direction": 45,  "animation": "a2o-test-animation2" },
-        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x":  3, "z": -2, "direction": 315, "animation": "a2o-walking-frantic-loop" }
-      ]
-    },
-    {
-      "name": "Three Amigos",
-      "cast": [
-        { "actor": "Blaine Cueball",      "character": "Ross (Bald)", "x": -3.5, "z": 0, "direction": 0, "animation": "a2o-test-animation" },
-        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",   "x":  0,   "z": 0, "direction": 0, "animation": "a2o-test-animation5" },
-        { "actor": "Quincy Vape III",     "character": "Hipster",     "x":  3.5, "z": 0, "direction": 0, "animation": "a2o-test-animation3" }
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": 0,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation5"
+        }
       ]
     },
     {
       "name": "The Family",
       "cast": [
-        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",      "x": -2, "z": 0, "direction": 0, "animation": "a2o-test-animation5" },
-        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)", "x":  2, "z": 0, "direction": 0, "animation": "a2o-dance-inplace-twistloop" }
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": -2,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Cheryl Swanbeam",
+          "character": "Mom (Ponytail)",
+          "x": 2,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-dance-inplace-twistloop"
+        }
+      ]
+    },
+    {
+      "name": "Three Amigos",
+      "cast": [
+        {
+          "actor": "Blaine Cueball",
+          "character": "Ross (Bald)",
+          "x": -3.5,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation"
+        },
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": 0,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Quincy Vape III",
+          "character": "Hipster",
+          "x": 3.5,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation3"
+        }
+      ]
+    },
+    {
+      "name": "Dance Party",
+      "cast": [
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": -3,
+          "z": 2,
+          "direction": 135,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Cheryl Swanbeam",
+          "character": "Mom (Ponytail)",
+          "x": 3,
+          "z": 2,
+          "direction": 225,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Fawn Luxington",
+          "character": "Mercedes",
+          "x": -3,
+          "z": -2,
+          "direction": 45,
+          "animation": "a2o-test-animation2"
+        },
+        {
+          "actor": "Throttle McBeef",
+          "character": "Biker Dude",
+          "x": 3,
+          "z": -2,
+          "direction": 315,
+          "animation": "a2o-walking-frantic-loop"
+        }
+      ]
+    },
+    {
+      "name": "Grand Chorus",
+      "cast": [
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": -4.5,
+          "z": 2.5,
+          "direction": 0,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Cheryl Swanbeam",
+          "character": "Mom (Ponytail)",
+          "x": -1.5,
+          "z": 2.5,
+          "direction": 0,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Blaine Cueball",
+          "character": "Ross (Bald)",
+          "x": 1.5,
+          "z": 2.5,
+          "direction": 0,
+          "animation": "a2o-test-animation"
+        },
+        {
+          "actor": "Fawn Luxington",
+          "character": "Mercedes",
+          "x": 4.5,
+          "z": 2.5,
+          "direction": 0,
+          "animation": "a2o-test-animation2"
+        },
+        {
+          "actor": "Harold Suspenders",
+          "character": "Grandpa",
+          "x": -3,
+          "z": -1.5,
+          "direction": 0,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Dolly Wonderknit",
+          "character": "Grandma",
+          "x": 0,
+          "z": -1.5,
+          "direction": 0,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Throttle McBeef",
+          "character": "Biker Dude",
+          "x": 3,
+          "z": -1.5,
+          "direction": 0,
+          "animation": "a2o-walking-frantic-loop"
+        }
+      ]
+    },
+    {
+      "name": "Simopolis",
+      "cast": [
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": -6,
+          "z": 4,
+          "direction": 0,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Cheryl Swanbeam",
+          "character": "Mom (Ponytail)",
+          "x": -2,
+          "z": 4,
+          "direction": 0,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Blaine Cueball",
+          "character": "Ross (Bald)",
+          "x": 2,
+          "z": 4,
+          "direction": 0,
+          "animation": "a2o-test-animation"
+        },
+        {
+          "actor": "Fawn Luxington",
+          "character": "Mercedes",
+          "x": 6,
+          "z": 4,
+          "direction": 0,
+          "animation": "a2o-test-animation2"
+        },
+        {
+          "actor": "Throttle McBeef",
+          "character": "Biker Dude",
+          "x": -5,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-walking-frantic-loop"
+        },
+        {
+          "actor": "Quincy Vape III",
+          "character": "Hipster",
+          "x": -1.5,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation3"
+        },
+        {
+          "actor": "Petunia Flambe",
+          "character": "Fat Lady Summer",
+          "x": 1.5,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Dirk Powerlunch",
+          "character": "The Boss",
+          "x": 5,
+          "z": 0,
+          "direction": 0,
+          "animation": "a2o-test-animation4"
+        },
+        {
+          "actor": "Harold Suspenders",
+          "character": "Grandpa",
+          "x": -4,
+          "z": -3.5,
+          "direction": 0,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Dolly Wonderknit",
+          "character": "Grandma",
+          "x": -0.5,
+          "z": -3.5,
+          "direction": 0,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Gary Nachofingers",
+          "character": "The Slob",
+          "x": 3,
+          "z": -3.5,
+          "direction": 0,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Tanya Stridewell",
+          "character": "Deb",
+          "x": 6.5,
+          "z": -3.5,
+          "direction": 0,
+          "animation": "a2o-walking-loop"
+        },
+        {
+          "actor": "Mildred Starchpress",
+          "character": "Peg",
+          "x": -3,
+          "z": -7,
+          "direction": 0,
+          "animation": "a2o-approve"
+        },
+        {
+          "actor": "Vince Rattlesnake",
+          "character": "Lizard King",
+          "x": 3,
+          "z": -7,
+          "direction": 0,
+          "animation": "a2o-test-animation6"
+        }
+      ]
+    },
+    {
+      "name": "Flash Crowd",
+      "cast": [
+        {
+          "actor": "Brick Mancastle",
+          "character": "Dad (Fit)",
+          "x": -5.5,
+          "z": 5.5,
+          "direction": 23,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Fawn Luxington",
+          "character": "Mercedes",
+          "x": -3,
+          "z": 6,
+          "direction": 310,
+          "animation": "a2o-test-animation2"
+        },
+        {
+          "actor": "Throttle McBeef",
+          "character": "Biker Dude",
+          "x": -0.5,
+          "z": 5.2,
+          "direction": 170,
+          "animation": "a2o-walking-frantic-loop"
+        },
+        {
+          "actor": "Dolly Wonderknit",
+          "character": "Grandma",
+          "x": 2,
+          "z": 6.3,
+          "direction": 45,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Quincy Vape III",
+          "character": "Hipster",
+          "x": 4.5,
+          "z": 5,
+          "direction": 200,
+          "animation": "a2o-test-animation3"
+        },
+        {
+          "actor": "Tanya Stridewell",
+          "character": "Deb",
+          "x": 6.5,
+          "z": 5.8,
+          "direction": 290,
+          "animation": "a2o-walking-loop"
+        },
+        {
+          "actor": "Dirk Powerlunch",
+          "character": "The Boss",
+          "x": -6.5,
+          "z": 3,
+          "direction": 110,
+          "animation": "a2o-test-animation4"
+        },
+        {
+          "actor": "Cheryl Swanbeam",
+          "character": "Mom (Ponytail)",
+          "x": -4,
+          "z": 2.5,
+          "direction": 90,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Gary Nachofingers",
+          "character": "The Slob",
+          "x": -1.5,
+          "z": 3.2,
+          "direction": 260,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Mildred Starchpress",
+          "character": "Peg",
+          "x": 1,
+          "z": 2.8,
+          "direction": 15,
+          "animation": "a2o-approve"
+        },
+        {
+          "actor": "Vince Rattlesnake",
+          "character": "Lizard King",
+          "x": 3.5,
+          "z": 2.5,
+          "direction": 140,
+          "animation": "a2o-test-animation6"
+        },
+        {
+          "actor": "Harold Suspenders",
+          "character": "Grandpa",
+          "x": 6,
+          "z": 3.3,
+          "direction": 330,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Petunia Flambe",
+          "character": "Fat Lady Summer",
+          "x": -5,
+          "z": 0.5,
+          "direction": 330,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Blaine Cueball",
+          "character": "Ross (Bald)",
+          "x": -2.5,
+          "z": 0,
+          "direction": 70,
+          "animation": "a2o-test-animation"
+        },
+        {
+          "actor": "Prudence Ironskirt",
+          "character": "Peg",
+          "x": 0.5,
+          "z": 0.5,
+          "direction": 195,
+          "animation": "a2o-test-animation3"
+        },
+        {
+          "actor": "Chad Thunderpants",
+          "character": "Dad (Fit)",
+          "x": 3,
+          "z": -0.2,
+          "direction": 225,
+          "animation": "a2o-walking-frantic-loop"
+        },
+        {
+          "actor": "Sable Diamondwrist",
+          "character": "Mercedes",
+          "x": 5.5,
+          "z": 0.8,
+          "direction": 350,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Axle Grindhouse",
+          "character": "Biker Dude",
+          "x": -6,
+          "z": -2,
+          "direction": 55,
+          "animation": "a2o-test-animation4"
+        },
+        {
+          "actor": "Jasper Coldpress",
+          "character": "Hipster",
+          "x": -3.5,
+          "z": -2.5,
+          "direction": 270,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Nana Crumbsworth",
+          "character": "Grandma",
+          "x": -1,
+          "z": -2.8,
+          "direction": 160,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Lana Moonbeam",
+          "character": "Mom (Ponytail)",
+          "x": 1.5,
+          "z": -2.2,
+          "direction": 80,
+          "animation": "a2o-test-animation"
+        },
+        {
+          "actor": "Slade Fangsworth",
+          "character": "Lizard King",
+          "x": 4,
+          "z": -2.5,
+          "direction": 95,
+          "animation": "a2o-test-animation6"
+        },
+        {
+          "actor": "Dwayne Couchfort",
+          "character": "The Slob",
+          "x": 6.5,
+          "z": -1.8,
+          "direction": 185,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Rex Boardroom",
+          "character": "The Boss",
+          "x": -5.5,
+          "z": -4.5,
+          "direction": 20,
+          "animation": "a2o-test-animation2"
+        },
+        {
+          "actor": "Jolene Sunpuddle",
+          "character": "Fat Lady Summer",
+          "x": -3,
+          "z": -5,
+          "direction": 145,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Cliff Chromedome",
+          "character": "Ross (Bald)",
+          "x": -0.5,
+          "z": -4.8,
+          "direction": 300,
+          "animation": "a2o-walking-frantic-loop"
+        },
+        {
+          "actor": "Tiffany Sparklecoat",
+          "character": "Deb",
+          "x": 2,
+          "z": -5.2,
+          "direction": 60,
+          "animation": "a2o-approve"
+        },
+        {
+          "actor": "Mortimer Wheezeworth",
+          "character": "Grandpa",
+          "x": 4.5,
+          "z": -4.5,
+          "direction": 240,
+          "animation": "a2o-test-animation4"
+        },
+        {
+          "actor": "Diesel McRevs",
+          "character": "Biker Dude",
+          "x": 7,
+          "z": -4,
+          "direction": 170,
+          "animation": "a2o-test-animation6"
+        },
+        {
+          "actor": "Lance Jawstrong",
+          "character": "Dad (Fit)",
+          "x": -4.5,
+          "z": -7,
+          "direction": 130,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Aiden Shroomtea",
+          "character": "Hipster",
+          "x": -2,
+          "z": -7.3,
+          "direction": 35,
+          "animation": "a2o-test-animation"
+        },
+        {
+          "actor": "Velvet Nightengale",
+          "character": "Mercedes",
+          "x": 0.5,
+          "z": -7,
+          "direction": 210,
+          "animation": "a2o-test-animation3"
+        },
+        {
+          "actor": "Brenda Windchime",
+          "character": "Mom (Ponytail)",
+          "x": 3,
+          "z": -7.5,
+          "direction": 315,
+          "animation": "a2o-test-animation5"
+        },
+        {
+          "actor": "Agnes Frostworth",
+          "character": "Peg",
+          "x": 5.5,
+          "z": -6.8,
+          "direction": 75,
+          "animation": "a2o-energetic1"
+        },
+        {
+          "actor": "Spike Venomtooth",
+          "character": "Lizard King",
+          "x": -6.5,
+          "z": -9,
+          "direction": 250,
+          "animation": "a2o-walking-frantic-loop"
+        },
+        {
+          "actor": "Edna Butterworth",
+          "character": "Grandma",
+          "x": -3.5,
+          "z": -9.5,
+          "direction": 5,
+          "animation": "a2o-test-animation2"
+        },
+        {
+          "actor": "Sterling Pinstripe",
+          "character": "The Boss",
+          "x": -0.5,
+          "z": -9.2,
+          "direction": 175,
+          "animation": "a2o-dance-inplace-twistloop"
+        },
+        {
+          "actor": "Earl Beanburrito",
+          "character": "The Slob",
+          "x": 2.5,
+          "z": -9,
+          "direction": 285,
+          "animation": "a2o-test-animation4"
+        },
+        {
+          "actor": "Bertha Sunflower",
+          "character": "Fat Lady Summer",
+          "x": 5,
+          "z": -9.5,
+          "direction": 120,
+          "animation": "a2o-test-animation6"
+        },
+        {
+          "actor": "Wilbur Napsalot",
+          "character": "Grandpa",
+          "x": 7.5,
+          "z": -8.5,
+          "direction": 340,
+          "animation": "a2o-test-animation"
+        }
       ]
     }
   ]
