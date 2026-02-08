@@ -420,9 +420,10 @@ function populateMenus() {
     fillSelect($('selHandTex'), applyFilter(handTexNames, 'handTex'), decodeTexName);
 
     // Animations: filter out non-looping transitions that sneak in from multi-skill CMX files
+    const skillBlacklist = ['twiststart', 'twiststop', '-start', '-stop', '-walkon', '-walkoff', '-divein', '-jumpin', 'a2o-stand'];
     const showableSkills = Object.keys(content.skills).filter(name => {
         const l = name.toLowerCase();
-        return !l.includes('twiststart') && !l.includes('twiststop') && !l.includes('-start') && !l.includes('-stop');
+        return !skillBlacklist.some(b => l.includes(b));
     });
     fillSelect($('selAnim'), showableSkills);
 
