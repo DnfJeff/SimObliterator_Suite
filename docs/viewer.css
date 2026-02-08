@@ -345,8 +345,10 @@ details summary h3 {
     border-radius: 12px;
     padding: 28px 36px;
     max-width: 520px;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: scroll;
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--accent) var(--bg-input); /* Firefox */
     color: var(--text-primary);
 }
 .help-content h2 {
@@ -410,6 +412,25 @@ kbd {
     cursor: pointer;
 }
 .help-close:hover { opacity: 0.85; }
+
+/* Force scrollbar visibility on WebKit browsers (Chrome, Safari, Edge)
+   because Apple decided hiding scrollbars was "minimal" and "artistic"
+   instead of usable. A scrollbar means you can scroll. No scrollbar
+   means you can't. That's an affordance. Don't lie to users. */
+.help-content::-webkit-scrollbar {
+    width: 10px;
+}
+.help-content::-webkit-scrollbar-track {
+    background: var(--bg-input);
+    border-radius: 4px;
+}
+.help-content::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+.help-content::-webkit-scrollbar-thumb:hover {
+    background: #9febb8;
+}
 
 #btnHelp {
     position: fixed;
