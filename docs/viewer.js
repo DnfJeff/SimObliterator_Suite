@@ -747,21 +747,19 @@ let spinGain = null;
 //   "oo" (ooh):  300,  870, 2240  — leaning, rounded
 //   "aa" (aah):  730, 1090, 2440  — max lean, open mouth
 //   "aw" (aww):  570,  840, 2410  — coming back around
-let spinFormants = null; // { oscs, gains, filters, masterGain }
+let spinFormants = null; // solo mode voice chain
+let bodyVoices = [];     // per-body voice chains for scene mode
 
-function initSpinSound() {
-    if (audioCtx) return;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Glottal source: sawtooth (vocal cord buzz) + slight noise for breathiness
+// Create one complete voice chain: 2 oscillators + noise -> 3 bandpass formants -> gain -> panner -> destination
+function createVoiceChain() {
     const glottal = audioCtx.createOscillator();
     glottal.type = 'sawtooth';
-    glottal.frequency.value = 120; // base pitch
+    glottal.frequency.value = 120;
 
     const glottal2 = audioCtx.createOscillator();
     glottal2.type = 'sawtooth';
     glottal2.frequency.value = 120;
-    glottal2.detune.value = 5; // chorus
+    glottal2.detune.value = 5 + Math.random() * 10; // varied detune per voice
 
     const noise = audioCtx.createBufferSource();
     const noiseLen = audioCtx.sampleRate * 2;
@@ -771,26 +769,22 @@ function initSpinSound() {
     noise.buffer = noiseBuf;
     noise.loop = true;
 
-    // Source mixer — noise gets its own gain for per-character breathiness control
     const srcGain = audioCtx.createGain();
     srcGain.gain.value = 1;
     const noiseGain = audioCtx.createGain();
-    noiseGain.gain.value = 0.15; // default breathiness
+    noiseGain.gain.value = 0.15;
     glottal.connect(srcGain);
     glottal2.connect(srcGain);
     noise.connect(noiseGain);
     noiseGain.connect(srcGain);
 
-    // Three formant filters (bandpass) for "ee" vowel
-    const formantFreqs = [270, 2300, 3000]; // F1, F2, F3
-    const formantQs = [5, 12, 8];           // narrower = more vowel-like
-    const formantGains = [1.0, 0.6, 0.3];   // F1 loudest
+    const formantFreqs = [270, 2300, 3000];
+    const formantQs = [5, 12, 8];
+    const formantGains = [1.0, 0.6, 0.3];
 
     const filters = [];
-    const fGains = [];
     const masterGain = audioCtx.createGain();
     masterGain.gain.value = 0;
-    // Stereo panner: characters' screen X position maps to L/R pan
     const panner = audioCtx.createStereoPanner();
     panner.pan.value = 0;
     masterGain.connect(panner);
@@ -801,25 +795,42 @@ function initSpinSound() {
         bp.type = 'bandpass';
         bp.frequency.value = formantFreqs[i];
         bp.Q.value = formantQs[i];
-
         const g = audioCtx.createGain();
         g.gain.value = formantGains[i];
-
         srcGain.connect(bp);
         bp.connect(g);
         g.connect(masterGain);
-
         filters.push(bp);
-        fGains.push(g);
     }
 
     glottal.start();
     glottal2.start();
     noise.start();
 
-    spinFormants = { glottal, glottal2, filters, masterGain, noiseGain, panner };
-    spinOsc = glottal;
-    spinGain = masterGain;
+    return { glottal, glottal2, filters, masterGain, noiseGain, panner };
+}
+
+function initSpinSound() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Create solo voice chain
+    spinFormants = createVoiceChain();
+    spinOsc = spinFormants.glottal;
+    spinGain = spinFormants.masterGain;
+}
+
+// Create per-body voice chains for scene mode (call after audioCtx exists)
+function ensureBodyVoices() {
+    if (!audioCtx) return;
+    // Match voice chains to bodies count
+    while (bodyVoices.length < bodies.length) {
+        bodyVoices.push(createVoiceChain());
+    }
+    // Silence extra chains
+    const now = audioCtx.currentTime;
+    for (let i = bodies.length; i < bodyVoices.length; i++) {
+        bodyVoices[i].masterGain.gain.setTargetAtTime(0, now, 0.05);
+    }
 }
 
 // Four vowel targets around the precession circle (F1, F2, F3)
@@ -920,103 +931,92 @@ function getVoiceType() {
     return                          { basePitch: 50, pitchRange: 20, formantScale: 0.75, breathiness: 0.10, chorusSize: 1 };
 }
 
+// Drive a single voice chain from a body's voice params and top-physics state.
+function updateVoiceChain(chain, voice, bTop, screenX, speed, now) {
+    if (speed > 0.5) {
+        const rawTilt = bTop.active ? Math.min(bTop.tilt / TOP_MAX_TILT, 1.0) : 0;
+        const tiltAmount = Math.pow(rawTilt, 0.6);
+        const precAngle = bTop.active ? ((bTop.precessionAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) : 0;
+
+        // Pitch with per-body wobble from this body's own nutation
+        const basePitch = voice.basePitch + Math.min(speed, 15) * voice.pitchRange;
+        const wobbleDepth = tiltAmount * 60;
+        const wobble1 = Math.sin(bTop.nutationPhase * 2.5) * wobbleDepth;
+        const wobble2 = Math.sin(bTop.nutationPhase * 1.7 + 1.3) * wobbleDepth * 0.3;
+        const pitch = basePitch + wobble1 + wobble2;
+        chain.glottal.frequency.setTargetAtTime(pitch, now, 0.01);
+        chain.glottal2.frequency.setTargetAtTime(pitch * 1.005, now, 0.01);
+
+        // Breathiness
+        if (chain.noiseGain) {
+            const breathTilt = (voice.breathiness || 0.15) + tiltAmount * 0.5;
+            chain.noiseGain.gain.setTargetAtTime(breathTilt, now, 0.02);
+        }
+
+        // Formants: this body's own dipthong sweep
+        const speedShift = 1 + Math.min(speed, 12) * 0.02;
+        const [f1, f2, f3] = lerpVowel(precAngle, tiltAmount);
+        const fScale = speedShift * voice.formantScale;
+        chain.filters[0].frequency.setTargetAtTime(f1 * fScale, now, 0.015);
+        chain.filters[1].frequency.setTargetAtTime(f2 * fScale, now, 0.015);
+        chain.filters[2].frequency.setTargetAtTime(f3 * fScale, now, 0.015);
+
+        const qScale = 1 - tiltAmount * 0.6;
+        chain.filters[0].Q.setTargetAtTime(5 * qScale, now, 0.01);
+        chain.filters[1].Q.setTargetAtTime(12 * qScale, now, 0.01);
+        chain.filters[2].Q.setTargetAtTime(8 * qScale, now, 0.01);
+
+        // Volume: scale down per body so the chorus doesn't clip
+        const numVoices = Math.max(bodies.length, 1);
+        const perVoiceVol = Math.min(speed / 7, 0.25) / Math.sqrt(numVoices);
+        const tiltBoost = 1 + tiltAmount * 1.2;
+        chain.masterGain.gain.setTargetAtTime(perVoiceVol * tiltBoost, now, 0.02);
+
+        // Stereo pan from screen X position
+        if (chain.panner) {
+            const pan = Math.max(-1, Math.min(1, screenX / 3));
+            chain.panner.pan.setTargetAtTime(pan, now, 0.03);
+        }
+    } else {
+        chain.masterGain.gain.setTargetAtTime(0, now, 0.1);
+    }
+}
+
 function updateSpinSound() {
-    if (!audioCtx || !spinFormants) return;
+    if (!audioCtx) return;
 
     const speed = Math.abs(rotationVelocity);
     const now = audioCtx.currentTime;
 
-    if (speed > 0.5) {
+    if (bodies.length > 0) {
+        // Scene mode: each body gets its own voice chain
+        ensureBodyVoices();
+        // Silence the solo chain
+        if (spinFormants) spinFormants.masterGain.gain.setTargetAtTime(0, now, 0.05);
+
+        for (let i = 0; i < bodies.length; i++) {
+            const b = bodies[i];
+            const chain = bodyVoices[i];
+            if (!chain) continue;
+
+            // Get this body's voice params from their person data
+            const v = b.personData?.voice;
+            const voice = v ? {
+                basePitch: v.pitch || 50, pitchRange: v.range || 20,
+                formantScale: v.formant || 0.85, breathiness: v.breathiness || 0.15,
+            } : { basePitch: 50, pitchRange: 20, formantScale: 0.75, breathiness: 0.10 };
+
+            // Screen X: body position projected for pan
+            const driftX = b.top.active ? b.top.driftX : 0;
+            const screenX = b.x + driftX;
+
+            updateVoiceChain(chain, voice, b.top, screenX, speed, now);
+        }
+    } else if (spinFormants) {
+        // Solo mode: single voice chain
         const voice = getVoiceType();
-
-        // Aggregate tilt from all bodies (or just the global top for solo)
-        let avgTilt = 0, avgPrec = 0, avgNut = 0, topCount = 0;
-        if (bodies.length > 0) {
-            for (const b of bodies) {
-                if (b.top.active) {
-                    avgTilt += b.top.tilt;
-                    avgPrec += b.top.precessionAngle;
-                    avgNut += b.top.nutationPhase;
-                    topCount++;
-                }
-            }
-            if (topCount > 0) { avgTilt /= topCount; avgPrec /= topCount; avgNut /= topCount; }
-        } else if (top.active) {
-            avgTilt = top.tilt; avgPrec = top.precessionAngle; avgNut = top.nutationPhase;
-            topCount = 1;
-        }
-
-        const rawTilt = topCount > 0 ? Math.min(avgTilt / TOP_MAX_TILT, 1.0) : 0;
-        const tiltAmount = Math.pow(rawTilt, 0.6);
-        const precAngle = topCount > 0 ? ((avgPrec % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) : 0;
-
-        // Glottal pitch: blended voice base, rises with speed
-        // Chorus mode: wider detune between oscillators proportional to cast size
-        const basePitch = voice.basePitch + Math.min(speed, 15) * voice.pitchRange;
-        const wobbleDepth = tiltAmount * 60;
-        const wobble1 = Math.sin(avgNut * 2.5) * wobbleDepth;
-        const wobble2 = Math.sin(avgNut * 1.7 + 1.3) * wobbleDepth * 0.3;
-        const pitch = basePitch + wobble1 + wobble2;
-        const chorusDetune = 1 + (voice.chorusSize || 1) * 0.003; // wider for more voices
-        spinFormants.glottal.frequency.setTargetAtTime(pitch, now, 0.01);
-        spinFormants.glottal2.frequency.setTargetAtTime(pitch * chorusDetune, now, 0.01);
-
-        // Per-character breathiness: more air = more noise in the voice
-        if (spinFormants.noiseGain) {
-            const breathBase = voice.breathiness || 0.15;
-            const breathTilt = breathBase + tiltAmount * 0.5; // VERY breathy when careening
-            spinFormants.noiseGain.gain.setTargetAtTime(breathTilt, now, 0.02);
-        }
-
-        // Speed-based formant shift (the base "wee" rising effect)
-        const speedShift = 1 + Math.min(speed, 12) * 0.02;
-
-        // Tilt-driven dipthong: precession angle sweeps through vowel space
-        const [f1, f2, f3] = lerpVowel(precAngle, tiltAmount);
-
-        // Apply speed shift, tilt-driven vowel morph, and voice-type formant scaling
-        const fScale = speedShift * voice.formantScale;
-        // Fast transition time (0.015s) so the vowels respond instantly to wobble
-        spinFormants.filters[0].frequency.setTargetAtTime(f1 * fScale, now, 0.015);
-        spinFormants.filters[1].frequency.setTargetAtTime(f2 * fScale, now, 0.015);
-        spinFormants.filters[2].frequency.setTargetAtTime(f3 * fScale, now, 0.015);
-
-        // Widen Q when mouth opens — at full tilt it's basically yelling into the void
-        const qScale = 1 - tiltAmount * 0.6; // Q drops to 40% at max tilt
-        spinFormants.filters[0].Q.setTargetAtTime(5 * qScale, now, 0.01);
-        spinFormants.filters[1].Q.setTargetAtTime(12 * qScale, now, 0.01);
-        spinFormants.filters[2].Q.setTargetAtTime(8 * qScale, now, 0.01);
-
-        // Volume: LOUDER when tilting — Taz doesn't do things quietly
-        const baseVol = Math.min(speed / 7, 0.25);
-        const tiltBoost = 1 + tiltAmount * 1.2; // up to 120% louder, full cartoon scream
-        spinFormants.masterGain.gain.setTargetAtTime(baseVol * tiltBoost, now, 0.02);
-
-        // Stereo pan: map bodies' X positions (after spin rotation) to L/R
-        if (spinFormants.panner && bodies.length > 0) {
-            const rotYDeg = parseFloat($('rotY')?.value || 0);
-            const rotRad = rotYDeg * Math.PI / 180;
-            let panSum = 0;
-            for (const b of bodies) {
-                // Each body's world X after applying spin rotation
-                const bDir = ((b.direction || 0) + rotYDeg) * Math.PI / 180;
-                // Project body position onto the camera's right axis
-                // Camera looks along Z, so X is screen-left/right
-                const worldX = b.x * Math.cos(rotRad) - b.z * Math.sin(rotRad);
-                // Add drift from top physics
-                const driftX = b.top.active ? b.top.driftX : 0;
-                panSum += worldX + driftX;
-            }
-            // Average and clamp to [-1, 1]
-            const avgPan = Math.max(-1, Math.min(1, panSum / bodies.length / 3));
-            spinFormants.panner.pan.setTargetAtTime(avgPan, now, 0.03);
-        } else if (spinFormants.panner) {
-            // Solo mode: drift-based pan
-            const driftPan = top.active ? Math.max(-1, Math.min(1, top.driftX / 2)) : 0;
-            spinFormants.panner.pan.setTargetAtTime(driftPan, now, 0.05);
-        }
-    } else {
-        spinFormants.masterGain.gain.setTargetAtTime(0, now, 0.1);
+        const driftX = top.active ? top.driftX : 0;
+        updateVoiceChain(spinFormants, voice, top, driftX, speed, now);
     }
 }
 
