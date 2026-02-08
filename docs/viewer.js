@@ -790,7 +790,11 @@ function initSpinSound() {
     const fGains = [];
     const masterGain = audioCtx.createGain();
     masterGain.gain.value = 0;
-    masterGain.connect(audioCtx.destination);
+    // Stereo panner: characters' screen X position maps to L/R pan
+    const panner = audioCtx.createStereoPanner();
+    panner.pan.value = 0;
+    masterGain.connect(panner);
+    panner.connect(audioCtx.destination);
 
     for (let i = 0; i < 3; i++) {
         const bp = audioCtx.createBiquadFilter();
@@ -813,7 +817,7 @@ function initSpinSound() {
     glottal2.start();
     noise.start();
 
-    spinFormants = { glottal, glottal2, filters, masterGain, noiseGain };
+    spinFormants = { glottal, glottal2, filters, masterGain, noiseGain, panner };
     spinOsc = glottal;
     spinGain = masterGain;
 }
@@ -987,6 +991,30 @@ function updateSpinSound() {
         const baseVol = Math.min(speed / 7, 0.25);
         const tiltBoost = 1 + tiltAmount * 1.2; // up to 120% louder, full cartoon scream
         spinFormants.masterGain.gain.setTargetAtTime(baseVol * tiltBoost, now, 0.02);
+
+        // Stereo pan: map bodies' X positions (after spin rotation) to L/R
+        if (spinFormants.panner && bodies.length > 0) {
+            const rotYDeg = parseFloat($('rotY')?.value || 0);
+            const rotRad = rotYDeg * Math.PI / 180;
+            let panSum = 0;
+            for (const b of bodies) {
+                // Each body's world X after applying spin rotation
+                const bDir = ((b.direction || 0) + rotYDeg) * Math.PI / 180;
+                // Project body position onto the camera's right axis
+                // Camera looks along Z, so X is screen-left/right
+                const worldX = b.x * Math.cos(rotRad) - b.z * Math.sin(rotRad);
+                // Add drift from top physics
+                const driftX = b.top.active ? b.top.driftX : 0;
+                panSum += worldX + driftX;
+            }
+            // Average and clamp to [-1, 1]
+            const avgPan = Math.max(-1, Math.min(1, panSum / bodies.length / 3));
+            spinFormants.panner.pan.setTargetAtTime(avgPan, now, 0.03);
+        } else if (spinFormants.panner) {
+            // Solo mode: drift-based pan
+            const driftPan = top.active ? Math.max(-1, Math.min(1, top.driftX / 2)) : 0;
+            spinFormants.panner.pan.setTargetAtTime(driftPan, now, 0.05);
+        }
     } else {
         spinFormants.masterGain.gain.setTargetAtTime(0, now, 0.1);
     }
@@ -1123,25 +1151,41 @@ function renderFrame() {
     }
 
     const zoom = parseFloat($('zoom').value) / 10;
-    const rotY = parseFloat($('rotY').value) * Math.PI / 180;
+    const rotYDeg = parseFloat($('rotY').value);
+    const rotY = rotYDeg * Math.PI / 180;
     const rotX = parseFloat($('rotX').value) * Math.PI / 180;
     const dist = zoom;
-    // Spherical coordinates: rotX tilts up/down, rotY spins around
+
+    // Scene mode: camera stays fixed, each body spins in place.
+    // Solo mode: camera orbits around the character (original behavior).
+    const sceneMode = bodies.length > 0;
     const cosX = Math.cos(rotX);
-    const eyeX = Math.sin(rotY) * cosX * dist;
-    const eyeY = cameraTarget.y + Math.sin(rotX) * dist;
-    const eyeZ = Math.cos(rotY) * cosX * dist;
+    let eyeX, eyeY, eyeZ;
+    if (sceneMode) {
+        // Fixed camera looking at the group from a consistent angle
+        eyeX = Math.sin(0) * cosX * dist; // no camera rotation
+        eyeY = cameraTarget.y + Math.sin(rotX) * dist;
+        eyeZ = Math.cos(0) * cosX * dist;
+    } else {
+        // Solo: camera orbits around character
+        eyeX = Math.sin(rotY) * cosX * dist;
+        eyeY = cameraTarget.y + Math.sin(rotX) * dist;
+        eyeZ = Math.cos(rotY) * cosX * dist;
+    }
 
     renderer.setCamera(50, canvas.width / canvas.height, 0.01, 100,
                        eyeX, eyeY, eyeZ,
                        cameraTarget.x, cameraTarget.y, cameraTarget.z);
 
-    // Render all bodies (solo mode: bodies empty, use activeMeshes; scene mode: iterate bodies)
-    const bodiesToRender = bodies.length > 0 ? bodies : [{ skeleton: activeSkeleton, meshes: activeMeshes, top, x: 0, z: 0, direction: 0 }];
+    // Render all bodies
+    const bodiesToRender = sceneMode ? bodies : [{ skeleton: activeSkeleton, meshes: activeMeshes, top, x: 0, z: 0, direction: 0 }];
 
     for (const body of bodiesToRender) {
         const bTop = body.top || top;
-        const bodyDir = (body.direction || 0) * Math.PI / 180;
+        // Scene mode: rotY spins each body around its own center (added to base direction)
+        // Solo mode: direction is 0 (camera does the orbiting)
+        const spinDeg = sceneMode ? (body.direction || 0) + rotYDeg : 0;
+        const bodyDir = spinDeg * Math.PI / 180;
         const cosD = Math.cos(bodyDir);
         const sinD = Math.sin(bodyDir);
 
