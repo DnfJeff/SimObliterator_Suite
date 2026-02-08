@@ -313,7 +313,9 @@ export class Renderer {
             }
         }
 
-        // Draw with custom color via uFadeColor
+        // Draw with custom color via uFadeColor, no culling (both sides visible)
+        const wasCulling = gl.isEnabled(gl.CULL_FACE);
+        gl.disable(gl.CULL_FACE);
         gl.uniform3f(this.uFadeColor, r, g, b);
         gl.uniform1f(this.uAlpha, alpha);
         gl.enable(gl.BLEND);
@@ -330,6 +332,7 @@ export class Renderer {
         gl.uniform3f(this.uFadeColor, -1, -1, -1);
         gl.uniform1f(this.uAlpha, 1.0);
         gl.disable(gl.BLEND);
+        if (wasCulling) gl.enable(gl.CULL_FACE);
     }
 
     loadTexture(image: HTMLImageElement): WebGLTexture {

@@ -1600,7 +1600,7 @@ function renderFrame() {
         if (selectedActorIndex >= 0 && selectedActorIndex < bodiesToRender.length) {
             // One actor selected: plumb bob over just them
             drawPlumbBobForBody(selectedActorIndex, bodiesToRender[selectedActorIndex]);
-        } else {
+        } else if (selectedActorIndex < 0) {
             // All mode: plumb bob over everyone
             for (let bi = 0; bi < bodiesToRender.length; bi++) {
                 drawPlumbBobForBody(bi, bodiesToRender[bi]);
