@@ -599,27 +599,26 @@ async function loadScene(sceneIndex) {
     // All bodies are built, all practices are ready — now make them live.
     bodies = newBodies;
 
-    // Populate Actor dropdown from cast
+    // Populate Actor dropdown from cast, with "All" at top
     const actorSel = $('selActor');
     const actorGroup = $('actorGroup');
     if (actorSel) {
         while (actorSel.options.length) actorSel.remove(0);
+        const allOpt = document.createElement('option');
+        allOpt.value = '-1';
+        allOpt.textContent = `All (${bodies.length})`;
+        actorSel.appendChild(allOpt);
         for (let i = 0; i < bodies.length; i++) {
             const opt = document.createElement('option');
             opt.value = String(i);
             opt.textContent = bodies[i].actorName;
             actorSel.appendChild(opt);
         }
-        selectedActorIndex = 0;
-        actorSel.value = '0';
+        selectedActorIndex = -1; // "All" by default
+        actorSel.value = '-1';
     }
     if (actorGroup) actorGroup.style.display = bodies.length > 0 ? '' : 'none';
-
-    // Sync Character dropdown to first actor's character
-    if (bodies.length > 0 && bodies[0].personData) {
-        const charIdx = contentIndex.characters?.findIndex(c => c.name === bodies[0].personData.name);
-        if (charIdx >= 0) $('selCharacter').value = String(charIdx);
-    }
+    updateActorEditingUI();
 
     // Set primary body refs for compatibility (camera target, status, etc.)
     if (bodies.length > 0) {
@@ -773,6 +772,7 @@ function exitScene() {
     selectedActorIndex = -1;
     const actorGroup = $('actorGroup');
     if (actorGroup) actorGroup.style.display = 'none';
+    updateActorEditingUI();
     // Silence any body voice chains
     if (audioCtx) {
         const now = audioCtx.currentTime;
@@ -1584,6 +1584,134 @@ function animationLoop(timestamp) {
     requestAnimationFrame(animationLoop);
 }
 
+// Pick actor by screen position: project each body's head position to screen,
+// find the nearest one within a threshold radius.
+function pickActorAtScreen(screenX, screenY) {
+    if (bodies.length === 0 || !renderer) return -1;
+
+    const rect = canvas.getBoundingClientRect();
+    const mx = screenX - rect.left;
+    const my = screenY - rect.top;
+
+    const zoom = parseFloat($('zoom').value) / 10;
+    const rotYDeg = parseFloat($('rotY').value);
+    const rotY = rotYDeg * Math.PI / 180;
+    const rotX = parseFloat($('rotX').value) * Math.PI / 180;
+    const dist = zoom;
+    const fov = 50;
+    const aspect = canvas.width / canvas.height;
+
+    const sceneMode = bodies.length > 0;
+    const cosX = Math.cos(rotX);
+    let eyeX, eyeY, eyeZ;
+    if (sceneMode) {
+        eyeX = 0;
+        eyeY = cameraTarget.y + Math.sin(rotX) * dist;
+        eyeZ = cosX * dist;
+    } else {
+        eyeX = Math.sin(rotY) * cosX * dist;
+        eyeY = cameraTarget.y + Math.sin(rotX) * dist;
+        eyeZ = Math.cos(rotY) * cosX * dist;
+    }
+
+    // Build view + projection matrices (same as renderer.setCamera)
+    const proj = perspectiveMatrix(fov, aspect, 0.01, 100);
+    const view = lookAtMatrix(eyeX, eyeY, eyeZ, cameraTarget.x, cameraTarget.y, cameraTarget.z, 0, 1, 0);
+
+    let bestIdx = -1;
+    let bestDist = 60; // max screen-pixel distance threshold
+
+    for (let i = 0; i < bodies.length; i++) {
+        const b = bodies[i];
+        if (!b.skeleton) continue;
+
+        // Get approximate center: body world position at waist height
+        const spinDeg = (b.direction || 0) + rotYDeg;
+        const bodyDir = spinDeg * Math.PI / 180;
+
+        // Use SPINE1 bone if available, else just body position
+        const spine = b.skeleton.find(bn => bn.name === 'SPINE1') || b.skeleton.find(bn => bn.name === 'PELVIS');
+        let wx = b.x, wy = 2.5, wz = b.z;
+        if (spine) {
+            const cosD = Math.cos(bodyDir);
+            const sinD = Math.sin(bodyDir);
+            const sx = spine.worldPosition.x;
+            const sz = spine.worldPosition.z;
+            wx = sx * cosD - sz * sinD + b.x;
+            wy = spine.worldPosition.y;
+            wz = sx * sinD + sz * cosD + b.z;
+        }
+
+        // Project world point to screen
+        const sp = projectToScreen(wx, wy, wz, view, proj, canvas.width, canvas.height);
+        if (!sp) continue;
+
+        const dx = sp.x - mx;
+        const dy = sp.y - my;
+        const screenDist = Math.sqrt(dx * dx + dy * dy);
+
+        if (screenDist < bestDist) {
+            bestDist = screenDist;
+            bestIdx = i;
+        }
+    }
+
+    return bestIdx;
+}
+
+// Project a world point to screen pixel coordinates
+function projectToScreen(wx, wy, wz, view, proj, width, height) {
+    // view * point
+    const vx = view[0]*wx + view[4]*wy + view[8]*wz + view[12];
+    const vy = view[1]*wx + view[5]*wy + view[9]*wz + view[13];
+    const vz = view[2]*wx + view[6]*wy + view[10]*wz + view[14];
+    const vw = view[3]*wx + view[7]*wy + view[11]*wz + view[15];
+    // proj * view_point
+    const px = proj[0]*vx + proj[4]*vy + proj[8]*vz + proj[12]*vw;
+    const py = proj[1]*vx + proj[5]*vy + proj[9]*vz + proj[13]*vw;
+    const pw = proj[3]*vx + proj[7]*vy + proj[11]*vz + proj[15]*vw;
+    if (Math.abs(pw) < 0.001) return null; // behind camera
+    // NDC
+    const ndcX = px / pw;
+    const ndcY = py / pw;
+    // Screen
+    return {
+        x: (ndcX * 0.5 + 0.5) * width,
+        y: (1.0 - (ndcY * 0.5 + 0.5)) * height,
+    };
+}
+
+// Minimal perspective matrix (matches renderer.ts)
+function perspectiveMatrix(fov, aspect, near, far) {
+    const f = 1.0 / Math.tan(fov * Math.PI / 360);
+    const nf = 1 / (near - far);
+    return new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0,
+    ]);
+}
+
+// Minimal lookAt matrix (matches renderer.ts)
+function lookAtMatrix(ex, ey, ez, cx, cy, cz, ux, uy, uz) {
+    let fx = cx - ex, fy = cy - ey, fz = cz - ez;
+    let fl = Math.sqrt(fx*fx + fy*fy + fz*fz);
+    fx /= fl; fy /= fl; fz /= fl;
+    let sx = fy*uz - fz*uy, sy = fz*ux - fx*uz, sz = fx*uy - fy*ux;
+    let sl = Math.sqrt(sx*sx + sy*sy + sz*sz);
+    sx /= sl; sy /= sl; sz /= sl;
+    let uux = sy*fz - sz*fy, uuy = sz*fx - sx*fz, uuz = sx*fy - sy*fx;
+    return new Float32Array([
+        sx, uux, -fx, 0,
+        sy, uuy, -fy, 0,
+        sz, uuz, -fz, 0,
+        -(sx*ex + sy*ey + sz*ez),
+        -(uux*ex + uuy*ey + uuz*ez),
+        fx*ex + fy*ey + fz*ez, 1,
+    ]);
+}
+
 // Mouse/touch interaction: drag left/right = spin, drag up/down = zoom
 function setupMouseInteraction() {
     canvas.addEventListener('contextmenu', e => e.preventDefault());
@@ -1669,8 +1797,16 @@ function setupMouseInteraction() {
         if (dragButton === 0 && dragMoved) {
             // Left button release with momentum — carry the smoothed velocity
             rotationVelocity = smoothedVelocity;
-        } else if (dragButton === 0) {
-            // Left click without drag — stop spinning
+        } else if (dragButton === 0 && !dragMoved) {
+            // Left click without drag — pick actor or stop spinning
+            if (bodies.length > 0) {
+                const picked = pickActorAtScreen(dragStartX, dragStartY);
+                if (picked >= 0) {
+                    selectActor(picked);
+                } else {
+                    selectActor(-1); // click background = select All
+                }
+            }
             rotationVelocity = 0;
         }
         // Right button: no momentum, just stops
@@ -1710,6 +1846,34 @@ function setupMouseInteraction() {
     });
 
     canvas.style.cursor = 'grab';
+}
+
+// Select an actor by index. -1 = All.
+function selectActor(idx) {
+    if (idx < -1 || idx >= bodies.length) return;
+    selectedActorIndex = idx;
+    const actorSel = $('selActor');
+    if (actorSel) actorSel.value = String(idx);
+    // Sync Character dropdown to this actor's character
+    if (idx >= 0) {
+        const body = bodies[idx];
+        if (body?.personData && contentIndex?.characters) {
+            const charIdx = contentIndex.characters.findIndex(c => c.name === body.personData.name);
+            if (charIdx >= 0) $('selCharacter').value = String(charIdx);
+        }
+    }
+    updateActorEditingUI();
+}
+
+// Enable/disable actor editing controls based on whether a specific actor is selected
+function updateActorEditingUI() {
+    const hasActor = activeScene && selectedActorIndex >= 0;
+    const charSel = $('selCharacter');
+    const btnPrev = $('btnCharacterPrev');
+    const btnNext = $('btnCharacterNext');
+    if (charSel) charSel.disabled = !hasActor && !!activeScene;
+    if (btnPrev) btnPrev.disabled = !hasActor && !!activeScene;
+    if (btnNext) btnNext.disabled = !hasActor && !!activeScene;
 }
 
 // Step through character presets
@@ -1917,23 +2081,13 @@ function setupEventListeners() {
     // Actor prev/next buttons and dropdown (scene mode only)
     function stepActor(dir) {
         if (bodies.length === 0) return;
+        // Range: -1 (All) through bodies.length-1
         let idx = selectedActorIndex + dir;
-        if (idx < 0) idx = bodies.length - 1;
-        if (idx >= bodies.length) idx = 0;
+        if (idx < -1) idx = bodies.length - 1;
+        if (idx >= bodies.length) idx = -1;
         selectActor(idx);
     }
-    function selectActor(idx) {
-        if (idx < 0 || idx >= bodies.length) return;
-        selectedActorIndex = idx;
-        const actorSel = $('selActor');
-        if (actorSel) actorSel.value = String(idx);
-        // Sync Character dropdown to this actor's character
-        const body = bodies[idx];
-        if (body?.personData && contentIndex?.characters) {
-            const charIdx = contentIndex.characters.findIndex(c => c.name === body.personData.name);
-            if (charIdx >= 0) $('selCharacter').value = String(charIdx);
-        }
-    }
+    // selectActor is module-level (defined above setupEventListeners)
     const btnActorPrev = $('btnActorPrev');
     const btnActorNext = $('btnActorNext');
     if (btnActorPrev) btnActorPrev.addEventListener('click', () => stepActor(-1));
