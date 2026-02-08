@@ -183,7 +183,7 @@
     "leftHand": "xskin-hmlo-L_HAND-HANDML",
     "rightHand": "xskin-hmro-R_HAND-HANDMR",
     "handTexture": "HUAOdrk",
-    "animation": "a2o-stand"
+    "animation": "a2o-dance-inplace-twistloop"
   },
 
   "people": [
@@ -197,7 +197,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-stand"
+      "animation": "a2o-dance-inplace-twistloop"
     },
     {
       "name": "Mom (Ponytail)",
@@ -221,7 +221,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-energetic1"
+      "animation": "a2o-test-animation"
     },
     {
       "name": "Mercedes",
@@ -233,7 +233,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-approve"
+      "animation": "a2o-test-animation2"
     },
     {
       "name": "Biker Dude",
@@ -257,7 +257,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle3"
+      "animation": "a2o-test-animation3"
     },
     {
       "name": "Fat Lady Summer",
@@ -293,7 +293,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-approve"
+      "animation": "a2o-test-animation4"
     },
     {
       "name": "The Slob",
@@ -329,7 +329,7 @@
       "leftHand": "xskin-hflo-L_HAND-HANDFL",
       "rightHand": "xskin-hfro-R_HAND-HANDFR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-energetic1"
+      "animation": "a2o-test-animation5"
     },
     {
       "name": "Peg",
@@ -353,7 +353,7 @@
       "leftHand": "xskin-hmlo-L_HAND-HANDML",
       "rightHand": "xskin-hmro-R_HAND-HANDMR",
       "handTexture": "HUAOdrk",
-      "animation": "a2o-idle6"
+      "animation": "a2o-test-animation6"
     }
   ]
 }
