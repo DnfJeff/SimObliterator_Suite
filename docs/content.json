@@ -78,10 +78,7 @@
     "adult-test-animation4.cmx",
     "adult-test-animation5.cmx",
     "adult-test-animation6.cmx",
-    "ross-walking-loop.cmx",
-    "c2o-idle1.cmx",
-    "c2o-salute.cmx",
-    "c2o-tv1-surf.cmx"
+    "ross-walking-loop.cmx"
   ],
   "meshes": [
     "xskin-b001fafat_01-PELVIS-BODY.skn",
@@ -388,10 +385,7 @@
     "xskill-a2o-running-loop.cfp",
     "xskill-a2o-walking-female-loop.cfp",
     "xskill-adult-bored1.cfp",
-    "xskill-adult-idle6.cfp",
-    "xskill-c2o-idle1.cfp",
-    "xskill-c2o-salute.cfp",
-    "xskill-c2o-tv1-surf.cfp"
+    "xskill-adult-idle6.cfp"
   ],
   "textures_png": [
     "B002FAFitdrk_Mom01.png",
