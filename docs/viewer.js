@@ -633,6 +633,7 @@ async function loadScene(sceneIndex) {
         }
     }
     updateActorEditingUI();
+    simlishGreet(selectedActorIndex);
 
     // Set primary body refs for compatibility (camera target, status, etc.)
     if (bodies.length > 0) {
