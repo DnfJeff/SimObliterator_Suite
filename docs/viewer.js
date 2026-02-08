@@ -527,58 +527,101 @@ let audioCtx = null;
 let spinOsc = null;
 let spinGain = null;
 
+// Simlish "weeee!" — formant synthesis with 3 bandpass-filtered noise+oscillator pairs.
+// The vowel "ee" has formants at F1≈270Hz, F2≈2300Hz, F3≈3000Hz.
+// Pitch shifts up with spin speed for the rising "weeEEEE!" effect.
+let spinFormants = null; // { oscs, gains, filters, masterGain }
+
 function initSpinSound() {
     if (audioCtx) return;
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // Two detuned sawtooth oscillators for a fat whirring sound
-    spinOsc = audioCtx.createOscillator();
-    spinOsc.type = 'sawtooth';
-    spinOsc.frequency.value = 0;
+    // Glottal source: sawtooth (vocal cord buzz) + slight noise for breathiness
+    const glottal = audioCtx.createOscillator();
+    glottal.type = 'sawtooth';
+    glottal.frequency.value = 120; // base pitch
 
-    const osc2 = audioCtx.createOscillator();
-    osc2.type = 'sawtooth';
-    osc2.frequency.value = 0;
-    osc2.detune.value = 7; // slight detune for thickness
+    const glottal2 = audioCtx.createOscillator();
+    glottal2.type = 'sawtooth';
+    glottal2.frequency.value = 120;
+    glottal2.detune.value = 5; // chorus
 
-    spinGain = audioCtx.createGain();
-    spinGain.gain.value = 0;
+    const noise = audioCtx.createBufferSource();
+    const noiseLen = audioCtx.sampleRate * 2;
+    const noiseBuf = audioCtx.createBuffer(1, noiseLen, audioCtx.sampleRate);
+    const noiseData = noiseBuf.getChannelData(0);
+    for (let i = 0; i < noiseLen; i++) noiseData[i] = (Math.random() * 2 - 1) * 0.15;
+    noise.buffer = noiseBuf;
+    noise.loop = true;
 
-    // Low-pass filter to tame the harsh sawtooth
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 800;
-    filter.Q.value = 2;
+    // Source mixer
+    const srcGain = audioCtx.createGain();
+    srcGain.gain.value = 1;
+    glottal.connect(srcGain);
+    glottal2.connect(srcGain);
+    noise.connect(srcGain);
 
-    spinOsc.connect(filter);
-    osc2.connect(filter);
-    filter.connect(spinGain);
-    spinGain.connect(audioCtx.destination);
+    // Three formant filters (bandpass) for "ee" vowel
+    const formantFreqs = [270, 2300, 3000]; // F1, F2, F3
+    const formantQs = [5, 12, 8];           // narrower = more vowel-like
+    const formantGains = [1.0, 0.6, 0.3];   // F1 loudest
 
-    spinOsc.start();
-    osc2.start();
-    spinOsc._osc2 = osc2; // keep reference for frequency updates
+    const filters = [];
+    const fGains = [];
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0;
+    masterGain.connect(audioCtx.destination);
+
+    for (let i = 0; i < 3; i++) {
+        const bp = audioCtx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = formantFreqs[i];
+        bp.Q.value = formantQs[i];
+
+        const g = audioCtx.createGain();
+        g.gain.value = formantGains[i];
+
+        srcGain.connect(bp);
+        bp.connect(g);
+        g.connect(masterGain);
+
+        filters.push(bp);
+        fGains.push(g);
+    }
+
+    glottal.start();
+    glottal2.start();
+    noise.start();
+
+    spinFormants = { glottal, glottal2, filters, masterGain };
+    // Keep old refs for compatibility
+    spinOsc = glottal;
+    spinGain = masterGain;
 }
 
 function updateSpinSound() {
-    if (!audioCtx || !spinOsc || !spinGain) return;
+    if (!audioCtx || !spinFormants) return;
 
     const speed = Math.abs(rotationVelocity);
+    const now = audioCtx.currentTime;
 
     if (speed > 0.5) {
-        // Map spin speed to pitch: 100Hz (slow) to 800Hz (screaming fast)
-        const pitch = 100 + Math.min(speed, 15) * 50;
-        const now = audioCtx.currentTime;
-        spinOsc.frequency.setTargetAtTime(pitch, now, 0.05);
-        spinOsc._osc2.frequency.setTargetAtTime(pitch, now, 0.05);
+        // Glottal pitch rises with speed: 120Hz (low moan) to 400Hz (high squeal)
+        const pitch = 120 + Math.min(speed, 12) * 24;
+        spinFormants.glottal.frequency.setTargetAtTime(pitch, now, 0.04);
+        spinFormants.glottal2.frequency.setTargetAtTime(pitch, now, 0.04);
 
-        // Volume ramps with speed, max 0.15
-        const vol = Math.min(speed / 10, 0.15);
-        spinGain.gain.setTargetAtTime(vol, now, 0.05);
+        // Shift formants up slightly with pitch for natural "wee" rising
+        const shift = 1 + Math.min(speed, 12) * 0.02; // up to 1.24x
+        spinFormants.filters[0].frequency.setTargetAtTime(270 * shift, now, 0.05);
+        spinFormants.filters[1].frequency.setTargetAtTime(2300 * shift, now, 0.05);
+        spinFormants.filters[2].frequency.setTargetAtTime(3000 * shift, now, 0.05);
+
+        // Volume
+        const vol = Math.min(speed / 8, 0.2);
+        spinFormants.masterGain.gain.setTargetAtTime(vol, now, 0.04);
     } else {
-        // Fade out
-        const now = audioCtx.currentTime;
-        spinGain.gain.setTargetAtTime(0, now, 0.1);
+        spinFormants.masterGain.gain.setTargetAtTime(0, now, 0.1);
     }
 }
 
