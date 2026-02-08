@@ -2135,25 +2135,29 @@ async function applyCharacterToActor(charIndex, actorIndex) {
     if (actorIndex < 0 || actorIndex >= bodies.length) return;
     const char = contentIndex.characters[charIndex];
     const body = bodies[actorIndex];
-    body.personData = char;
 
-    // Rebuild skeleton
+    // Build everything into temporaries — don't touch the live body until ready.
+    // This prevents the animation loop from rendering a half-built rest-pose frame.
+    let newSkeleton = null;
     const skelName = char.skeleton || 'adult';
     const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
     try {
-        const skelResp = await fetch('data/' + skelFile);
-        if (skelResp.ok) {
-            const skelData = parseCMX(await skelResp.text());
+        let skelText = _skelCache[skelFile];
+        if (!skelText) {
+            const skelResp = await fetch('data/' + skelFile);
+            if (skelResp.ok) skelText = await skelResp.text();
+        }
+        if (skelText) {
+            const skelData = parseCMX(skelText);
             if (skelData.skeletons?.length) {
-                body.skeleton = buildSkeleton(skelData.skeletons[0]);
-                updateTransforms(body.skeleton);
+                newSkeleton = buildSkeleton(skelData.skeletons[0]);
+                updateTransforms(newSkeleton);
             }
         }
     } catch (e) { console.error(`[applyCharacterToActor] skeleton error:`, e); }
-    if (!body.skeleton) return;
+    if (!newSkeleton) return;
 
-    // Rebuild meshes
-    body.meshes = [];
+    const newMeshes = [];
     const meshParts = [
         { name: char.body,      tex: char.bodyTexture },
         { name: char.head,      tex: char.headTexture },
@@ -2171,16 +2175,28 @@ async function applyCharacterToActor(charIndex, actorIndex) {
         const mesh = content.meshes[meshKey];
         if (!mesh) continue;
         const boneMap = new Map();
-        for (const bone of body.skeleton) boneMap.set(bone.name, bone);
+        for (const bone of newSkeleton) boneMap.set(bone.name, bone);
         const texture = part.tex ? await getTexture(part.tex) : null;
-        body.meshes.push({ mesh, boneMap, texture });
+        newMeshes.push({ mesh, boneMap, texture });
     }
 
-    // Rebuild animation
+    let newPractice = null;
     const animName = char.animation;
     if (animName) {
-        body.practice = await loadAnimationForBody(animName, body.skeleton, `actor "${body.actorName}"`);
+        newPractice = await loadAnimationForBody(animName, newSkeleton, `actor "${body.actorName}"`);
     }
+
+    // Apply first animation frame before making visible
+    if (newPractice?.ready) {
+        newPractice.tick(animationTime > 0 ? animationTime : 1);
+        updateTransforms(newSkeleton);
+    }
+
+    // Atomic swap: animation loop only ever sees a fully-posed character
+    body.personData = char;
+    body.skeleton = newSkeleton;
+    body.meshes = newMeshes;
+    body.practice = newPractice;
 
     renderFrame();
 }
@@ -2225,7 +2241,13 @@ async function applyAnimationToActor(animName, actorIndex) {
     if (!animName) return;
     const body = bodies[actorIndex];
     if (!body.skeleton) return;
-    body.practice = await loadAnimationForBody(animName, body.skeleton, `actor "${body.actorName}"`);
+    // Build practice into temporary, tick first frame, then swap
+    const newPractice = await loadAnimationForBody(animName, body.skeleton, `actor "${body.actorName}"`);
+    if (newPractice?.ready) {
+        newPractice.tick(animationTime > 0 ? animationTime : 1);
+        updateTransforms(body.skeleton);
+    }
+    body.practice = newPractice;
     renderFrame();
 }
 
