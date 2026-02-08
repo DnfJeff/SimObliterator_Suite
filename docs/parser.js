@@ -163,9 +163,6 @@ export function parseCMX(text) {
     const versionLine = r.readString();
     const version = parseInt(versionLine.replace(/^version\s+/i, ''), 10) || 0;
     const result = parseAnimData(r);
-    console.log(`[parseCMX] v${version} skeletons=${result.skeletons.length} suits=${result.suits.length} skills=${result.skills.length}`, { skeletons: result.skeletons.map(s => ({ name: s.name, bones: s.bones.length })),
-        suits: result.suits.map(s => ({ name: s.name, skins: s.skins.map(sk => sk.meshName) })),
-        skills: result.skills.map(s => s.name) });
     return result;
 }
 // Parse a SKN text mesh file. Text-specific: multi-value lines for faces, bindings.
@@ -222,11 +219,6 @@ export function parseSKN(text) {
         vertices.push(vec3(parts[0] || 0, parts[1] || 0, parts[2] || 0));
         normals.push(vec3(parts[3] || 0, parts[4] || 0, parts[5] || 0));
     }
-    console.log(`[parseSKN] "${name}" tex="${textureName}" bones=[${boneNames}] faces=${faces.length} bindings=${boneBindings.length} uvs=${uvs.length} blends=${blendBindings.length} verts=${vertices.length}`, {
-        boneBindings,
-        firstVert: vertices[0],
-        firstFace: faces[0],
-    });
     return { name, textureName, boneNames, faces, boneBindings,
         uvs, blendBindings, vertices, normals };
 }
@@ -238,9 +230,6 @@ export function parseSKN(text) {
 export function parseBCF(buffer) {
     const r = new BinaryReader(buffer);
     const result = parseAnimData(r);
-    console.log(`[parseBCF] skeletons=${result.skeletons.length} suits=${result.suits.length} skills=${result.skills.length}`, { skeletons: result.skeletons.map(s => ({ name: s.name, bones: s.bones.length })),
-        suits: result.suits.map(s => ({ name: s.name, skins: s.skins.map(sk => sk.meshName) })),
-        skills: result.skills.map(s => s.name) });
     return result;
 }
 // Parse a BMF (Binary Mesh Format) file. Binary version of SKN.
@@ -295,7 +284,6 @@ export function parseBMF(buffer) {
         vertices.push(vec3(r.readFloat32(), r.readFloat32(), r.readFloat32()));
         normals.push(vec3(r.readFloat32(), r.readFloat32(), r.readFloat32()));
     }
-    console.log(`[parseBMF] "${name}" tex="${textureName}" bones=[${boneNames}] faces=${faces.length} bindings=${boneBindings.length} uvs=${uvs.length} blends=${blendBindings.length} verts=${vertices.length}`);
     return { name, textureName, boneNames, faces, boneBindings,
         uvs, blendBindings, vertices, normals };
 }

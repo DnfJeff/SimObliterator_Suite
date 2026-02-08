@@ -227,28 +227,49 @@ async function loadContentIndex() {
             ...(contentIndex.suits || []),
             ...(contentIndex.animations || []),
         ];
+        let cmxLoaded = 0, cmxFailed = 0;
         for (const name of allCmx) {
             try {
                 const r = await fetch('data/' + name);
-                if (!r.ok) continue;
+                if (!r.ok) {
+                    console.error(`[loadContentIndex] CMX fetch FAILED: ${r.status} for "${name}"`);
+                    cmxFailed++;
+                    continue;
+                }
                 const cmx = parseCMX(await r.text());
                 cmx.skeletons.forEach(s => content.skeletons[s.name] = s);
                 cmx.suits.forEach(s => content.suits[s.name] = s);
                 cmx.skills.forEach(s => content.skills[s.name] = s);
-            } catch (e) { console.warn(name, e); }
+                cmxLoaded++;
+            } catch (e) {
+                console.error(`[loadContentIndex] CMX parse EXCEPTION for "${name}":`, e);
+                cmxFailed++;
+            }
         }
+        console.warn(`[loadContentIndex] CMX: ${cmxLoaded} loaded, ${cmxFailed} failed out of ${allCmx.length}`);
+        console.warn(`[loadContentIndex] Skills loaded: [${Object.keys(content.skills).join(', ')}]`);
 
         statusEl.textContent = 'Loading meshes...';
 
         // Load all SKN meshes
+        let meshLoaded = 0, meshFailed = 0;
         for (const name of (contentIndex.meshes || [])) {
             try {
                 const r = await fetch('data/' + name);
-                if (!r.ok) continue;
+                if (!r.ok) {
+                    console.error(`[loadContentIndex] SKN fetch FAILED: ${r.status} for "${name}"`);
+                    meshFailed++;
+                    continue;
+                }
                 const mesh = parseSKN(await r.text());
                 content.meshes[mesh.name] = mesh;
-            } catch (e) { console.warn(name, e); }
+                meshLoaded++;
+            } catch (e) {
+                console.error(`[loadContentIndex] SKN parse EXCEPTION for "${name}":`, e);
+                meshFailed++;
+            }
         }
+        console.warn(`[loadContentIndex] Meshes: ${meshLoaded} loaded, ${meshFailed} failed out of ${(contentIndex.meshes || []).length}`);
 
         // Index texture filenames — prefer PNG over BMP (smaller, browser-native)
         for (const name of (contentIndex.textures_bmp || [])) {
@@ -416,14 +437,24 @@ function findPersonByName(name) {
 // Load a multi-body scene. Each cast member gets their own Body with independent
 // skeleton, meshes, animation, position, and top-physics state.
 async function loadScene(sceneIndex) {
-    if (!contentIndex?.scenes?.[sceneIndex]) return;
+    if (!contentIndex?.scenes?.[sceneIndex]) {
+        console.error(`[loadScene] INVALID scene index ${sceneIndex}, scenes available: ${contentIndex?.scenes?.length ?? 0}`);
+        return;
+    }
     const scene = contentIndex.scenes[sceneIndex];
+    console.warn(`[loadScene] === LOADING SCENE "${scene.name}" with ${scene.cast.length} cast members ===`);
     activeScene = scene.name;
-    bodies = [];
+    // Build into a LOCAL array — don't touch the live bodies[] until ALL are loaded.
+    // This prevents the animation loop from ticking partially-loaded bodies.
+    const newBodies = [];
 
-    for (const cast of scene.cast) {
+    for (let ci = 0; ci < scene.cast.length; ci++) {
+        const cast = scene.cast[ci];
         const person = findPersonByName(cast.person);
-        if (!person) { console.warn(`[loadScene] person not found: ${cast.person}`); continue; }
+        if (!person) {
+            console.error(`[loadScene] CAST[${ci}] person NOT FOUND: "${cast.person}" — skipping`);
+            continue;
+        }
 
         const body = createBody();
         body.personData = person;
@@ -436,56 +467,139 @@ async function loadScene(sceneIndex) {
         const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
         try {
             const skelResp = await fetch('data/' + skelFile);
+            if (!skelResp.ok) {
+                console.error(`[loadScene] CAST[${ci}] "${cast.person}" skeleton fetch FAILED: ${skelResp.status} ${skelResp.statusText} for "${skelFile}"`);
+                continue;
+            }
             const skelText = await skelResp.text();
             const skelData = parseCMX(skelText);
             if (skelData.skeletons?.length) {
                 body.skeleton = buildSkeleton(skelData.skeletons[0]);
                 updateTransforms(body.skeleton);
+            } else {
+                console.error(`[loadScene] CAST[${ci}] "${cast.person}" parseCMX returned 0 skeletons from "${skelFile}"`);
             }
-        } catch (e) { console.warn(`[loadScene] skeleton ${skelFile}:`, e); }
+        } catch (e) {
+            console.error(`[loadScene] CAST[${ci}] "${cast.person}" skeleton EXCEPTION for "${skelFile}":`, e);
+        }
 
-        if (!body.skeleton) continue;
+        if (!body.skeleton) {
+            console.error(`[loadScene] CAST[${ci}] "${cast.person}" has NO SKELETON — skipping entirely`);
+            continue;
+        }
 
         // Load meshes (body, head, hands) with textures
         const meshParts = [
-            { name: person.body, tex: person.bodyTexture },
-            { name: person.head, tex: person.headTexture },
-            { name: person.leftHand, tex: person.handTexture },
-            { name: person.rightHand, tex: person.handTexture },
+            { label: 'body',      name: person.body,      tex: person.bodyTexture },
+            { label: 'head',      name: person.head,      tex: person.headTexture },
+            { label: 'leftHand',  name: person.leftHand,  tex: person.handTexture },
+            { label: 'rightHand', name: person.rightHand, tex: person.handTexture },
         ];
         for (const part of meshParts) {
-            if (!part.name) continue;
+            if (!part.name) {
+                console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: name is empty/null, skipping`);
+                continue;
+            }
             const meshKey = part.name;
             if (!content.meshes[meshKey]) {
-                // Load SKN
-                const sknFile = meshKey + '.skn';
-                try {
-                    const resp = await fetch('data/' + sknFile);
-                    const text = await resp.text();
-                    content.meshes[meshKey] = parseSKN(text);
-                } catch (e) { continue; }
+                // Try to find by case-insensitive match before fetching
+                const lowerKey = meshKey.toLowerCase();
+                const ciMatch = Object.keys(content.meshes).find(k => k.toLowerCase() === lowerKey);
+                if (ciMatch) {
+                    console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: exact key "${meshKey}" not found but case-insensitive match "${ciMatch}" exists — using it`);
+                    content.meshes[meshKey] = content.meshes[ciMatch];
+                } else {
+                    // Load SKN as fallback
+                    const sknFile = meshKey + '.skn';
+                    console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: key "${meshKey}" not in preloaded meshes (${Object.keys(content.meshes).length} loaded), trying fetch "${sknFile}"`);
+                    try {
+                        const resp = await fetch('data/' + sknFile);
+                        if (!resp.ok) {
+                            console.error(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: fetch "${sknFile}" FAILED: ${resp.status} ${resp.statusText}`);
+                            continue;
+                        }
+                        const text = await resp.text();
+                        const parsed = parseSKN(text);
+                        content.meshes[meshKey] = parsed;
+                        console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: dynamically loaded "${sknFile}" → internal name "${parsed.name}"`);
+                    } catch (e) {
+                        console.error(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: SKN load EXCEPTION for "${sknFile}":`, e);
+                        continue;
+                    }
+                }
             }
             const mesh = content.meshes[meshKey];
-            if (!mesh) continue;
+            if (!mesh) {
+                console.error(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: mesh STILL NULL after load attempts for "${meshKey}"`);
+                continue;
+            }
             const boneMap = new Map();
             for (const bone of body.skeleton) {
-                if (bone.name === mesh.boneName) boneMap.set(mesh.boneName, bone);
-                else boneMap.set(bone.name, bone);
+                boneMap.set(bone.name, bone);
             }
 
             // Use the same getTexture() as solo mode — returns cached WebGLTexture
-            const texture = part.tex ? await getTexture(part.tex) : null;
+            let texture = null;
+            if (part.tex) {
+                texture = await getTexture(part.tex);
+                if (!texture) {
+                    console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: texture "${part.tex}" failed to load`);
+                }
+            }
             body.meshes.push({ mesh, boneMap, texture });
         }
 
-        // Load animation
-        const animName = cast.animation || person.animation;
-        if (animName) {
-            body.practice = await loadAnimationForBody(animName, body.skeleton);
+        if (body.meshes.length === 0) {
+            console.error(`[loadScene] CAST[${ci}] "${cast.person}" has ZERO meshes — body will be invisible!`);
         }
 
-        bodies.push(body);
+        // Load animation — DEEP COPY the skill so multiple bodies don't share/corrupt the same skill object
+        const animName = cast.animation || person.animation;
+        if (animName) {
+            body.practice = await loadAnimationForBody(animName, body.skeleton, `CAST[${ci}] "${cast.person}"`);
+            if (!body.practice) {
+                console.error(`[loadScene] CAST[${ci}] "${cast.person}" animation "${animName}" returned NULL practice — body will be frozen!`);
+            } else if (!body.practice.ready) {
+                console.error(`[loadScene] CAST[${ci}] "${cast.person}" animation "${animName}" practice NOT READY (translations=${body.practice.skill.translations.length} rotations=${body.practice.skill.rotations.length}) — body will be frozen!`);
+            }
+        } else {
+            console.warn(`[loadScene] CAST[${ci}] "${cast.person}" has no animation specified — body will be idle`);
+        }
+
+        newBodies.push(body);
     }
+
+    // Scene health diagnostic
+    console.warn(`[loadScene] === SCENE "${scene.name}" LOADED: ${newBodies.length}/${scene.cast.length} bodies ===`);
+    for (let i = 0; i < newBodies.length; i++) {
+        const b = newBodies[i];
+        const name = b.personData?.name || '?';
+        const hasSkel = !!b.skeleton;
+        const meshCount = b.meshes.length;
+        const hasPractice = !!b.practice;
+        const practiceReady = b.practice?.ready ?? false;
+        const transLen = b.practice?.skill?.translations?.length ?? 0;
+        const rotLen = b.practice?.skill?.rotations?.length ?? 0;
+        const bindingCount = b.practice?.bindings?.length ?? 0;
+        const status = (hasSkel && meshCount > 0 && hasPractice && practiceReady) ? 'ALIVE' : 'DEAD';
+        const issues = [];
+        if (!hasSkel) issues.push('NO_SKELETON');
+        if (meshCount === 0) issues.push('NO_MESHES');
+        if (!hasPractice) issues.push('NO_PRACTICE');
+        if (hasPractice && !practiceReady) issues.push('PRACTICE_NOT_READY');
+        if (hasPractice && transLen === 0 && rotLen === 0) issues.push('NO_ANIM_DATA');
+        if (hasPractice && bindingCount === 0) issues.push('NO_BONE_BINDINGS');
+        const issueStr = issues.length > 0 ? ` ISSUES=[${issues.join(',')}]` : '';
+        if (status === 'DEAD') {
+            console.error(`[loadScene] BODY[${i}] "${name}" ${status} skel=${hasSkel} meshes=${meshCount} practice=${hasPractice} ready=${practiceReady} trans=${transLen} rots=${rotLen} bindings=${bindingCount}${issueStr}`);
+        } else {
+            console.warn(`[loadScene] BODY[${i}] "${name}" ${status} skel=${hasSkel} meshes=${meshCount} practice=${hasPractice} ready=${practiceReady} trans=${transLen} rots=${rotLen} bindings=${bindingCount}`);
+        }
+    }
+
+    // ATOMIC SWAP: animation loop only ever sees a fully-loaded scene.
+    // All bodies are built, all practices are ready — now make them live.
+    bodies = newBodies;
 
     // Set primary body refs for compatibility (camera target, status, etc.)
     if (bodies.length > 0) {
@@ -501,16 +615,20 @@ async function loadScene(sceneIndex) {
 
     animationTime = 0;
     lastFrameTime = 0;
-    const status = $('status');
-    if (status) status.textContent = `Scene: ${scene.name} (${bodies.length} characters)`;
+    _animDiagLogged = false; // reset so first-tick diagnostic fires for new scene
+    const statusEl2 = $('status');
+    if (statusEl2) statusEl2.textContent = `Scene: ${scene.name} (${bodies.length} characters)`;
     renderFrame();
 }
 
 // Load an animation (Practice) for a specific body's skeleton.
 // Uses the same CFP loading path as the solo loader in updateScene().
-async function loadAnimationForBody(animName, skeleton) {
+async function loadAnimationForBody(animName, skeleton, debugLabel = '') {
+    const tag = `[loadAnimForBody] ${debugLabel}`;
+
     // Find the skill by name in already-loaded skills
     let skill = content.skills[animName];
+    let matchMethod = skill ? 'exact' : null;
 
     if (!skill) {
         // Search by internal name field (case-insensitive)
@@ -518,6 +636,7 @@ async function loadAnimationForBody(animName, skeleton) {
         skill = Object.values(content.skills).find(
             s => s.name?.toLowerCase() === lower
         );
+        if (skill) matchMethod = 'case-insensitive';
         // Substring match: "adult-dance-inplace-twistloop" matches "a2o-dance-inplace-twistloop"
         if (!skill) {
             // Strip common prefixes and try matching the tail
@@ -527,19 +646,27 @@ async function loadAnimationForBody(animName, skeleton) {
                 const sStripped = sLower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
                 return sStripped === stripped || sLower.includes(stripped) || stripped.includes(sLower.replace(/^a2o-/, ''));
             });
+            if (skill) matchMethod = 'stripped-prefix';
         }
     }
 
     if (!skill) {
         // Try loading all animation CMXs to find the skill
+        console.warn(`${tag} "${animName}" not in ${Object.keys(content.skills).length} loaded skills, loading all CMXs...`);
         for (const cmxFile of contentIndex.animations || []) {
             if (content.skills[cmxFile.replace('.cmx', '')]) continue;
             try {
                 const resp = await fetch('data/' + cmxFile);
+                if (!resp.ok) {
+                    console.error(`${tag} CMX fetch failed: ${resp.status} for "${cmxFile}"`);
+                    continue;
+                }
                 const text = await resp.text();
                 const data = parseCMX(text);
                 for (const s of data.skills || []) content.skills[s.name] = s;
-            } catch (e) { }
+            } catch (e) {
+                console.error(`${tag} CMX load exception for "${cmxFile}":`, e);
+            }
         }
         const lower = animName.toLowerCase();
         const stripped = lower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
@@ -548,17 +675,30 @@ async function loadAnimationForBody(animName, skeleton) {
             const sStripped = sLower.replace(/^(adult|ross|child|c2o|a2o)-/, '');
             return sLower === lower || sStripped === stripped;
         });
+        if (skill) matchMethod = 'full-scan';
     }
 
-    if (!skill?.motions?.length) {
-        console.warn(`[loadAnimationForBody] skill not found: ${animName}`);
+    if (!skill) {
+        console.error(`${tag} SKILL NOT FOUND: "${animName}" — available skills: [${Object.keys(content.skills).join(', ')}]`);
         return null;
     }
 
-    // Load CFP: try bare name and xskill- prefixed name against the index
+    if (!skill.motions?.length) {
+        console.error(`${tag} skill "${skill.name}" has NO MOTIONS (motions=${skill.motions?.length ?? 0})`);
+        return null;
+    }
+
+    console.warn(`${tag} "${animName}" → skill "${skill.name}" (match=${matchMethod}) motions=${skill.motions.length} numTrans=${skill.numTranslations} numRots=${skill.numRotations} cfpFile="${skill.animationFileName}"`);
+
+    // DEEP COPY the skill so multiple bodies sharing the same animation
+    // don't corrupt each other's translations/rotations arrays.
+    // In the original C++, Skill owns its data and Practice just references it.
+    // Multiple Practices can share one Skill safely because the Skill's data is
+    // loaded once and never mutated. But our parseCFP mutates skill.translations
+    // and skill.rotations — so we must either load CFP once and share, or deep copy.
+    // We load CFP once into the shared skill, then each Practice references it.
     const cfpName = skill.animationFileName;
     if (cfpName && !cfpCache.has(cfpName) && (skill.numTranslations > 0 || skill.numRotations > 0)) {
-        // cfpIndex keys are like "xskill-a2o-test-animation5", skill.animationFileName is "A2O-test-animation5"
         const bare = cfpName.toLowerCase();
         const prefixed = 'xskill-' + bare;
         const cfpFile = cfpIndex.get(bare) || cfpIndex.get(prefixed);
@@ -567,22 +707,41 @@ async function loadAnimationForBody(animName, skeleton) {
                 const resp = await fetch('data/' + cfpFile);
                 if (resp.ok) {
                     cfpCache.set(cfpName, await resp.arrayBuffer());
+                    console.warn(`${tag} CFP loaded: "${cfpFile}" (${cfpCache.get(cfpName).byteLength} bytes)`);
+                } else {
+                    console.error(`${tag} CFP fetch FAILED: ${resp.status} for "${cfpFile}"`);
                 }
-            } catch (e) { }
+            } catch (e) {
+                console.error(`${tag} CFP fetch EXCEPTION for "${cfpFile}":`, e);
+            }
+        } else {
+            console.error(`${tag} CFP file NOT FOUND in index for "${cfpName}" (tried bare="${bare}" prefixed="${prefixed}") — index has ${cfpIndex.size} entries`);
         }
     }
 
+    // Parse CFP into the shared skill ONLY if not already parsed
+    // (avoid re-parsing and re-allocating arrays for every body)
     const buffer = cfpCache.get(cfpName);
-    if (buffer) {
+    if (buffer && (skill.translations.length === 0 && skill.rotations.length === 0)) {
         skill.translations = [];
         skill.rotations = [];
         parseCFP(buffer, skill);
+        console.warn(`${tag} CFP parsed: translations=${skill.translations.length} rotations=${skill.rotations.length}`);
+    } else if (!buffer && (skill.numTranslations > 0 || skill.numRotations > 0)) {
+        console.error(`${tag} NO CFP BUFFER for "${cfpName}" but skill expects ${skill.numTranslations} translations and ${skill.numRotations} rotations — animation will be BROKEN`);
+    }
+
+    if (skill.translations.length === 0 && skill.rotations.length === 0) {
+        console.error(`${tag} skill "${skill.name}" has EMPTY animation data after CFP parse — practice will NOT be ready`);
     }
 
     const practice = new Practice(skill, skeleton);
     if (practice.ready) {
         practice.tick(0);
         updateTransforms(skeleton);
+        console.warn(`${tag} Practice READY: bindings=${practice.bindings.length}/${skill.motions.length} duration=${practice.duration}ms`);
+    } else {
+        console.error(`${tag} Practice NOT READY: bindings=${practice.bindings.length}/${skill.motions.length} trans=${skill.translations.length} rots=${skill.rotations.length}`);
     }
     return practice;
 }
@@ -1215,7 +1374,8 @@ function renderFrame() {
     // Render all bodies
     const bodiesToRender = sceneMode ? bodies : [{ skeleton: activeSkeleton, meshes: activeMeshes, top, x: 0, z: 0, direction: 0 }];
 
-    for (const body of bodiesToRender) {
+    for (let bi = 0; bi < bodiesToRender.length; bi++) {
+        const body = bodiesToRender[bi];
         const bTop = body.top || top;
         // Scene mode: rotY spins each body around its own center (added to base direction)
         // Solo mode: direction is 0 (camera does the orbiting)
@@ -1224,46 +1384,60 @@ function renderFrame() {
         const cosD = Math.cos(bodyDir);
         const sinD = Math.sin(bodyDir);
 
+        if (body.meshes.length === 0 && sceneMode && !_renderWarnedBodies.has(bi)) {
+            _renderWarnedBodies.add(bi);
+            console.error(`[renderFrame] BODY[${bi}] "${body.personData?.name || '?'}" has 0 meshes — nothing to draw`);
+        }
+
         for (const { mesh, boneMap, texture } of body.meshes) {
-            let verts, norms;
-            if (body.skeleton) {
-                const deformed = deformMesh(mesh, body.skeleton, boneMap);
-                verts = deformed.vertices;
-                norms = deformed.normals;
-            } else {
-                verts = mesh.vertices;
-                norms = mesh.normals;
-            }
+            try {
+                let verts, norms;
+                if (body.skeleton) {
+                    const deformed = deformMesh(mesh, body.skeleton, boneMap);
+                    verts = deformed.vertices;
+                    norms = deformed.normals;
+                } else {
+                    verts = mesh.vertices;
+                    norms = mesh.normals;
+                }
 
-            // Per-body top physics tilt + drift
-            if (bTop.active) {
-                verts = verts.map(v => applyTopTransformFor(v, bTop));
-                norms = norms.map(v => applyTopTransformFor(v, bTop));
-            }
+                // Per-body top physics tilt + drift
+                if (bTop.active) {
+                    verts = verts.map(v => applyTopTransformFor(v, bTop));
+                    norms = norms.map(v => applyTopTransformFor(v, bTop));
+                }
 
-            // World position offset + facing direction
-            if (body.x !== 0 || body.z !== 0 || bodyDir !== 0) {
-                verts = verts.map(v => {
-                    if (!v) return v;
-                    // Rotate around Y by direction, then translate
-                    const rx = v.x * cosD - v.z * sinD;
-                    const rz = v.x * sinD + v.z * cosD;
-                    return { x: rx + body.x, y: v.y, z: rz + body.z };
-                });
-                if (bodyDir !== 0) {
-                    norms = norms.map(v => {
+                // World position offset + facing direction
+                if (body.x !== 0 || body.z !== 0 || bodyDir !== 0) {
+                    verts = verts.map(v => {
                         if (!v) return v;
-                        return { x: v.x * cosD - v.z * sinD, y: v.y, z: v.x * sinD + v.z * cosD };
+                        // Rotate around Y by direction, then translate
+                        const rx = v.x * cosD - v.z * sinD;
+                        const rz = v.x * sinD + v.z * cosD;
+                        return { x: rx + body.x, y: v.y, z: rz + body.z };
                     });
+                    if (bodyDir !== 0) {
+                        norms = norms.map(v => {
+                            if (!v) return v;
+                            return { x: v.x * cosD - v.z * sinD, y: v.y, z: v.x * sinD + v.z * cosD };
+                        });
+                    }
+                }
+
+                renderer.drawMesh(mesh, verts, norms, texture || null);
+            } catch (e) {
+                if (!_renderWarnedBodies.has(`${bi}-${mesh.name}`)) {
+                    _renderWarnedBodies.add(`${bi}-${mesh.name}`);
+                    console.error(`[renderFrame] BODY[${bi}] mesh "${mesh.name}" render EXCEPTION:`, e);
                 }
             }
-
-            renderer.drawMesh(mesh, verts, norms, texture || null);
         }
     }
 }
+const _renderWarnedBodies = new Set();
 
 // Animation loop: ticks Practice animation + applies rotation momentum.
+let _animDiagLogged = false;
 function animationLoop(timestamp) {
     let needsRender = false;
 
@@ -1276,19 +1450,45 @@ function animationLoop(timestamp) {
         animationTime += dt * speedScale;
 
         if (bodies.length > 0) {
+            // One-shot diagnostic: log every body's animation state on first tick
+            if (!_animDiagLogged) {
+                _animDiagLogged = true;
+                console.warn(`[animLoop] FIRST TICK: ${bodies.length} bodies, animationTime=${animationTime.toFixed(1)}`);
+                for (let i = 0; i < bodies.length; i++) {
+                    const b = bodies[i];
+                    const name = b.personData?.name || '?';
+                    const hasPractice = !!b.practice;
+                    const ready = b.practice?.ready ?? false;
+                    const hasSkel = !!b.skeleton;
+                    const meshCount = b.meshes.length;
+                    if (!hasPractice || !ready || !hasSkel || meshCount === 0) {
+                        console.error(`[animLoop] BODY[${i}] "${name}" WILL NOT ANIMATE: practice=${hasPractice} ready=${ready} skeleton=${hasSkel} meshes=${meshCount}`);
+                    }
+                }
+            }
+
             // Scene mode: tick every body's own practice
-            for (const body of bodies) {
+            for (let i = 0; i < bodies.length; i++) {
+                const body = bodies[i];
                 if (body.practice?.ready && body.skeleton) {
-                    body.practice.tick(animationTime);
-                    updateTransforms(body.skeleton);
-                    needsRender = true;
+                    try {
+                        body.practice.tick(animationTime);
+                        updateTransforms(body.skeleton);
+                        needsRender = true;
+                    } catch (e) {
+                        console.error(`[animLoop] BODY[${i}] "${body.personData?.name}" tick EXCEPTION:`, e);
+                    }
                 }
             }
         } else if (activePractice?.ready && activeSkeleton) {
             // Solo mode
-            activePractice.tick(animationTime);
-            updateTransforms(activeSkeleton);
-            needsRender = true;
+            try {
+                activePractice.tick(animationTime);
+                updateTransforms(activeSkeleton);
+                needsRender = true;
+            } catch (e) {
+                console.error(`[animLoop] solo tick EXCEPTION:`, e);
+            }
         }
     }
 
@@ -1666,6 +1866,9 @@ function setupEventListeners() {
 initRenderer();
 setupEventListeners();
 loadContentIndex();
-animationLoop();
+// Start animation loop via rAF so timestamp is always valid (never undefined).
+// Calling animationLoop() directly would pass undefined as timestamp, poisoning
+// animationTime with NaN — which permanently kills any Practice that gets ticked.
+requestAnimationFrame(animationLoop);
 // Focus canvas for keyboard input
 canvas.focus();

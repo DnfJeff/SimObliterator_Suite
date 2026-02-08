@@ -49,9 +49,6 @@ export function buildSkeleton(data) {
                 bone.parent.children.push(bone);
         }
     }
-    const root = bones.find(b => !b.parent);
-    console.log(`[buildSkeleton] "${data.name}" ${bones.length} bones, root="${root?.name}"`, { boneNames: bones.map(b => b.name),
-        rootPos: root?.position, rootRot: root?.rotation });
     return bones;
 }
 // Find the root bone (no parent)
