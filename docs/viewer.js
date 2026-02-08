@@ -81,6 +81,8 @@ let dragMoved = false;
 let dragButton = 0;           // 0=left (spin+zoom), 2=right (spin+orbit)
 const DRAG_THRESHOLD = 3;     // pixels before it counts as drag vs click
 const FRICTION = 0.98;        // velocity decay per frame (lower = slows faster)
+// Held key state for smooth per-frame arrow key input
+const _keysHeld = { up: false, down: false, left: false, right: false, leftStart: 0, rightStart: 0 };
 const VELOCITY_SMOOTHING = 0.3; // low-pass filter for mouse velocity
 let smoothedVelocity = 0;
 
@@ -1734,6 +1736,28 @@ function animationLoop(timestamp) {
         : top.active;
     if (anyTopActive) needsRender = true;
 
+    // Arrow keys: smooth zoom (up/down) and ramp spin (left/right)
+    if (_keysHeld.up || _keysHeld.down) {
+        const zoomSlider = $('zoom');
+        const zoomDelta = (_keysHeld.down ? 1.5 : -1.5); // per frame
+        let val = parseFloat(zoomSlider.value) + zoomDelta;
+        val = Math.max(15, Math.min(400, val));
+        zoomSlider.value = val;
+        needsRender = true;
+    }
+    if (_keysHeld.left || _keysHeld.right) {
+        // Ramp up spin speed the longer the key is held (gentle acceleration)
+        const now = performance.now();
+        const dir = _keysHeld.left ? 1 : -1;
+        const holdTime = _keysHeld.left
+            ? (now - _keysHeld.leftStart) / 1000
+            : (now - _keysHeld.rightStart) / 1000;
+        // Gentle ramp: starts at 0.3 deg/frame, maxes at ~3 deg/frame after 2 seconds
+        const speed = 0.3 + Math.min(holdTime * 1.5, 3.0);
+        rotationVelocity = dir * speed;
+        needsRender = true;
+    }
+
     // Spin sound: pitch tracks velocity, fades as they slow down
     updateSpinSound();
 
@@ -2364,21 +2388,41 @@ function setupEventListeners() {
     const btnPause = $('btnPause');
     if (btnPause) btnPause.addEventListener('click', togglePause);
 
-    // Keyboard: left/right arrows step animation, space = pause
+    // Keyboard controls:
+    // Space = cycle between All and last selected actor
+    // 0 = pause, 1/2/3/4 = speed (normal/fast/faster/fastest)
+    // Up/Down = smooth zoom, Left/Right = ramp spin velocity
     canvas.tabIndex = 0;
+    let _lastSelectedBeforeAll = 0; // remember last picked actor for space toggle
+
     canvas.addEventListener('keydown', e => {
-        if (e.key === 'ArrowLeft') { stepAnimation(-1); e.preventDefault(); }
-        if (e.key === 'ArrowRight') { stepAnimation(1); e.preventDefault(); }
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            const zoomSlider = $('zoom');
-            const delta = e.key === 'ArrowUp' ? -10 : 10;
-            let val = parseFloat(zoomSlider.value) + delta;
-            val = Math.max(15, Math.min(400, val));
-            zoomSlider.value = val;
-            renderFrame();
+        if (e.key === ' ') {
+            // Space: toggle between All and selected actor
+            if (selectedActorIndex >= 0) {
+                _lastSelectedBeforeAll = selectedActorIndex;
+                selectActor(-1);
+            } else {
+                selectActor(_lastSelectedBeforeAll < bodies.length ? _lastSelectedBeforeAll : 0);
+            }
             e.preventDefault();
         }
-        if (e.key === ' ') { togglePause(); e.preventDefault(); }
+        if (e.key === '0') { paused = true; $('speed').value = 0; $('btnPause').textContent = 'Play'; $('btnPause').classList.add('active'); e.preventDefault(); }
+        if (e.key === '1') { paused = false; $('speed').value = 100; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
+        if (e.key === '2') { paused = false; $('speed').value = 200; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
+        if (e.key === '3') { paused = false; $('speed').value = 350; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
+        if (e.key === '4') { paused = false; $('speed').value = 500; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
+
+        // Track held arrow keys for smooth per-frame input
+        if (e.key === 'ArrowUp') { _keysHeld.up = true; e.preventDefault(); }
+        if (e.key === 'ArrowDown') { _keysHeld.down = true; e.preventDefault(); }
+        if (e.key === 'ArrowLeft') { _keysHeld.left = true; _keysHeld.leftStart = _keysHeld.leftStart || performance.now(); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { _keysHeld.right = true; _keysHeld.rightStart = _keysHeld.rightStart || performance.now(); e.preventDefault(); }
+    });
+    canvas.addEventListener('keyup', e => {
+        if (e.key === 'ArrowUp') { _keysHeld.up = false; e.preventDefault(); }
+        if (e.key === 'ArrowDown') { _keysHeld.down = false; e.preventDefault(); }
+        if (e.key === 'ArrowLeft') { _keysHeld.left = false; _keysHeld.leftStart = 0; e.preventDefault(); }
+        if (e.key === 'ArrowRight') { _keysHeld.right = false; _keysHeld.rightStart = 0; e.preventDefault(); }
     });
 
     // Mouse drag interaction on canvas
