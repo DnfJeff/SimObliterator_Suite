@@ -50,7 +50,7 @@ function createBody() {
         skeleton: null,      // Bone[]
         meshes: [],          // {mesh, boneMap, texture}[]
         practice: null,      // Practice instance
-        personData: null,    // reference to content.json person entry
+        personData: null,    // reference to content.json character entry
         x: 0, z: 0,         // world position offset
         direction: 0,        // facing angle (degrees)
         top: {               // per-body top physics (independent spin/tilt/drift)
@@ -62,6 +62,7 @@ function createBody() {
 }
 let bodies = [];              // Body[] — all characters in the current scene
 let activeScene = null;       // current scene name or null (solo mode)
+let selectedActorIndex = -1;  // which actor in bodies[] is selected for editing (-1 = none)
 const cfpCache = new Map();   // animationFileName -> ArrayBuffer (loaded CFP data)
 
 // Rotation momentum state: drag left/right to spin, release to keep spinning.
@@ -295,13 +296,13 @@ async function loadContentIndex() {
 
         console.log('[loadContentIndex]', counts);
 
-        // Auto-load first scene (Grand Chorus) or fall back to first person
+        // Auto-load first scene (Flash Crowd) or fall back to first character
         if (contentIndex.scenes?.length) {
             $('selScene').value = '0';
             await loadScene(0);
-        } else if (contentIndex.people?.length) {
-            $('selPerson').value = '0';
-            applyPerson(0);
+        } else if (contentIndex.characters?.length) {
+            $('selCharacter').value = '0';
+            applyCharacter(0);
         } else {
             applyDefaults();
         }
@@ -349,10 +350,10 @@ function populateMenus() {
     // Animations
     fillSelect($('selAnim'), Object.keys(content.skills));
 
-    // People dropdown
-    if (contentIndex?.people) {
-        fillSelect($('selPerson'), contentIndex.people.map((_, i) => String(i)),
-            i => contentIndex.people[i].name);
+    // Character dropdown
+    if (contentIndex?.characters) {
+        fillSelect($('selCharacter'), contentIndex.characters.map((_, i) => String(i)),
+            i => contentIndex.characters[i].name);
     }
 
     // Scene dropdown: scenes first, Solo at the bottom
@@ -394,7 +395,7 @@ function revalidateDropdowns() {
 
 
 // Apply default selections (SimShow's gCharacterTable).
-// Defaults = first person preset (Dad Fit + RomanCrew, same since 1999).
+// Defaults = first character preset (Dad Fit + RomanCrew, same since 1999).
 function applyDefaults() {
     if (!contentIndex?.defaults) return;
     const d = contentIndex.defaults;
@@ -411,10 +412,10 @@ function applyDefaults() {
     updateScene();
 }
 
-// Apply a person preset
-function applyPerson(index) {
-    if (!contentIndex?.people?.[index]) return;
-    const p = contentIndex.people[index];
+// Apply a character preset
+function applyCharacter(index) {
+    if (!contentIndex?.characters?.[index]) return;
+    const p = contentIndex.characters[index];
     setSelectValue('selSkeleton', p.skeleton);
     setSelectValue('selBody', p.body);
     setSelectValue('selHead', p.head);
@@ -427,11 +428,11 @@ function applyPerson(index) {
     updateScene();
 }
 
-// Find a person entry by name (case-insensitive)
-function findPersonByName(name) {
-    if (!contentIndex?.people) return null;
+// Find a character entry by name (case-insensitive)
+function findCharacterByName(name) {
+    if (!contentIndex?.characters) return null;
     const lower = name.toLowerCase();
-    return contentIndex.people.find(p => p.name.toLowerCase() === lower) || null;
+    return contentIndex.characters.find(c => c.name.toLowerCase() === lower) || null;
 }
 
 // Load a multi-body scene. Each cast member gets their own Body with independent
@@ -450,25 +451,26 @@ async function loadScene(sceneIndex) {
 
     for (let ci = 0; ci < scene.cast.length; ci++) {
         const cast = scene.cast[ci];
-        const person = findPersonByName(cast.person);
-        if (!person) {
-            console.error(`[loadScene] CAST[${ci}] person NOT FOUND: "${cast.person}" — skipping`);
+        const char = findCharacterByName(cast.character);
+        if (!char) {
+            console.error(`[loadScene] CAST[${ci}] character NOT FOUND: "${cast.character}" — skipping`);
             continue;
         }
 
         const body = createBody();
-        body.personData = person;
+        body.personData = char;
+        body.actorName = cast.actor || `Actor ${ci + 1}`;
         body.x = cast.x || 0;
         body.z = cast.z || 0;
         body.direction = cast.direction || 0;
 
         // Load skeleton
-        const skelName = person.skeleton || 'adult';
+        const skelName = char.skeleton || 'adult';
         const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
         try {
             const skelResp = await fetch('data/' + skelFile);
             if (!skelResp.ok) {
-                console.error(`[loadScene] CAST[${ci}] "${cast.person}" skeleton fetch FAILED: ${skelResp.status} ${skelResp.statusText} for "${skelFile}"`);
+                console.error(`[loadScene] CAST[${ci}] "${cast.character}" skeleton fetch FAILED: ${skelResp.status} ${skelResp.statusText} for "${skelFile}"`);
                 continue;
             }
             const skelText = await skelResp.text();
@@ -477,27 +479,27 @@ async function loadScene(sceneIndex) {
                 body.skeleton = buildSkeleton(skelData.skeletons[0]);
                 updateTransforms(body.skeleton);
             } else {
-                console.error(`[loadScene] CAST[${ci}] "${cast.person}" parseCMX returned 0 skeletons from "${skelFile}"`);
+                console.error(`[loadScene] CAST[${ci}] "${cast.character}" parseCMX returned 0 skeletons from "${skelFile}"`);
             }
         } catch (e) {
-            console.error(`[loadScene] CAST[${ci}] "${cast.person}" skeleton EXCEPTION for "${skelFile}":`, e);
+            console.error(`[loadScene] CAST[${ci}] "${cast.character}" skeleton EXCEPTION for "${skelFile}":`, e);
         }
 
         if (!body.skeleton) {
-            console.error(`[loadScene] CAST[${ci}] "${cast.person}" has NO SKELETON — skipping entirely`);
+            console.error(`[loadScene] CAST[${ci}] "${cast.character}" has NO SKELETON — skipping entirely`);
             continue;
         }
 
         // Load meshes (body, head, hands) with textures
         const meshParts = [
-            { label: 'body',      name: person.body,      tex: person.bodyTexture },
-            { label: 'head',      name: person.head,      tex: person.headTexture },
-            { label: 'leftHand',  name: person.leftHand,  tex: person.handTexture },
-            { label: 'rightHand', name: person.rightHand, tex: person.handTexture },
+            { label: 'body',      name: char.body,      tex: char.bodyTexture },
+            { label: 'head',      name: char.head,      tex: char.headTexture },
+            { label: 'leftHand',  name: char.leftHand,  tex: char.handTexture },
+            { label: 'rightHand', name: char.rightHand, tex: char.handTexture },
         ];
         for (const part of meshParts) {
             if (!part.name) {
-                console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: name is empty/null, skipping`);
+                console.warn(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: name is empty/null, skipping`);
                 continue;
             }
             const meshKey = part.name;
@@ -506,31 +508,31 @@ async function loadScene(sceneIndex) {
                 const lowerKey = meshKey.toLowerCase();
                 const ciMatch = Object.keys(content.meshes).find(k => k.toLowerCase() === lowerKey);
                 if (ciMatch) {
-                    console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: exact key "${meshKey}" not found but case-insensitive match "${ciMatch}" exists — using it`);
+                    console.warn(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: exact key "${meshKey}" not found but case-insensitive match "${ciMatch}" exists — using it`);
                     content.meshes[meshKey] = content.meshes[ciMatch];
                 } else {
                     // Load SKN as fallback
                     const sknFile = meshKey + '.skn';
-                    console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: key "${meshKey}" not in preloaded meshes (${Object.keys(content.meshes).length} loaded), trying fetch "${sknFile}"`);
+                    console.warn(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: key "${meshKey}" not in preloaded meshes (${Object.keys(content.meshes).length} loaded), trying fetch "${sknFile}"`);
                     try {
                         const resp = await fetch('data/' + sknFile);
                         if (!resp.ok) {
-                            console.error(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: fetch "${sknFile}" FAILED: ${resp.status} ${resp.statusText}`);
+                            console.error(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: fetch "${sknFile}" FAILED: ${resp.status} ${resp.statusText}`);
                             continue;
                         }
                         const text = await resp.text();
                         const parsed = parseSKN(text);
                         content.meshes[meshKey] = parsed;
-                        console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: dynamically loaded "${sknFile}" → internal name "${parsed.name}"`);
+                        console.warn(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: dynamically loaded "${sknFile}" → internal name "${parsed.name}"`);
                     } catch (e) {
-                        console.error(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: SKN load EXCEPTION for "${sknFile}":`, e);
+                        console.error(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: SKN load EXCEPTION for "${sknFile}":`, e);
                         continue;
                     }
                 }
             }
             const mesh = content.meshes[meshKey];
             if (!mesh) {
-                console.error(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: mesh STILL NULL after load attempts for "${meshKey}"`);
+                console.error(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: mesh STILL NULL after load attempts for "${meshKey}"`);
                 continue;
             }
             const boneMap = new Map();
@@ -543,27 +545,27 @@ async function loadScene(sceneIndex) {
             if (part.tex) {
                 texture = await getTexture(part.tex);
                 if (!texture) {
-                    console.warn(`[loadScene] CAST[${ci}] "${cast.person}" ${part.label}: texture "${part.tex}" failed to load`);
+                    console.warn(`[loadScene] CAST[${ci}] "${cast.character}" ${part.label}: texture "${part.tex}" failed to load`);
                 }
             }
             body.meshes.push({ mesh, boneMap, texture });
         }
 
         if (body.meshes.length === 0) {
-            console.error(`[loadScene] CAST[${ci}] "${cast.person}" has ZERO meshes — body will be invisible!`);
+            console.error(`[loadScene] CAST[${ci}] "${cast.character}" has ZERO meshes — body will be invisible!`);
         }
 
         // Load animation — DEEP COPY the skill so multiple bodies don't share/corrupt the same skill object
-        const animName = cast.animation || person.animation;
+        const animName = cast.animation || char.animation;
         if (animName) {
-            body.practice = await loadAnimationForBody(animName, body.skeleton, `CAST[${ci}] "${cast.person}"`);
+            body.practice = await loadAnimationForBody(animName, body.skeleton, `CAST[${ci}] "${cast.character}"`);
             if (!body.practice) {
-                console.error(`[loadScene] CAST[${ci}] "${cast.person}" animation "${animName}" returned NULL practice — body will be frozen!`);
+                console.error(`[loadScene] CAST[${ci}] "${cast.character}" animation "${animName}" returned NULL practice — body will be frozen!`);
             } else if (!body.practice.ready) {
-                console.error(`[loadScene] CAST[${ci}] "${cast.person}" animation "${animName}" practice NOT READY (translations=${body.practice.skill.translations.length} rotations=${body.practice.skill.rotations.length}) — body will be frozen!`);
+                console.error(`[loadScene] CAST[${ci}] "${cast.character}" animation "${animName}" practice NOT READY (translations=${body.practice.skill.translations.length} rotations=${body.practice.skill.rotations.length}) — body will be frozen!`);
             }
         } else {
-            console.warn(`[loadScene] CAST[${ci}] "${cast.person}" has no animation specified — body will be idle`);
+            console.warn(`[loadScene] CAST[${ci}] "${cast.character}" has no animation specified — body will be idle`);
         }
 
         newBodies.push(body);
@@ -600,6 +602,28 @@ async function loadScene(sceneIndex) {
     // ATOMIC SWAP: animation loop only ever sees a fully-loaded scene.
     // All bodies are built, all practices are ready — now make them live.
     bodies = newBodies;
+
+    // Populate Actor dropdown from cast
+    const actorSel = $('selActor');
+    const actorGroup = $('actorGroup');
+    if (actorSel) {
+        while (actorSel.options.length) actorSel.remove(0);
+        for (let i = 0; i < bodies.length; i++) {
+            const opt = document.createElement('option');
+            opt.value = String(i);
+            opt.textContent = bodies[i].actorName;
+            actorSel.appendChild(opt);
+        }
+        selectedActorIndex = 0;
+        actorSel.value = '0';
+    }
+    if (actorGroup) actorGroup.style.display = bodies.length > 0 ? '' : 'none';
+
+    // Sync Character dropdown to first actor's character
+    if (bodies.length > 0 && bodies[0].personData) {
+        const charIdx = contentIndex.characters?.findIndex(c => c.name === bodies[0].personData.name);
+        if (charIdx >= 0) $('selCharacter').value = String(charIdx);
+    }
 
     // Set primary body refs for compatibility (camera target, status, etc.)
     if (bodies.length > 0) {
@@ -746,10 +770,13 @@ async function loadAnimationForBody(animName, skeleton, debugLabel = '') {
     return practice;
 }
 
-// Exit scene mode, return to solo viewing with first person
+// Exit scene mode, return to solo viewing with first character
 function exitScene() {
     activeScene = null;
     bodies = [];
+    selectedActorIndex = -1;
+    const actorGroup = $('actorGroup');
+    if (actorGroup) actorGroup.style.display = 'none';
     // Silence any body voice chains
     if (audioCtx) {
         const now = audioCtx.currentTime;
@@ -762,10 +789,10 @@ function exitScene() {
             if (opt.value === '') { sel.value = ''; break; }
         }
     }
-    // Load first person
-    if (contentIndex?.people?.length) {
-        $('selPerson').value = '0';
-        applyPerson(0);
+    // Load first character
+    if (contentIndex?.characters?.length) {
+        $('selCharacter').value = '0';
+        applyCharacter(0);
     } else {
         applyDefaults();
     }
@@ -1089,13 +1116,13 @@ function getVoiceType() {
         }
     }
 
-    // Solo mode: try per-person JSON voice first
-    const peopleSelect = $('selPerson');
-    if (peopleSelect && contentIndex?.people) {
-        const idx = parseInt(peopleSelect.value, 10);
-        const person = contentIndex.people[idx];
-        if (person?.voice) {
-            const v = person.voice;
+    // Solo mode: try per-character JSON voice first
+    const charSelect = $('selCharacter');
+    if (charSelect && contentIndex?.characters) {
+        const idx = parseInt(charSelect.value, 10);
+        const char = contentIndex.characters[idx];
+        if (char?.voice) {
+            const v = char.voice;
             return {
                 basePitch: v.pitch || 100,
                 pitchRange: v.range || 50,
@@ -1192,7 +1219,7 @@ function updateSpinSound() {
             const chain = bodyVoices[i];
             if (!chain) continue;
 
-            // Get this body's voice params from their person data
+            // Get this body's voice params from their character data
             const v = b.personData?.voice;
             const voice = v ? {
                 basePitch: v.pitch || 50, pitchRange: v.range || 20,
@@ -1320,11 +1347,11 @@ async function updateScene() {
     computeCameraTarget();
 
     // Status
-    const personIdx = parseInt($('selPerson').value);
-    const personName = contentIndex?.people?.[personIdx]?.name;
+    const charIdx = parseInt($('selCharacter').value);
+    const charName = contentIndex?.characters?.[charIdx]?.name;
     const animLabel = animName || 'idle';
-    statusEl.textContent = personName
-        ? `${personName} | ${animLabel}`
+    statusEl.textContent = charName
+        ? `${charName} | ${animLabel}`
         : `${skelName} (${activeSkeleton.length} bones) | ${animLabel}`;
     renderFrame();
 }
@@ -1646,18 +1673,79 @@ function setupMouseInteraction() {
     canvas.style.cursor = 'grab';
 }
 
-// Step through people presets
-function stepPerson(direction) {
-    if (!contentIndex?.people?.length) return;
-    const sel = $('selPerson');
+// Step through character presets
+function stepCharacter(direction) {
+    if (!contentIndex?.characters?.length) return;
+    const sel = $('selCharacter');
     let idx = parseInt(sel.value);
-    if (isNaN(idx)) idx = direction > 0 ? 0 : contentIndex.people.length - 1;
+    if (isNaN(idx)) idx = direction > 0 ? 0 : contentIndex.characters.length - 1;
     else idx += direction;
-    if (idx < 0) idx = contentIndex.people.length - 1;
-    if (idx >= contentIndex.people.length) idx = 0;
+    if (idx < 0) idx = contentIndex.characters.length - 1;
+    if (idx >= contentIndex.characters.length) idx = 0;
     sel.value = String(idx);
-    exitScene();
-    applyPerson(idx);
+    if (activeScene && selectedActorIndex >= 0) {
+        applyCharacterToActor(idx, selectedActorIndex);
+    } else {
+        exitScene();
+        applyCharacter(idx);
+    }
+}
+
+// Apply a character preset to a specific actor in the current scene.
+// Rebuilds that actor's body (skeleton, meshes, textures, animation) in place.
+async function applyCharacterToActor(charIndex, actorIndex) {
+    if (!contentIndex?.characters?.[charIndex]) return;
+    if (actorIndex < 0 || actorIndex >= bodies.length) return;
+    const char = contentIndex.characters[charIndex];
+    const body = bodies[actorIndex];
+    body.personData = char;
+
+    // Rebuild skeleton
+    const skelName = char.skeleton || 'adult';
+    const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
+    try {
+        const skelResp = await fetch('data/' + skelFile);
+        if (skelResp.ok) {
+            const skelData = parseCMX(await skelResp.text());
+            if (skelData.skeletons?.length) {
+                body.skeleton = buildSkeleton(skelData.skeletons[0]);
+                updateTransforms(body.skeleton);
+            }
+        }
+    } catch (e) { console.error(`[applyCharacterToActor] skeleton error:`, e); }
+    if (!body.skeleton) return;
+
+    // Rebuild meshes
+    body.meshes = [];
+    const meshParts = [
+        { name: char.body,      tex: char.bodyTexture },
+        { name: char.head,      tex: char.headTexture },
+        { name: char.leftHand,  tex: char.handTexture },
+        { name: char.rightHand, tex: char.handTexture },
+    ];
+    for (const part of meshParts) {
+        if (!part.name) continue;
+        const meshKey = part.name;
+        if (!content.meshes[meshKey]) {
+            const lowerKey = meshKey.toLowerCase();
+            const ciMatch = Object.keys(content.meshes).find(k => k.toLowerCase() === lowerKey);
+            if (ciMatch) content.meshes[meshKey] = content.meshes[ciMatch];
+        }
+        const mesh = content.meshes[meshKey];
+        if (!mesh) continue;
+        const boneMap = new Map();
+        for (const bone of body.skeleton) boneMap.set(bone.name, bone);
+        const texture = part.tex ? await getTexture(part.tex) : null;
+        body.meshes.push({ mesh, boneMap, texture });
+    }
+
+    // Rebuild animation
+    const animName = char.animation;
+    if (animName) {
+        body.practice = await loadAnimationForBody(animName, body.skeleton, `actor "${body.actorName}"`);
+    }
+
+    renderFrame();
 }
 
 function togglePause() {
@@ -1771,14 +1859,50 @@ function setupEventListeners() {
         btn.addEventListener('click', () => setDistance(btn.dataset.dist));
     });
 
-    // People prev/next buttons and dropdown
-    const btnPersonPrev = $('btnPersonPrev');
-    const btnPersonNext = $('btnPersonNext');
-    if (btnPersonPrev) btnPersonPrev.addEventListener('click', () => stepPerson(-1));
-    if (btnPersonNext) btnPersonNext.addEventListener('click', () => stepPerson(1));
-    $('selPerson').addEventListener('change', () => {
-        const idx = parseInt($('selPerson').value);
-        if (!isNaN(idx)) { exitScene(); applyPerson(idx); }
+    // Character prev/next buttons and dropdown
+    const btnCharacterPrev = $('btnCharacterPrev');
+    const btnCharacterNext = $('btnCharacterNext');
+    if (btnCharacterPrev) btnCharacterPrev.addEventListener('click', () => stepCharacter(-1));
+    if (btnCharacterNext) btnCharacterNext.addEventListener('click', () => stepCharacter(1));
+    $('selCharacter').addEventListener('change', () => {
+        const idx = parseInt($('selCharacter').value);
+        if (isNaN(idx)) return;
+        if (activeScene && selectedActorIndex >= 0) {
+            applyCharacterToActor(idx, selectedActorIndex);
+        } else {
+            exitScene();
+            applyCharacter(idx);
+        }
+    });
+
+    // Actor prev/next buttons and dropdown (scene mode only)
+    function stepActor(dir) {
+        if (bodies.length === 0) return;
+        let idx = selectedActorIndex + dir;
+        if (idx < 0) idx = bodies.length - 1;
+        if (idx >= bodies.length) idx = 0;
+        selectActor(idx);
+    }
+    function selectActor(idx) {
+        if (idx < 0 || idx >= bodies.length) return;
+        selectedActorIndex = idx;
+        const actorSel = $('selActor');
+        if (actorSel) actorSel.value = String(idx);
+        // Sync Character dropdown to this actor's character
+        const body = bodies[idx];
+        if (body?.personData && contentIndex?.characters) {
+            const charIdx = contentIndex.characters.findIndex(c => c.name === body.personData.name);
+            if (charIdx >= 0) $('selCharacter').value = String(charIdx);
+        }
+    }
+    const btnActorPrev = $('btnActorPrev');
+    const btnActorNext = $('btnActorNext');
+    if (btnActorPrev) btnActorPrev.addEventListener('click', () => stepActor(-1));
+    if (btnActorNext) btnActorNext.addEventListener('click', () => stepActor(1));
+    const selActor = $('selActor');
+    if (selActor) selActor.addEventListener('change', () => {
+        const idx = parseInt(selActor.value);
+        if (!isNaN(idx)) selectActor(idx);
     });
 
     // Scene prev/next/select

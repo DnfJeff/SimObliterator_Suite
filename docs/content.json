@@ -185,7 +185,7 @@
       "animation": "a2o-energetic1"
   },
 
-  "people": [
+  "characters": [
     {
       "name": "Dad (Fit)",
       "skeleton": "adult",
@@ -374,81 +374,101 @@
     {
       "name": "Flash Crowd",
       "cast": [
-        { "person": "Dad (Fit)",          "x": -8,   "z":  6,   "direction": 23,  "animation": "a2o-test-animation5" },
-        { "person": "Mercedes",           "x": -4,   "z":  7,   "direction": 310, "animation": "a2o-test-animation2" },
-        { "person": "Biker Dude",         "x":  1,   "z":  5.5, "direction": 170, "animation": "a2o-walking-frantic-loop" },
-        { "person": "Grandma",            "x":  5,   "z":  7,   "direction": 45,  "animation": "a2o-test-animation5" },
-        { "person": "Hipster",            "x":  9,   "z":  6,   "direction": 200, "animation": "a2o-test-animation3" },
-        { "person": "Mom (Ponytail)",     "x": -7,   "z":  2,   "direction": 90,  "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "The Slob",           "x": -2.5, "z":  1.5, "direction": 260, "animation": "a2o-energetic1" },
-        { "person": "Peg",                "x":  3,   "z":  2.5, "direction": 15,  "animation": "a2o-approve" },
-        { "person": "Lizard King",        "x":  7,   "z":  1,   "direction": 140, "animation": "a2o-test-animation6" },
-        { "person": "Fat Lady Summer",    "x": -6,   "z": -2,   "direction": 330, "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "Ross (Bald)",        "x": -1,   "z": -3,   "direction": 70,  "animation": "a2o-test-animation" },
-        { "person": "The Boss",           "x":  4,   "z": -2.5, "direction": 185, "animation": "a2o-test-animation4" },
-        { "person": "Deb",                "x":  8.5, "z": -3,   "direction": 290, "animation": "a2o-walking-loop" },
-        { "person": "Grandpa",            "x": -4,   "z": -5.5, "direction": 120, "animation": "a2o-energetic1" },
-        { "person": "Dad (Fit)",          "x":  0.5, "z": -6,   "direction": 225, "animation": "a2o-walking-frantic-loop" },
-        { "person": "Mercedes",           "x":  6,   "z": -6.5, "direction": 350, "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "Biker Dude",         "x": -8,   "z": -7.5, "direction": 55,  "animation": "a2o-test-animation4" },
-        { "person": "Mom (Ponytail)",     "x":  3,   "z": -8,   "direction": 160, "animation": "a2o-test-animation" },
-        { "person": "Hipster",            "x":  9,   "z": -7,   "direction": 270, "animation": "a2o-energetic1" },
-        { "person": "Lizard King",        "x": -3,   "z": -9,   "direction": 95,  "animation": "a2o-test-animation6" }
+        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -5.5, "z":  5.5, "direction": 23,  "animation": "a2o-test-animation5" },
+        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x": -3,   "z":  6,   "direction": 310, "animation": "a2o-test-animation2" },
+        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x": -0.5, "z":  5.2, "direction": 170, "animation": "a2o-walking-frantic-loop" },
+        { "actor": "Dolly Wonderknit",    "character": "Grandma",         "x":  2,   "z":  6.3, "direction": 45,  "animation": "a2o-test-animation5" },
+        { "actor": "Quincy Vape III",     "character": "Hipster",         "x":  4.5, "z":  5,   "direction": 200, "animation": "a2o-test-animation3" },
+        { "actor": "Tanya Stridewell",    "character": "Deb",             "x":  6.5, "z":  5.8, "direction": 290, "animation": "a2o-walking-loop" },
+        { "actor": "Dirk Powerlunch",     "character": "The Boss",        "x": -6.5, "z":  3,   "direction": 110, "animation": "a2o-test-animation4" },
+        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x": -4,   "z":  2.5, "direction": 90,  "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Gary Nachofingers",   "character": "The Slob",        "x": -1.5, "z":  3.2, "direction": 260, "animation": "a2o-energetic1" },
+        { "actor": "Mildred Starchpress", "character": "Peg",             "x":  1,   "z":  2.8, "direction": 15,  "animation": "a2o-approve" },
+        { "actor": "Vince Rattlesnake",   "character": "Lizard King",     "x":  3.5, "z":  2.5, "direction": 140, "animation": "a2o-test-animation6" },
+        { "actor": "Harold Suspenders",   "character": "Grandpa",         "x":  6,   "z":  3.3, "direction": 330, "animation": "a2o-energetic1" },
+        { "actor": "Petunia Flambe",      "character": "Fat Lady Summer", "x": -5,   "z":  0.5, "direction": 330, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Blaine Cueball",      "character": "Ross (Bald)",     "x": -2.5, "z":  0,   "direction": 70,  "animation": "a2o-test-animation" },
+        { "actor": "Prudence Ironskirt",  "character": "Peg",             "x":  0.5, "z":  0.5, "direction": 195, "animation": "a2o-test-animation3" },
+        { "actor": "Chad Thunderpants",   "character": "Dad (Fit)",       "x":  3,   "z": -0.2, "direction": 225, "animation": "a2o-walking-frantic-loop" },
+        { "actor": "Sable Diamondwrist",  "character": "Mercedes",        "x":  5.5, "z":  0.8, "direction": 350, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Axle Grindhouse",     "character": "Biker Dude",      "x": -6,   "z": -2,   "direction": 55,  "animation": "a2o-test-animation4" },
+        { "actor": "Jasper Coldpress",     "character": "Hipster",         "x": -3.5, "z": -2.5, "direction": 270, "animation": "a2o-energetic1" },
+        { "actor": "Nana Crumbsworth",    "character": "Grandma",         "x": -1,   "z": -2.8, "direction": 160, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Lana Moonbeam",       "character": "Mom (Ponytail)",  "x":  1.5, "z": -2.2, "direction": 80,  "animation": "a2o-test-animation" },
+        { "actor": "Slade Fangsworth",    "character": "Lizard King",     "x":  4,   "z": -2.5, "direction": 95,  "animation": "a2o-test-animation6" },
+        { "actor": "Dwayne Couchfort",    "character": "The Slob",        "x":  6.5, "z": -1.8, "direction": 185, "animation": "a2o-test-animation5" },
+        { "actor": "Rex Boardroom",       "character": "The Boss",        "x": -5.5, "z": -4.5, "direction": 20,  "animation": "a2o-test-animation2" },
+        { "actor": "Jolene Sunpuddle",    "character": "Fat Lady Summer", "x": -3,   "z": -5,   "direction": 145, "animation": "a2o-test-animation5" },
+        { "actor": "Cliff Chromedome",    "character": "Ross (Bald)",     "x": -0.5, "z": -4.8, "direction": 300, "animation": "a2o-walking-frantic-loop" },
+        { "actor": "Tiffany Sparklecoat", "character": "Deb",             "x":  2,   "z": -5.2, "direction": 60,  "animation": "a2o-approve" },
+        { "actor": "Mortimer Wheezeworth","character": "Grandpa",         "x":  4.5, "z": -4.5, "direction": 240, "animation": "a2o-test-animation4" },
+        { "actor": "Diesel McRevs",       "character": "Biker Dude",      "x":  7,   "z": -4,   "direction": 170, "animation": "a2o-test-animation6" },
+        { "actor": "Lance Jawstrong",     "character": "Dad (Fit)",       "x": -4.5, "z": -7,   "direction": 130, "animation": "a2o-energetic1" },
+        { "actor": "Aiden Shroomtea",     "character": "Hipster",         "x": -2,   "z": -7.3, "direction": 35,  "animation": "a2o-test-animation" },
+        { "actor": "Velvet Nightengale",  "character": "Mercedes",        "x":  0.5, "z": -7,   "direction": 210, "animation": "a2o-test-animation3" },
+        { "actor": "Brenda Windchime",    "character": "Mom (Ponytail)",  "x":  3,   "z": -7.5, "direction": 315, "animation": "a2o-test-animation5" },
+        { "actor": "Agnes Frostworth",    "character": "Peg",             "x":  5.5, "z": -6.8, "direction": 75,  "animation": "a2o-energetic1" },
+        { "actor": "Spike Venomtooth",    "character": "Lizard King",     "x": -6.5, "z": -9,   "direction": 250, "animation": "a2o-walking-frantic-loop" },
+        { "actor": "Edna Butterworth",    "character": "Grandma",         "x": -3.5, "z": -9.5, "direction": 5,   "animation": "a2o-test-animation2" },
+        { "actor": "Sterling Pinstripe",  "character": "The Boss",        "x": -0.5, "z": -9.2, "direction": 175, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Earl Beanburrito",    "character": "The Slob",        "x":  2.5, "z": -9,   "direction": 285, "animation": "a2o-test-animation4" },
+        { "actor": "Bertha Sunflower",    "character": "Fat Lady Summer", "x":  5,   "z": -9.5, "direction": 120, "animation": "a2o-test-animation6" },
+        { "actor": "Wilbur Napsalot",     "character": "Grandpa",         "x":  7.5, "z": -8.5, "direction": 340, "animation": "a2o-test-animation" }
       ]
     },
     {
       "name": "Simopolis",
       "cast": [
-        { "person": "Dad (Fit)",          "x": -6,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation5" },
-        { "person": "Mom (Ponytail)",     "x": -2,   "z":  4,   "direction": 0,   "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "Ross (Bald)",        "x":  2,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation" },
-        { "person": "Mercedes",           "x":  6,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation2" },
-        { "person": "Biker Dude",         "x": -5,   "z":  0,   "direction": 0,   "animation": "a2o-walking-frantic-loop" },
-        { "person": "Hipster",            "x": -1.5, "z":  0,   "direction": 0,   "animation": "a2o-test-animation3" },
-        { "person": "Fat Lady Summer",    "x":  1.5, "z":  0,   "direction": 0,   "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "The Boss",           "x":  5,   "z":  0,   "direction": 0,   "animation": "a2o-test-animation4" },
-        { "person": "Grandpa",            "x": -4,   "z": -3.5, "direction": 0,   "animation": "a2o-energetic1" },
-        { "person": "Grandma",            "x": -0.5, "z": -3.5, "direction": 0,   "animation": "a2o-test-animation5" },
-        { "person": "The Slob",           "x":  3,   "z": -3.5, "direction": 0,   "animation": "a2o-energetic1" },
-        { "person": "Deb",                "x":  6.5, "z": -3.5, "direction": 0,   "animation": "a2o-walking-loop" },
-        { "person": "Peg",                "x": -3,   "z": -7,   "direction": 0,   "animation": "a2o-approve" },
-        { "person": "Lizard King",        "x":  3,   "z": -7,   "direction": 0,   "animation": "a2o-test-animation6" }
+        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -6,   "z":  4,   "direction": 0, "animation": "a2o-test-animation5" },
+        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x": -2,   "z":  4,   "direction": 0, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Blaine Cueball",      "character": "Ross (Bald)",     "x":  2,   "z":  4,   "direction": 0, "animation": "a2o-test-animation" },
+        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x":  6,   "z":  4,   "direction": 0, "animation": "a2o-test-animation2" },
+        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x": -5,   "z":  0,   "direction": 0, "animation": "a2o-walking-frantic-loop" },
+        { "actor": "Quincy Vape III",     "character": "Hipster",         "x": -1.5, "z":  0,   "direction": 0, "animation": "a2o-test-animation3" },
+        { "actor": "Petunia Flambe",      "character": "Fat Lady Summer", "x":  1.5, "z":  0,   "direction": 0, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Dirk Powerlunch",     "character": "The Boss",        "x":  5,   "z":  0,   "direction": 0, "animation": "a2o-test-animation4" },
+        { "actor": "Harold Suspenders",   "character": "Grandpa",         "x": -4,   "z": -3.5, "direction": 0, "animation": "a2o-energetic1" },
+        { "actor": "Dolly Wonderknit",    "character": "Grandma",         "x": -0.5, "z": -3.5, "direction": 0, "animation": "a2o-test-animation5" },
+        { "actor": "Gary Nachofingers",   "character": "The Slob",        "x":  3,   "z": -3.5, "direction": 0, "animation": "a2o-energetic1" },
+        { "actor": "Tanya Stridewell",    "character": "Deb",             "x":  6.5, "z": -3.5, "direction": 0, "animation": "a2o-walking-loop" },
+        { "actor": "Mildred Starchpress", "character": "Peg",             "x": -3,   "z": -7,   "direction": 0, "animation": "a2o-approve" },
+        { "actor": "Vince Rattlesnake",   "character": "Lizard King",     "x":  3,   "z": -7,   "direction": 0, "animation": "a2o-test-animation6" }
       ]
     },
     {
       "name": "Grand Chorus",
       "cast": [
-        { "person": "Dad (Fit)",          "x": -4.5, "z":  2.5, "direction": 0,   "animation": "a2o-energetic1" },
-        { "person": "Mom (Ponytail)",     "x": -1.5, "z":  2.5, "direction": 0,   "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "Ross (Bald)",        "x":  1.5, "z":  2.5, "direction": 0,   "animation": "a2o-test-animation" },
-        { "person": "Mercedes",           "x":  4.5, "z":  2.5, "direction": 0,   "animation": "a2o-test-animation2" },
-        { "person": "Grandpa",            "x": -3,   "z": -1.5, "direction": 0,   "animation": "a2o-energetic1" },
-        { "person": "Grandma",            "x":  0,   "z": -1.5, "direction": 0,   "animation": "a2o-test-animation5" },
-        { "person": "Biker Dude",         "x":  3,   "z": -1.5, "direction": 0,   "animation": "a2o-walking-frantic-loop" }
+        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -4.5, "z":  2.5, "direction": 0, "animation": "a2o-energetic1" },
+        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x": -1.5, "z":  2.5, "direction": 0, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Blaine Cueball",      "character": "Ross (Bald)",     "x":  1.5, "z":  2.5, "direction": 0, "animation": "a2o-test-animation" },
+        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x":  4.5, "z":  2.5, "direction": 0, "animation": "a2o-test-animation2" },
+        { "actor": "Harold Suspenders",   "character": "Grandpa",         "x": -3,   "z": -1.5, "direction": 0, "animation": "a2o-energetic1" },
+        { "actor": "Dolly Wonderknit",    "character": "Grandma",         "x":  0,   "z": -1.5, "direction": 0, "animation": "a2o-test-animation5" },
+        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x":  3,   "z": -1.5, "direction": 0, "animation": "a2o-walking-frantic-loop" }
       ]
     },
     {
       "name": "Dance Party",
       "cast": [
-        { "person": "Dad (Fit)",         "x": -3,   "z":  2,   "direction": 135, "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "Mom (Ponytail)",    "x":  3,   "z":  2,   "direction": 225, "animation": "a2o-dance-inplace-twistloop" },
-        { "person": "Mercedes",          "x": -3,   "z": -2,   "direction": 45,  "animation": "a2o-test-animation2" },
-        { "person": "Biker Dude",        "x":  3,   "z": -2,   "direction": 315, "animation": "a2o-walking-frantic-loop" }
+        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",       "x": -3, "z":  2, "direction": 135, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)",  "x":  3, "z":  2, "direction": 225, "animation": "a2o-dance-inplace-twistloop" },
+        { "actor": "Fawn Luxington",      "character": "Mercedes",        "x": -3, "z": -2, "direction": 45,  "animation": "a2o-test-animation2" },
+        { "actor": "Throttle McBeef",     "character": "Biker Dude",      "x":  3, "z": -2, "direction": 315, "animation": "a2o-walking-frantic-loop" }
       ]
     },
     {
       "name": "Three Amigos",
       "cast": [
-        { "person": "Ross (Bald)",   "x": -3.5, "z": 0, "direction": 0, "animation": "a2o-test-animation" },
-        { "person": "Dad (Fit)",     "x":  0,   "z": 0, "direction": 0, "animation": "a2o-test-animation5" },
-        { "person": "Hipster",       "x":  3.5, "z": 0, "direction": 0, "animation": "a2o-test-animation3" }
+        { "actor": "Blaine Cueball",      "character": "Ross (Bald)", "x": -3.5, "z": 0, "direction": 0, "animation": "a2o-test-animation" },
+        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",   "x":  0,   "z": 0, "direction": 0, "animation": "a2o-test-animation5" },
+        { "actor": "Quincy Vape III",     "character": "Hipster",     "x":  3.5, "z": 0, "direction": 0, "animation": "a2o-test-animation3" }
       ]
     },
     {
       "name": "The Family",
       "cast": [
-        { "person": "Dad (Fit)",     "x": -2, "z": 0,  "direction": 0,   "animation": "a2o-test-animation5" },
-        { "person": "Mom (Ponytail)","x":  2, "z": 0,  "direction": 0,   "animation": "a2o-dance-inplace-twistloop" }
+        { "actor": "Brick Mancastle",     "character": "Dad (Fit)",      "x": -2, "z": 0, "direction": 0, "animation": "a2o-test-animation5" },
+        { "actor": "Cheryl Swanbeam",     "character": "Mom (Ponytail)", "x":  2, "z": 0, "direction": 0, "animation": "a2o-dance-inplace-twistloop" }
       ]
     }
   ]
