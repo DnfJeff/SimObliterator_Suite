@@ -210,7 +210,7 @@ export class Renderer {
         const cosR = Math.cos(rotY);
         const sinR = Math.sin(rotY);
         const s = size;
-        const h = size * 1.4; // taller than wide
+        const h = size * 2.2; // tall diamond shape
         // Equatorial points (rotated around Y)
         const eq = [
             { x: s * cosR, y: 0, z: s * sinR },
