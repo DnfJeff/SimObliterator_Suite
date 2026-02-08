@@ -1045,9 +1045,16 @@ function tickTopFor(t) {
 function tickTop() { tickTopFor(top); }
 
 // Tick all bodies' top physics (scene mode): same spin input, independent chaos
+// Tick top physics only for bodies that are actually spinning.
+// When a specific actor is selected, only that actor gets top physics.
+// When All is selected, everyone does.
 function tickAllBodiesTop() {
     if (bodies.length > 0) {
-        for (const body of bodies) tickTopFor(body.top);
+        for (let i = 0; i < bodies.length; i++) {
+            if (selectedActorIndex < 0 || i === selectedActorIndex) {
+                tickTopFor(bodies[i].top);
+            }
+        }
     } else {
         tickTopFor(top);
     }
