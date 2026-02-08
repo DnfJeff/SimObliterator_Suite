@@ -359,23 +359,30 @@ details summary h3 {
     font-size: 16px;
     margin-bottom: 12px;
 }
-.help-cols {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-.help-col {
-    flex: 1;
-    min-width: 180px;
+.help-keys {
+    width: 100%;
+    border-collapse: collapse;
     font-size: 14px;
-    line-height: 1.8;
 }
-.help-col h3 {
+.help-keys th {
+    text-align: left;
+    padding: 10px 0 4px;
     color: var(--accent);
     font-size: 15px;
-    margin-bottom: 4px;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 2px;
+}
+.help-keys td {
+    padding: 3px 0 3px 16px;
+}
+.help-keys td:first-child {
+    width: 130px;
+    padding-left: 16px;
+    white-space: nowrap;
+    text-align: right;
+    color: var(--text-dim);
+}
+.help-keys td:last-child {
+    padding-left: 12px;
 }
 kbd {
     display: inline-block;
