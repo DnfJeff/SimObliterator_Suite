@@ -32,15 +32,36 @@ let contentIndex = null;
 
 // Rendering state
 let renderer = null;
-let activeSkeleton = null;  // Bone[]
-let activeMeshes = [];      // {mesh, boneMap, texture}[]
+let activeSkeleton = null;  // Bone[] (primary body for solo mode)
+let activeMeshes = [];      // {mesh, boneMap, texture}[] (primary body)
 let cameraTarget = { x: 0, y: 1.5, z: 0 };
 
 // Animation playback
-let activePractice = null;    // Practice instance (current animation)
+let activePractice = null;    // Practice instance (primary body)
 let animationTime = 0;        // accumulated ticks (ms)
 let lastFrameTime = 0;        // last timestamp from requestAnimationFrame
 let paused = false;
+
+// Multi-body scene support. Each body is an independent character with its own
+// skeleton, meshes, animation, position, top-physics state, and voice params.
+// In solo mode, bodies[] has one entry. In scene mode, multiple.
+function createBody() {
+    return {
+        skeleton: null,      // Bone[]
+        meshes: [],          // {mesh, boneMap, texture}[]
+        practice: null,      // Practice instance
+        personData: null,    // reference to content.json person entry
+        x: 0, z: 0,         // world position offset
+        direction: 0,        // facing angle (degrees)
+        top: {               // per-body top physics (independent spin/tilt/drift)
+            active: false, tilt: 0, tiltTarget: 0,
+            precessionAngle: 0, nutationPhase: 0, nutationAmp: 0,
+            driftX: 0, driftZ: 0, driftVX: 0, driftVZ: 0,
+        },
+    };
+}
+let bodies = [];              // Body[] — all characters in the current scene
+let activeScene = null;       // current scene name or null (solo mode)
 const cfpCache = new Map();   // animationFileName -> ArrayBuffer (loaded CFP data)
 
 // Rotation momentum state: drag left/right to spin, release to keep spinning.
@@ -309,6 +330,12 @@ function populateMenus() {
         fillSelect($('selPerson'), contentIndex.people.map((_, i) => String(i)),
             i => contentIndex.people[i].name);
     }
+
+    // Scene dropdown
+    if (contentIndex?.scenes) {
+        fillSelect($('selScene'), contentIndex.scenes.map((_, i) => String(i)),
+            i => contentIndex.scenes[i].name);
+    }
 }
 
 // After filter changes, revalidate all dropdowns: if the current selection
@@ -361,6 +388,187 @@ function applyPerson(index) {
     setSelectValue('selHeadTex', p.headTexture);
     setSelectValue('selHandTex', p.handTexture);
     if (p.animation) setSelectValue('selAnim', p.animation);
+    updateScene();
+}
+
+// Find a person entry by name (case-insensitive)
+function findPersonByName(name) {
+    if (!contentIndex?.people) return null;
+    const lower = name.toLowerCase();
+    return contentIndex.people.find(p => p.name.toLowerCase() === lower) || null;
+}
+
+// Load a multi-body scene. Each cast member gets their own Body with independent
+// skeleton, meshes, animation, position, and top-physics state.
+async function loadScene(sceneIndex) {
+    if (!contentIndex?.scenes?.[sceneIndex]) return;
+    const scene = contentIndex.scenes[sceneIndex];
+    activeScene = scene.name;
+    bodies = [];
+
+    for (const cast of scene.cast) {
+        const person = findPersonByName(cast.person);
+        if (!person) { console.warn(`[loadScene] person not found: ${cast.person}`); continue; }
+
+        const body = createBody();
+        body.personData = person;
+        body.x = cast.x || 0;
+        body.z = cast.z || 0;
+        body.direction = cast.direction || 0;
+
+        // Load skeleton
+        const skelName = person.skeleton || 'adult';
+        const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
+        try {
+            const skelResp = await fetch('data/' + skelFile);
+            const skelText = await skelResp.text();
+            const skelData = parseCMX(skelText);
+            if (skelData.skeletons?.length) {
+                body.skeleton = buildSkeleton(skelData.skeletons[0]);
+                updateTransforms(body.skeleton);
+            }
+        } catch (e) { console.warn(`[loadScene] skeleton ${skelFile}:`, e); }
+
+        if (!body.skeleton) continue;
+
+        // Load meshes (body, head, hands) with textures
+        const meshParts = [
+            { name: person.body, tex: person.bodyTexture },
+            { name: person.head, tex: person.headTexture },
+            { name: person.leftHand, tex: person.handTexture },
+            { name: person.rightHand, tex: person.handTexture },
+        ];
+        for (const part of meshParts) {
+            if (!part.name) continue;
+            const meshKey = part.name;
+            if (!content.meshes[meshKey]) {
+                // Load SKN
+                const sknFile = meshKey + '.skn';
+                try {
+                    const resp = await fetch('data/' + sknFile);
+                    const text = await resp.text();
+                    content.meshes[meshKey] = parseSKN(text);
+                } catch (e) { continue; }
+            }
+            const mesh = content.meshes[meshKey];
+            if (!mesh) continue;
+            const boneMap = new Map();
+            for (const bone of body.skeleton) {
+                if (bone.name === mesh.boneName) boneMap.set(mesh.boneName, bone);
+                else boneMap.set(bone.name, bone);
+            }
+
+            let texture = null;
+            if (part.tex) {
+                const texKey = part.tex;
+                if (!content.textures[texKey]) {
+                    for (const ext of ['.png', '.bmp']) {
+                        try {
+                            const texResp = await fetch('data/' + texKey + ext);
+                            if (texResp.ok) {
+                                if (ext === '.png') {
+                                    const img = new Image();
+                                    img.src = URL.createObjectURL(await texResp.blob());
+                                    await new Promise(r => { img.onload = r; });
+                                    texture = loadTexture(renderer.context, img);
+                                } else {
+                                    const buf = await texResp.arrayBuffer();
+                                    texture = loadTexture(renderer.context, buf);
+                                }
+                                content.textures[texKey] = texture;
+                                break;
+                            }
+                        } catch (e) { }
+                    }
+                } else {
+                    texture = content.textures[texKey];
+                }
+            }
+            body.meshes.push({ mesh, boneMap, texture });
+        }
+
+        // Load animation
+        const animName = cast.animation || person.animation;
+        if (animName) {
+            body.practice = await loadAnimationForBody(animName, body.skeleton);
+        }
+
+        bodies.push(body);
+    }
+
+    // Set primary body refs for compatibility (camera target, status, etc.)
+    if (bodies.length > 0) {
+        activeSkeleton = bodies[0].skeleton;
+        activeMeshes = bodies[0].meshes;
+        activePractice = bodies[0].practice;
+        // Camera targets center of the group
+        let cx = 0, cz = 0;
+        for (const b of bodies) { cx += b.x; cz += b.z; }
+        cx /= bodies.length; cz /= bodies.length;
+        cameraTarget = { x: cx, y: 1.5, z: cz };
+    }
+
+    animationTime = 0;
+    lastFrameTime = 0;
+    const status = $('status');
+    if (status) status.textContent = `Scene: ${scene.name} (${bodies.length} characters)`;
+    renderFrame();
+}
+
+// Load an animation (Practice) for a specific body's skeleton
+async function loadAnimationForBody(animName, skeleton) {
+    // Find the CMX that defines this skill
+    const allAnims = Object.values(content.skills);
+    let skill = allAnims.find(s => s.name?.toLowerCase() === animName.toLowerCase());
+
+    if (!skill) {
+        // Try loading the animation CMX
+        for (const cmxFile of contentIndex.animations || []) {
+            const cmxName = cmxFile.replace('.cmx', '');
+            if (content.skills[cmxName]) continue;
+            try {
+                const resp = await fetch('data/' + cmxFile);
+                const text = await resp.text();
+                const data = parseCMX(text);
+                for (const s of data.skills || []) content.skills[s.name] = s;
+            } catch (e) { }
+        }
+        skill = Object.values(content.skills).find(s => s.name?.toLowerCase() === animName.toLowerCase());
+    }
+
+    if (!skill?.motions?.length) return null;
+
+    // Load CFP for the first motion
+    const motion = skill.motions[0];
+    const cfpKey = 'xskill-' + motion.animationFileName;
+    let cfpData = cfpCache.get(cfpKey.toLowerCase());
+    if (!cfpData) {
+        const actual = cfpIndex.get(cfpKey.toLowerCase());
+        if (actual) {
+            try {
+                const resp = await fetch('data/' + actual);
+                if (resp.ok) {
+                    cfpData = await resp.arrayBuffer();
+                    cfpCache.set(cfpKey.toLowerCase(), cfpData);
+                }
+            } catch (e) { }
+        }
+    }
+
+    if (!cfpData) return null;
+    const keyframes = parseCFP(cfpData);
+    const practice = new Practice(skill, keyframes, skeleton);
+    practice.tick(0);
+    updateTransforms(skeleton);
+    return practice;
+}
+
+// Exit scene mode, return to solo viewing
+function exitScene() {
+    activeScene = null;
+    bodies = [];
+    const sel = $('selScene');
+    if (sel) sel.value = '';
     updateScene();
 }
 
@@ -421,110 +629,103 @@ const TOP_DRIFT_FRICTION = 0.975; // less friction — keeps momentum longer
 const TOP_TILT_DECAY = 0.94;      // holds the lean — doesn't snap back quickly
 const TOP_SETTLE_RATE = 0.12;     // snaps INTO tilt fast (instant cartoon reaction)
 
-function tickTop() {
+// Tick top physics for a given top-state object.
+// All bodies share the same rotationVelocity input but each has independent state.
+function tickTopFor(t) {
     const spinSpeed = Math.abs(rotationVelocity);
 
     if (spinSpeed > TOP_SPIN_THRESHOLD) {
-        if (!top.active) {
-            // Launch with a moderate random nudge (not too far off-center)
+        if (!t.active) {
             const launchAngle = Math.random() * Math.PI * 2;
-            top.driftVX += Math.sin(launchAngle) * spinSpeed * 0.015;
-            top.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.015;
-            top.nutationPhase = Math.random() * Math.PI * 2;
+            t.driftVX += Math.sin(launchAngle) * spinSpeed * 0.015;
+            t.driftVZ += Math.cos(launchAngle) * spinSpeed * 0.015;
+            t.nutationPhase = Math.random() * Math.PI * 2;
         }
-        top.active = true;
-        top.tiltTarget = Math.min(spinSpeed * TOP_TILT_SCALE, TOP_MAX_TILT);
-    } else if (top.active) {
-        top.tiltTarget *= TOP_TILT_DECAY;
-        if (top.tiltTarget < 0.005 && Math.abs(top.driftX) < 0.01 && Math.abs(top.driftZ) < 0.01) {
-            top.active = false;
-            top.tilt = 0;
-            top.driftX = 0;
-            top.driftZ = 0;
-            top.driftVX = 0;
-            top.driftVZ = 0;
-            top.nutationAmp = 0;
+        t.active = true;
+        t.tiltTarget = Math.min(spinSpeed * TOP_TILT_SCALE, TOP_MAX_TILT);
+    } else if (t.active) {
+        t.tiltTarget *= TOP_TILT_DECAY;
+        if (t.tiltTarget < 0.005 && Math.abs(t.driftX) < 0.01 && Math.abs(t.driftZ) < 0.01) {
+            t.active = false;
+            t.tilt = 0;
+            t.driftX = 0; t.driftZ = 0;
+            t.driftVX = 0; t.driftVZ = 0;
+            t.nutationAmp = 0;
             return;
         }
     }
 
-    if (!top.active) return;
+    if (!t.active) return;
 
-    // Smooth tilt toward target
-    top.tilt += (top.tiltTarget - top.tilt) * TOP_SETTLE_RATE;
+    t.tilt += (t.tiltTarget - t.tilt) * TOP_SETTLE_RATE;
+    t.precessionAngle += spinSpeed * TOP_PRECESSION_RATE;
+    t.nutationPhase += TOP_NUTATION_FREQ * 0.05;
+    t.nutationAmp += (t.tilt * TOP_NUTATION_SCALE - t.nutationAmp) * 0.1;
 
-    // Precession: tilt axis rotates around Y, faster when spinning faster
-    top.precessionAngle += spinSpeed * TOP_PRECESSION_RATE;
+    const tiltDirX = Math.sin(t.precessionAngle);
+    const tiltDirZ = Math.cos(t.precessionAngle);
+    t.driftVX += tiltDirX * t.tilt * TOP_DRIFT_FORCE;
+    t.driftVZ += tiltDirZ * t.tilt * TOP_DRIFT_FORCE;
 
-    // Nutation: wobble overlaid on precession
-    top.nutationPhase += TOP_NUTATION_FREQ * 0.05;
-    top.nutationAmp += (top.tilt * TOP_NUTATION_SCALE - top.nutationAmp) * 0.1;
-
-    // Drift: tilt pushes the character off-center
-    const tiltDirX = Math.sin(top.precessionAngle);
-    const tiltDirZ = Math.cos(top.precessionAngle);
-    top.driftVX += tiltDirX * top.tilt * TOP_DRIFT_FORCE;
-    top.driftVZ += tiltDirZ * top.tilt * TOP_DRIFT_FORCE;
-
-    // Orbital tangential force: makes the drift spiral/orbit like a cartoon tornado path
-    const dist = Math.sqrt(top.driftX * top.driftX + top.driftZ * top.driftZ);
+    const dist = Math.sqrt(t.driftX * t.driftX + t.driftZ * t.driftZ);
     if (dist > 0.01) {
-        const orbitalStrength = spinSpeed * 0.0004; // strong orbital sweep
+        const orbitalStrength = spinSpeed * 0.0004;
         const spinSign = rotationVelocity > 0 ? 1 : -1;
-        top.driftVX += (-top.driftZ / dist) * orbitalStrength * spinSign;
-        top.driftVZ += (top.driftX / dist) * orbitalStrength * spinSign;
+        t.driftVX += (-t.driftZ / dist) * orbitalStrength * spinSign;
+        t.driftVZ += (t.driftX / dist) * orbitalStrength * spinSign;
     }
 
-    // Cartoon jitter: tiny random impulses make the path wobbly and unpredictable
-    const jitter = top.tilt * 0.0003;
-    top.driftVX += (Math.random() - 0.5) * jitter;
-    top.driftVZ += (Math.random() - 0.5) * jitter;
+    const jitter = t.tilt * 0.0003;
+    t.driftVX += (Math.random() - 0.5) * jitter;
+    t.driftVZ += (Math.random() - 0.5) * jitter;
 
-    // Gravity bowl: pulls back toward center — but it's a wide bowl
     const gravStrength = TOP_GRAVITY * (1 + dist * 0.3);
-    top.driftVX -= top.driftX * gravStrength;
-    top.driftVZ -= top.driftZ * gravStrength;
+    t.driftVX -= t.driftX * gravStrength;
+    t.driftVZ -= t.driftZ * gravStrength;
 
-    // Friction on drift
-    top.driftVX *= TOP_DRIFT_FRICTION;
-    top.driftVZ *= TOP_DRIFT_FRICTION;
-
-    top.driftX += top.driftVX;
-    top.driftZ += top.driftVZ;
+    t.driftVX *= TOP_DRIFT_FRICTION;
+    t.driftVZ *= TOP_DRIFT_FRICTION;
+    t.driftX += t.driftVX;
+    t.driftZ += t.driftVZ;
 }
 
-// Apply top physics transform to a vertex: tilt + precession + nutation + drift
-function applyTopTransform(v) {
-    if (!top.active || !v) return v;
+// Solo-mode wrapper: ticks the global top state
+function tickTop() { tickTopFor(top); }
 
-    // Compute effective tilt with nutation wobble
-    const nutX = top.nutationAmp * Math.sin(top.nutationPhase);
-    const nutZ = top.nutationAmp * Math.cos(top.nutationPhase * 0.7);
+// Tick all bodies' top physics (scene mode): same spin input, independent chaos
+function tickAllBodiesTop() {
+    if (bodies.length > 0) {
+        for (const body of bodies) tickTopFor(body.top);
+    } else {
+        tickTopFor(top);
+    }
+}
 
-    // Tilt axis from precession angle
-    const tiltX = top.tilt * Math.sin(top.precessionAngle) + nutX;
-    const tiltZ = top.tilt * Math.cos(top.precessionAngle) + nutZ;
+// Apply top physics transform for a given top-state object
+function applyTopTransformFor(v, t) {
+    if (!t.active || !v) return v;
 
-    // Rotate vertex around the character's center (cameraTarget.y)
+    const nutX = t.nutationAmp * Math.sin(t.nutationPhase);
+    const nutZ = t.nutationAmp * Math.cos(t.nutationPhase * 0.7);
+    const tiltX = t.tilt * Math.sin(t.precessionAngle) + nutX;
+    const tiltZ = t.tilt * Math.cos(t.precessionAngle) + nutZ;
+
     const cy = cameraTarget.y;
     const relY = v.y - cy;
 
-    // Tilt around X axis (forward/back lean)
     const cosZ = Math.cos(tiltZ), sinZ = Math.sin(tiltZ);
     let y1 = relY * cosZ - v.x * sinZ;
     let x1 = relY * sinZ + v.x * cosZ;
 
-    // Tilt around Z axis (left/right lean)
     const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX);
     let y2 = y1 * cosX - v.z * sinX;
     let z2 = y1 * sinX + v.z * cosX;
 
-    return {
-        x: x1 + top.driftX,
-        y: y2 + cy,
-        z: z2 + top.driftZ,
-    };
+    return { x: x1 + t.driftX, y: y2 + cy, z: z2 + t.driftZ };
 }
+
+// Solo-mode wrapper
+function applyTopTransform(v) { return applyTopTransformFor(v, top); }
 
 // Top spin sound: procedural whirring via Web Audio oscillator.
 // Pitch proportional to spin speed — you hear it wind up and slow down.
@@ -645,10 +846,36 @@ function lerpVowel(angle, tiltAmount) {
 }
 
 // Voice parameters for the current character.
-// First checks the per-person "voice" object from content.json (pitch, range, formant, breathiness).
-// Falls back to auto-detection from body mesh name (MA/FA/MC/FC).
+// Voice parameters for the current character(s).
+// Scene mode: blends all cast members' voices into a chord/chorus.
+// Solo mode: reads the selected person's voice or auto-detects.
 function getVoiceType() {
-    // Try per-person JSON voice first
+    // Scene mode: blend all bodies' voices
+    if (bodies.length > 1) {
+        let totalPitch = 0, totalRange = 0, totalFormant = 0, totalBreath = 0;
+        let count = 0;
+        for (const body of bodies) {
+            const v = body.personData?.voice;
+            if (v) {
+                totalPitch += v.pitch || 100;
+                totalRange += v.range || 50;
+                totalFormant += v.formant || 1.0;
+                totalBreath += v.breathiness || 0.15;
+                count++;
+            }
+        }
+        if (count > 0) {
+            return {
+                basePitch: totalPitch / count,
+                pitchRange: totalRange / count,
+                formantScale: totalFormant / count,
+                breathiness: totalBreath / count,
+                chorusSize: count, // used for extra detune
+            };
+        }
+    }
+
+    // Solo mode: try per-person JSON voice first
     const peopleSelect = $('selPerson');
     if (peopleSelect && contentIndex?.people) {
         const idx = parseInt(peopleSelect.value, 10);
@@ -660,6 +887,7 @@ function getVoiceType() {
                 pitchRange: v.range || 50,
                 formantScale: v.formant || 1.0,
                 breathiness: v.breathiness || 0.15,
+                chorusSize: 1,
             };
         }
     }
@@ -676,10 +904,10 @@ function getVoiceType() {
         if (filter.age === 'C') isChild = true;
     }
 
-    if (isChild && isFemale) return { basePitch: 240, pitchRange: 40, formantScale: 1.35, breathiness: 0.20 };
-    if (isChild)             return { basePitch: 220, pitchRange: 45, formantScale: 1.30, breathiness: 0.18 };
-    if (isFemale)            return { basePitch: 180, pitchRange: 50, formantScale: 1.15, breathiness: 0.18 };
-    return                          { basePitch: 70, pitchRange: 28, formantScale: 0.85, breathiness: 0.10 };
+    if (isChild && isFemale) return { basePitch: 240, pitchRange: 40, formantScale: 1.35, breathiness: 0.20, chorusSize: 1 };
+    if (isChild)             return { basePitch: 220, pitchRange: 45, formantScale: 1.30, breathiness: 0.18, chorusSize: 1 };
+    if (isFemale)            return { basePitch: 180, pitchRange: 50, formantScale: 1.15, breathiness: 0.18, chorusSize: 1 };
+    return                          { basePitch: 70, pitchRange: 28, formantScale: 0.85, breathiness: 0.10, chorusSize: 1 };
 }
 
 function updateSpinSound() {
@@ -691,21 +919,37 @@ function updateSpinSound() {
     if (speed > 0.5) {
         const voice = getVoiceType();
 
-        // Tilt amount: how much the character is leaning (0..1)
-        // Use a power curve so even moderate tilts produce audible vowel shift
-        const rawTilt = top.active ? Math.min(top.tilt / TOP_MAX_TILT, 1.0) : 0;
-        const tiltAmount = Math.pow(rawTilt, 0.6); // gamma < 1 = more effect at low tilt
-        const precAngle = top.active ? ((top.precessionAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) : 0;
+        // Aggregate tilt from all bodies (or just the global top for solo)
+        let avgTilt = 0, avgPrec = 0, avgNut = 0, topCount = 0;
+        if (bodies.length > 0) {
+            for (const b of bodies) {
+                if (b.top.active) {
+                    avgTilt += b.top.tilt;
+                    avgPrec += b.top.precessionAngle;
+                    avgNut += b.top.nutationPhase;
+                    topCount++;
+                }
+            }
+            if (topCount > 0) { avgTilt /= topCount; avgPrec /= topCount; avgNut /= topCount; }
+        } else if (top.active) {
+            avgTilt = top.tilt; avgPrec = top.precessionAngle; avgNut = top.nutationPhase;
+            topCount = 1;
+        }
 
-        // Glottal pitch: character-specific base, rises with speed
-        // Tilt adds a WILD wobbling pitch bend — cartoon yodeling
+        const rawTilt = topCount > 0 ? Math.min(avgTilt / TOP_MAX_TILT, 1.0) : 0;
+        const tiltAmount = Math.pow(rawTilt, 0.6);
+        const precAngle = topCount > 0 ? ((avgPrec % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2) : 0;
+
+        // Glottal pitch: blended voice base, rises with speed
+        // Chorus mode: wider detune between oscillators proportional to cast size
         const basePitch = voice.basePitch + Math.min(speed, 15) * voice.pitchRange;
-        const wobbleDepth = tiltAmount * 60; // up to +/-60Hz pitch swing
-        const wobble1 = Math.sin(top.nutationPhase * 2.5) * wobbleDepth;
-        const wobble2 = Math.sin(top.nutationPhase * 1.7 + 1.3) * wobbleDepth * 0.3; // secondary warble
+        const wobbleDepth = tiltAmount * 60;
+        const wobble1 = Math.sin(avgNut * 2.5) * wobbleDepth;
+        const wobble2 = Math.sin(avgNut * 1.7 + 1.3) * wobbleDepth * 0.3;
         const pitch = basePitch + wobble1 + wobble2;
+        const chorusDetune = 1 + (voice.chorusSize || 1) * 0.003; // wider for more voices
         spinFormants.glottal.frequency.setTargetAtTime(pitch, now, 0.01);
-        spinFormants.glottal2.frequency.setTargetAtTime(pitch * 1.005, now, 0.01); // wider detune = chaos
+        spinFormants.glottal2.frequency.setTargetAtTime(pitch * chorusDetune, now, 0.01);
 
         // Per-character breathiness: more air = more noise in the voice
         if (spinFormants.noiseGain) {
@@ -861,9 +1105,9 @@ function renderFrame() {
     if (!renderer) return;
 
     // Motion blur: when spinning fast with top physics active, fade previous frame
-    // instead of hard-clearing. Creates ghostly afterimage trails.
     const spinSpeed = Math.abs(rotationVelocity);
-    if (top.active && spinSpeed > 1.0) {
+    const anyActive = bodies.length > 0 ? bodies.some(b => b.top.active) : top.active;
+    if (anyActive && spinSpeed > 1.0) {
         // Alpha = how much background to overlay. Lower = longer trails.
         // Scale with spin speed: fast spin = long trails, slow = short trails
         const trailLength = Math.max(0.08, 0.4 - spinSpeed * 0.02);
@@ -886,24 +1130,51 @@ function renderFrame() {
                        eyeX, eyeY, eyeZ,
                        cameraTarget.x, cameraTarget.y, cameraTarget.z);
 
-    for (const { mesh, boneMap, texture } of activeMeshes) {
-        let verts, norms;
-        if (activeSkeleton) {
-            const deformed = deformMesh(mesh, activeSkeleton, boneMap);
-            verts = deformed.vertices;
-            norms = deformed.normals;
-        } else {
-            verts = mesh.vertices;
-            norms = mesh.normals;
-        }
+    // Render all bodies (solo mode: bodies empty, use activeMeshes; scene mode: iterate bodies)
+    const bodiesToRender = bodies.length > 0 ? bodies : [{ skeleton: activeSkeleton, meshes: activeMeshes, top, x: 0, z: 0, direction: 0 }];
 
-        // Easter egg: apply top physics tilt + drift when spinning fast
-        if (top.active) {
-            verts = verts.map(applyTopTransform);
-            norms = norms.map(applyTopTransform); // tilt normals too
-        }
+    for (const body of bodiesToRender) {
+        const bTop = body.top || top;
+        const bodyDir = (body.direction || 0) * Math.PI / 180;
+        const cosD = Math.cos(bodyDir);
+        const sinD = Math.sin(bodyDir);
 
-        renderer.drawMesh(mesh, verts, norms, texture || null);
+        for (const { mesh, boneMap, texture } of body.meshes) {
+            let verts, norms;
+            if (body.skeleton) {
+                const deformed = deformMesh(mesh, body.skeleton, boneMap);
+                verts = deformed.vertices;
+                norms = deformed.normals;
+            } else {
+                verts = mesh.vertices;
+                norms = mesh.normals;
+            }
+
+            // Per-body top physics tilt + drift
+            if (bTop.active) {
+                verts = verts.map(v => applyTopTransformFor(v, bTop));
+                norms = norms.map(v => applyTopTransformFor(v, bTop));
+            }
+
+            // World position offset + facing direction
+            if (body.x !== 0 || body.z !== 0 || bodyDir !== 0) {
+                verts = verts.map(v => {
+                    if (!v) return v;
+                    // Rotate around Y by direction, then translate
+                    const rx = v.x * cosD - v.z * sinD;
+                    const rz = v.x * sinD + v.z * cosD;
+                    return { x: rx + body.x, y: v.y, z: rz + body.z };
+                });
+                if (bodyDir !== 0) {
+                    norms = norms.map(v => {
+                        if (!v) return v;
+                        return { x: v.x * cosD - v.z * sinD, y: v.y, z: v.x * sinD + v.z * cosD };
+                    });
+                }
+            }
+
+            renderer.drawMesh(mesh, verts, norms, texture || null);
+        }
     }
 }
 
@@ -911,23 +1182,29 @@ function renderFrame() {
 function animationLoop(timestamp) {
     let needsRender = false;
 
-    // Tick animation Practice if active and not paused
-    if (activePractice?.ready && activeSkeleton && !paused) {
+    // Tick animations for all bodies (scene mode) or just the primary (solo mode)
+    if (!paused) {
         if (lastFrameTime === 0) lastFrameTime = timestamp;
         const dt = timestamp - lastFrameTime;
         lastFrameTime = timestamp;
-
-        // Accumulate time in ms (Speed slider = 0-200, 100 = normal)
         const speedScale = parseFloat($('speed').value) / 100;
         animationTime += dt * speedScale;
 
-        // Tick the practice (applies keyframes to bone positions/rotations)
-        activePractice.tick(animationTime);
-
-        // Propagate bone transforms through hierarchy
-        updateTransforms(activeSkeleton);
-
-        needsRender = true;
+        if (bodies.length > 0) {
+            // Scene mode: tick every body's own practice
+            for (const body of bodies) {
+                if (body.practice?.ready && body.skeleton) {
+                    body.practice.tick(animationTime);
+                    updateTransforms(body.skeleton);
+                    needsRender = true;
+                }
+            }
+        } else if (activePractice?.ready && activeSkeleton) {
+            // Solo mode
+            activePractice.tick(animationTime);
+            updateTransforms(activeSkeleton);
+            needsRender = true;
+        }
     }
 
     // Spin momentum
@@ -941,9 +1218,12 @@ function animationLoop(timestamp) {
         needsRender = true;
     }
 
-    // Top physics: spin fast enough and the character tilts like a top
-    tickTop();
-    if (top.active) needsRender = true;
+    // Top physics: all bodies respond to the same spin, each with independent state
+    tickAllBodiesTop();
+    const anyTopActive = bodies.length > 0
+        ? bodies.some(b => b.top.active)
+        : top.active;
+    if (anyTopActive) needsRender = true;
 
     // Spin sound: pitch tracks velocity, fades as they slow down
     updateSpinSound();
@@ -1212,7 +1492,32 @@ function setupEventListeners() {
     if (btnPersonNext) btnPersonNext.addEventListener('click', () => stepPerson(1));
     $('selPerson').addEventListener('change', () => {
         const idx = parseInt($('selPerson').value);
-        if (!isNaN(idx)) applyPerson(idx);
+        if (!isNaN(idx)) { exitScene(); applyPerson(idx); }
+    });
+
+    // Scene prev/next/select
+    function stepScene(dir) {
+        const sel = $('selScene');
+        if (!sel || sel.options.length <= 1) return;
+        let idx = parseInt(sel.value);
+        if (isNaN(idx)) idx = dir > 0 ? 0 : sel.options.length - 2;
+        else idx += dir;
+        // Skip the placeholder option (index 0 in the <select>, value "")
+        const max = sel.options.length - 2; // -1 for 0-based, -1 for placeholder
+        if (idx < 0) idx = max;
+        if (idx > max) idx = 0;
+        sel.value = String(idx);
+        loadScene(idx);
+    }
+    const btnScenePrev = $('btnScenePrev');
+    const btnSceneNext = $('btnSceneNext');
+    if (btnScenePrev) btnScenePrev.addEventListener('click', () => stepScene(-1));
+    if (btnSceneNext) btnSceneNext.addEventListener('click', () => stepScene(1));
+    const selScene = $('selScene');
+    if (selScene) selScene.addEventListener('change', () => {
+        const idx = parseInt(selScene.value);
+        if (isNaN(idx) || selScene.value === '') { exitScene(); return; }
+        loadScene(idx);
     });
 
     // Animation prev/next buttons

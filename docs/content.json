@@ -368,5 +368,44 @@
       "animation": "a2o-test-animation6",
       "voice": { "pitch": 50, "range": 20, "formant": 0.75, "breathiness": 0.06 }
     }
+  ],
+
+  "scenes": [
+    {
+      "name": "The Family",
+      "cast": [
+        { "person": "Dad (Fit)",     "x": -1.5, "z": 0,    "direction": 0,   "animation": "a2o-test-animation5" },
+        { "person": "Mom (Ponytail)","x":  1.5, "z": 0,    "direction": 0,   "animation": "adult-dance-inplace-twistloop" }
+      ]
+    },
+    {
+      "name": "Dance Party",
+      "cast": [
+        { "person": "Dad (Fit)",         "x": -2,   "z":  1.5, "direction": 135, "animation": "adult-dance-inplace-twistloop" },
+        { "person": "Mom (Ponytail)",    "x":  2,   "z":  1.5, "direction": 225, "animation": "adult-dance-inplace-twistloop" },
+        { "person": "Mercedes",          "x": -2,   "z": -1.5, "direction": 45,  "animation": "a2o-test-animation2" },
+        { "person": "Biker Dude",        "x":  2,   "z": -1.5, "direction": 315, "animation": "adult-walking-frantic-loop" }
+      ]
+    },
+    {
+      "name": "Three Amigos",
+      "cast": [
+        { "person": "Ross (Bald)",   "x": -2.5, "z": 0, "direction": 0, "animation": "a2o-test-animation" },
+        { "person": "Dad (Fit)",     "x":  0,   "z": 0, "direction": 0, "animation": "a2o-test-animation5" },
+        { "person": "Hipster",       "x":  2.5, "z": 0, "direction": 0, "animation": "a2o-test-animation3" }
+      ]
+    },
+    {
+      "name": "Grand Chorus",
+      "cast": [
+        { "person": "Dad (Fit)",          "x": -3,   "z":  2,   "direction": 0,   "animation": "adult-energetic1" },
+        { "person": "Mom (Ponytail)",     "x": -1,   "z":  2,   "direction": 0,   "animation": "adult-dance-inplace-twistloop" },
+        { "person": "Ross (Bald)",        "x":  1,   "z":  2,   "direction": 0,   "animation": "a2o-test-animation" },
+        { "person": "Mercedes",           "x":  3,   "z":  2,   "direction": 0,   "animation": "a2o-test-animation2" },
+        { "person": "Grandpa",            "x": -2,   "z": -1,   "direction": 0,   "animation": "adult-energetic1" },
+        { "person": "Grandma",            "x":  0,   "z": -1,   "direction": 0,   "animation": "a2o-test-animation5" },
+        { "person": "Biker Dude",         "x":  2,   "z": -1,   "direction": 0,   "animation": "adult-walking-frantic-loop" }
+      ]
+    }
   ]
 }
