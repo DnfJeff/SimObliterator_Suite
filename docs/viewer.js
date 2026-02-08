@@ -1974,13 +1974,13 @@ function setupMouseInteraction() {
         let delta;
         if (e.ctrlKey) {
             // Pinch-to-zoom in Chrome: ctrlKey + small deltaY
-            delta = e.deltaY * 0.3;
+            delta = -e.deltaY * 0.3;
         } else if (e.deltaMode === 1) {
             // Line-based scroll (mouse wheel): deltaY is ~3
-            delta = e.deltaY * 3;
+            delta = -e.deltaY * 3;
         } else {
             // Pixel-based scroll (trackpad): deltaY is ~1-10 per tick
-            delta = e.deltaY * 0.15;
+            delta = -e.deltaY * 0.15;
         }
         let val = parseFloat(zoomSlider.value) + delta;
         val = Math.max(15, Math.min(400, val));
