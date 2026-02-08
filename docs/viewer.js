@@ -53,6 +53,7 @@ function createBody() {
         personData: null,    // reference to content.json character entry
         x: 0, z: 0,         // world position offset
         direction: 0,        // facing angle (degrees)
+        spinOffset: 0,       // per-body spin accumulated from drag (degrees)
         top: {               // per-body top physics (independent spin/tilt/drift)
             active: false, tilt: 0, tiltTarget: 0,
             precessionAngle: 0, nutationPhase: 0, nutationAmp: 0,
@@ -1401,13 +1402,12 @@ function renderFrame() {
     for (let bi = 0; bi < bodiesToRender.length; bi++) {
         const body = bodiesToRender[bi];
         const bTop = body.top || top;
-        // Scene mode: rotY spins bodies around their own centers.
-        // If a specific actor is selected, only that actor gets the drag spin.
-        // If "All" is selected (-1), everyone spins together.
-        // Solo mode: direction is 0 (camera does the orbiting).
+        // Scene mode: each body has a base direction + per-body spinOffset + global rotY.
+        // All mode (-1): everyone gets global rotY.
+        // Selected actor: only that actor gets global rotY; others keep base + their own spinOffset.
         let spinDeg = 0;
         if (sceneMode) {
-            const baseDir = body.direction || 0;
+            const baseDir = (body.direction || 0) + (body.spinOffset || 0);
             if (selectedActorIndex < 0 || bi === selectedActorIndex) {
                 spinDeg = baseDir + rotYDeg;
             } else {
@@ -1476,7 +1476,7 @@ function renderFrame() {
             const headBone = selBody.skeleton.find(b => b.name === 'HEAD');
             if (headBone) {
                 const bTop = selBody.top || top;
-                const spinDeg = (selBody.direction || 0) + rotYDeg;
+                const spinDeg = (selBody.direction || 0) + (selBody.spinOffset || 0) + rotYDeg;
                 const bodyDir = spinDeg * Math.PI / 180;
                 const cosD = Math.cos(bodyDir);
                 const sinD = Math.sin(bodyDir);
@@ -1569,13 +1569,20 @@ function animationLoop(timestamp) {
         }
     }
 
-    // Spin momentum
+    // Spin momentum: when a specific actor is selected, spin only them.
+    // When All is selected, spin the global rotY slider (spins everyone).
     if (!isDragging && Math.abs(rotationVelocity) > 0.001) {
-        const rotSlider = $('rotY');
-        let val = parseFloat(rotSlider.value) + rotationVelocity;
-        if (val > 360) val -= 360;
-        if (val < 0) val += 360;
-        rotSlider.value = val;
+        if (bodies.length > 0 && selectedActorIndex >= 0 && selectedActorIndex < bodies.length) {
+            // Per-actor spin
+            bodies[selectedActorIndex].spinOffset += rotationVelocity;
+        } else {
+            // Global spin (All mode or solo)
+            const rotSlider = $('rotY');
+            let val = parseFloat(rotSlider.value) + rotationVelocity;
+            if (val > 360) val -= 360;
+            if (val < 0) val += 360;
+            rotSlider.value = val;
+        }
         rotationVelocity *= FRICTION;
         needsRender = true;
     }
@@ -1637,8 +1644,8 @@ function pickActorAtScreen(screenX, screenY) {
         if (!b.skeleton) continue;
 
         // Get approximate center: body world position at waist height
-        // Match render logic: only selected or all get rotY spin
-        const baseDir = b.direction || 0;
+        // Match render logic: base + spinOffset + global rotY (if selected or All)
+        const baseDir = (b.direction || 0) + (b.spinOffset || 0);
         const spinDeg = (selectedActorIndex < 0 || i === selectedActorIndex) ? baseDir + rotYDeg : baseDir;
         const bodyDir = spinDeg * Math.PI / 180;
 
@@ -1763,11 +1770,17 @@ function setupMouseInteraction() {
 
         if (dragButton === 0) {
             // Left button: horizontal = spin, vertical = zoom
-            const rotSlider = $('rotY');
-            let rotVal = parseFloat(rotSlider.value) - dx * 0.5;
-            if (rotVal > 360) rotVal -= 360;
-            if (rotVal < 0) rotVal += 360;
-            rotSlider.value = rotVal;
+            if (bodies.length > 0 && selectedActorIndex >= 0 && selectedActorIndex < bodies.length) {
+                // Per-actor spin
+                bodies[selectedActorIndex].spinOffset -= dx * 0.5;
+            } else {
+                // Global spin
+                const rotSlider = $('rotY');
+                let rotVal = parseFloat(rotSlider.value) - dx * 0.5;
+                if (rotVal > 360) rotVal -= 360;
+                if (rotVal < 0) rotVal += 360;
+                rotSlider.value = rotVal;
+            }
 
             const zoomSlider = $('zoom');
             let zoomVal = parseFloat(zoomSlider.value) + dy * 0.25;
@@ -1867,12 +1880,16 @@ function selectActor(idx) {
     selectedActorIndex = idx;
     const actorSel = $('selActor');
     if (actorSel) actorSel.value = String(idx);
-    // Sync Character dropdown to this actor's character
     if (idx >= 0) {
         const body = bodies[idx];
+        // Sync Character dropdown to this actor's character
         if (body?.personData && contentIndex?.characters) {
             const charIdx = contentIndex.characters.findIndex(c => c.name === body.personData.name);
             if (charIdx >= 0) $('selCharacter').value = String(charIdx);
+        }
+        // Sync Animation dropdown to this actor's current skill
+        if (body?.practice?.skill?.name) {
+            setSelectValue('selAnim', body.practice.skill.name);
         }
     }
     updateActorEditingUI();
