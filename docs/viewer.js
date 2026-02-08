@@ -65,6 +65,7 @@ let bodies = [];              // Body[] — all characters in the current scene
 let activeScene = null;       // current scene name or null (solo mode)
 let selectedActorIndex = -1;  // which actor in bodies[] is selected for editing (-1 = none)
 const cfpCache = new Map();   // animationFileName -> ArrayBuffer (loaded CFP data)
+const _skelCache = {};        // skelFile -> CMX text (preloaded skeleton data)
 
 // Rotation momentum state: drag left/right to spin, release to keep spinning.
 // SimShow had fixed NW/NE/SW/SE angles + slow/fast auto-rotate.
@@ -284,6 +285,65 @@ async function loadContentIndex() {
         }
 
         buildCfpIndex();
+
+        // Preload ALL character data so scene switching is instant:
+        // skeleton CMX files, all textures, and all CFP animation data.
+        statusEl.textContent = 'Preloading characters...';
+        const loaderText = document.querySelector('.loader-text');
+
+        // Cache skeleton CMX files (usually just "adult" and "child")
+        const skelNames = new Set();
+        if (contentIndex.characters) {
+            for (const c of contentIndex.characters) skelNames.add(c.skeleton || 'adult');
+        }
+        for (const skelName of skelNames) {
+            const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
+            if (!_skelCache[skelFile]) {
+                try {
+                    const r = await fetch('data/' + skelFile);
+                    if (r.ok) _skelCache[skelFile] = await r.text();
+                } catch (e) { console.error(`[preload] skeleton "${skelFile}":`, e); }
+            }
+        }
+
+        // Preload all textures referenced by characters
+        const texNames = new Set();
+        if (contentIndex.characters) {
+            for (const c of contentIndex.characters) {
+                if (c.bodyTexture) texNames.add(c.bodyTexture);
+                if (c.headTexture) texNames.add(c.headTexture);
+                if (c.handTexture) texNames.add(c.handTexture);
+            }
+        }
+        let texLoaded = 0;
+        for (const texName of texNames) {
+            if (loaderText) loaderText.textContent = `Loading textures... ${++texLoaded}/${texNames.size}`;
+            await getTexture(texName);
+        }
+
+        // Preload all CFP animation data
+        const cfpNames = new Set();
+        for (const skill of Object.values(content.skills)) {
+            const cfpName = skill.animationFileName;
+            if (cfpName && !cfpCache.has(cfpName) && (skill.numTranslations > 0 || skill.numRotations > 0)) {
+                cfpNames.add(cfpName);
+            }
+        }
+        let cfpLoaded = 0;
+        for (const cfpName of cfpNames) {
+            if (loaderText) loaderText.textContent = `Loading animations... ${++cfpLoaded}/${cfpNames.size}`;
+            const bare = cfpName.toLowerCase();
+            const cfpFile = cfpIndex.get(bare) || cfpIndex.get('xskill-' + bare);
+            if (cfpFile) {
+                try {
+                    const r = await fetch('data/' + cfpFile);
+                    if (r.ok) cfpCache.set(cfpName, await r.arrayBuffer());
+                } catch (e) { }
+            }
+        }
+
+        console.log(`[preload] skeletons=${skelNames.size} textures=${texNames.size} cfp=${cfpNames.size}`);
+
         populateMenus();
 
         const counts = {
@@ -297,7 +357,7 @@ async function loadContentIndex() {
 
         console.log('[loadContentIndex]', counts);
 
-        // Auto-load first scene (Flash Crowd) or fall back to first character
+        // Auto-load first scene or fall back to first character
         if (contentIndex.scenes?.length) {
             $('selScene').value = '0';
             await loadScene(0);
@@ -306,6 +366,13 @@ async function loadContentIndex() {
             applyCharacter(0);
         } else {
             applyDefaults();
+        }
+
+        // Hide loading overlay
+        const overlay = $('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('done');
+            setTimeout(() => overlay.remove(), 500);
         }
 
     } catch (e) {
@@ -461,16 +528,20 @@ async function loadScene(sceneIndex) {
         body.z = cast.z || 0;
         body.direction = cast.direction || 0;
 
-        // Load skeleton
+        // Load skeleton (from preloaded cache or fetch)
         const skelName = char.skeleton || 'adult';
         const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
         try {
-            const skelResp = await fetch('data/' + skelFile);
-            if (!skelResp.ok) {
-                console.error(`[loadScene] CAST[${ci}] "${cast.character}" skeleton fetch FAILED: ${skelResp.status} ${skelResp.statusText} for "${skelFile}"`);
-                continue;
+            let skelText = _skelCache[skelFile];
+            if (!skelText) {
+                const skelResp = await fetch('data/' + skelFile);
+                if (!skelResp.ok) {
+                    console.error(`[loadScene] CAST[${ci}] "${cast.character}" skeleton fetch FAILED: ${skelResp.status} ${skelResp.statusText} for "${skelFile}"`);
+                    continue;
+                }
+                skelText = await skelResp.text();
+                _skelCache[skelFile] = skelText;
             }
-            const skelText = await skelResp.text();
             const skelData = parseCMX(skelText);
             if (skelData.skeletons?.length) {
                 body.skeleton = buildSkeleton(skelData.skeletons[0]);
