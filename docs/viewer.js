@@ -632,9 +632,10 @@ async function loadScene(sceneIndex) {
         cameraTarget = { x: cx, y: 2.5, z: cz };
     }
 
-    animationTime = 0;
-    lastFrameTime = 0;
-    _animDiagLogged = false; // reset so first-tick diagnostic fires for new scene
+    // Don't reset animationTime or lastFrameTime — new Practices handle their own
+    // warmup via lastTicks=0. Resetting to 0 caused a one-frame flash of rest pose
+    // because tick(0) returns immediately without applying motions.
+    _animDiagLogged = false;
     const statusEl2 = $('status');
     if (statusEl2) statusEl2.textContent = `Scene: ${scene.name} (${bodies.length} characters)`;
     renderFrame();
