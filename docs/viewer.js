@@ -2185,14 +2185,22 @@ async function applyCharacterToActor(charIndex, actorIndex) {
     renderFrame();
 }
 
+let _savedSpeed = 100; // speed before pause, for 0 key toggle
+
 function togglePause() {
-    paused = !paused;
+    if (paused) {
+        paused = false;
+        $('speed').value = _savedSpeed;
+        lastFrameTime = 0;
+    } else {
+        _savedSpeed = parseFloat($('speed').value);
+        paused = true;
+    }
     const btn = $('btnPause');
     if (btn) {
         btn.textContent = paused ? 'Play' : 'Pause';
         btn.classList.toggle('active', paused);
     }
-    if (!paused) lastFrameTime = 0; // reset dt so no time jump on resume
 }
 
 // Step animation dropdown forward or backward
@@ -2396,6 +2404,7 @@ function setupEventListeners() {
     // Up/Down = smooth zoom, Left/Right = ramp spin velocity
     canvas.tabIndex = 0;
     let _lastSelectedBeforeAll = 0; // remember last picked actor for space toggle
+    // _savedSpeed is module-level (below)
 
     canvas.addEventListener('keydown', e => {
         if (e.key === ' ') {
@@ -2408,11 +2417,33 @@ function setupEventListeners() {
             }
             e.preventDefault();
         }
-        if (e.key === '0') { paused = true; $('speed').value = 0; $('btnPause').textContent = 'Play'; $('btnPause').classList.add('active'); e.preventDefault(); }
-        if (e.key === '1') { paused = false; $('speed').value = 100; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
-        if (e.key === '2') { paused = false; $('speed').value = 200; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
-        if (e.key === '3') { paused = false; $('speed').value = 350; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
-        if (e.key === '4') { paused = false; $('speed').value = 500; lastFrameTime = 0; $('btnPause').textContent = 'Pause'; $('btnPause').classList.remove('active'); e.preventDefault(); }
+        // 0 = toggle pause (remembers previous speed)
+        // 1-9 = speed: 1=slowest(10%), 5=normal(100%), 9=fastest(500%)
+        if (e.key === '0') {
+            if (paused) {
+                paused = false;
+                $('speed').value = _savedSpeed;
+                lastFrameTime = 0;
+                $('btnPause').textContent = 'Pause';
+                $('btnPause').classList.remove('active');
+            } else {
+                _savedSpeed = parseFloat($('speed').value);
+                paused = true;
+                $('btnPause').textContent = 'Play';
+                $('btnPause').classList.add('active');
+            }
+            e.preventDefault();
+        }
+        const speedKeys = { '1': 10, '2': 25, '3': 50, '4': 75, '5': 100, '6': 150, '7': 250, '8': 375, '9': 500 };
+        if (speedKeys[e.key]) {
+            paused = false;
+            $('speed').value = speedKeys[e.key];
+            _savedSpeed = speedKeys[e.key];
+            lastFrameTime = 0;
+            $('btnPause').textContent = 'Pause';
+            $('btnPause').classList.remove('active');
+            e.preventDefault();
+        }
 
         // Track held arrow keys for smooth per-frame input
         if (e.key === 'ArrowUp') { _keysHeld.up = true; e.preventDefault(); }
