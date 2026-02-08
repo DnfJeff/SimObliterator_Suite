@@ -2489,16 +2489,17 @@ function setupEventListeners() {
     window.addEventListener('keydown', e => {
         if (_isInputFocused()) return;
         if (e.key === ' ') {
-            // Space: next actor (same as Next button).
-            // If spinning, transfer momentum to per-body spin velocity.
+            // Space/Shift+Space: next/prev actor. Transfer spin momentum.
             if (bodies.length > 0) {
                 if (Math.abs(rotationVelocity) > 0.01 && selectedActorIndex >= 0 && selectedActorIndex < bodies.length) {
                     bodies[selectedActorIndex].spinVelocity = rotationVelocity;
                     rotationVelocity = 0;
                 }
                 const minIdx = bodies.length > 1 ? -1 : 0;
-                let idx = selectedActorIndex + 1;
+                const dir = e.shiftKey ? -1 : 1;
+                let idx = selectedActorIndex + dir;
                 if (idx >= bodies.length) idx = minIdx;
+                if (idx < minIdx) idx = bodies.length - 1;
                 selectActor(idx);
             }
             e.preventDefault();
