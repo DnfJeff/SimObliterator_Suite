@@ -1890,6 +1890,17 @@ function setupMouseInteraction() {
         canvas.style.cursor = 'grabbing';
         canvas.focus();
         initSpinSound(); // init audio on first gesture (browser policy)
+
+        // Click-to-pick: immediately select actor on mousedown (left button only)
+        if (e.button === 0 && bodies.length > 0) {
+            const picked = pickActorAtScreen(e.clientX, e.clientY);
+            if (picked >= 0) {
+                selectActor(picked);
+            } else if (bodies.length > 1) {
+                selectActor(-1); // click background = All
+            }
+        }
+
         e.preventDefault();
     });
 
@@ -1964,15 +1975,7 @@ function setupMouseInteraction() {
             // Left button release with momentum — carry the smoothed velocity
             rotationVelocity = smoothedVelocity;
         } else if (dragButton === 0 && !dragMoved) {
-            // Left click without drag — pick actor or stop spinning
-            if (bodies.length > 0) {
-                const picked = pickActorAtScreen(dragStartX, dragStartY);
-                if (picked >= 0) {
-                    selectActor(picked);
-                } else {
-                    selectActor(-1); // click background = select All
-                }
-            }
+            // Click without drag — stop spinning (pick already happened on mousedown)
             rotationVelocity = 0;
         }
         // Right button: no momentum, just stops
