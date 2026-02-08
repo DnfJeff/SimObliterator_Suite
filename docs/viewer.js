@@ -2312,11 +2312,6 @@ function setDistance(preset) {
 
 // Wire up all event listeners
 function setupEventListeners() {
-    // Selection changes trigger scene rebuild (solo mode details)
-    for (const id of ['selSkeleton', 'selBody', 'selHead', 'selLeftHand', 'selRightHand',
-                       'selBodyTex', 'selHeadTex', 'selHandTex']) {
-        $(id).addEventListener('change', updateScene);
-    }
     // Animation dropdown: in scene mode with selected actor, change that actor's anim
     $('selAnim').addEventListener('change', () => {
         const animName = $('selAnim').value;
