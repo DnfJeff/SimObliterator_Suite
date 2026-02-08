@@ -10,11 +10,11 @@
 // This version: ES modules + WebGL + the same VitaBoy data pipeline,
 // running in a browser 26 years later. Same Dad. Same RomanCrew head.
 
-import { parseCMX, parseSKN, parseCFP } from '../dist/parser.js';
-import { buildSkeleton, updateTransforms, deformMesh, findBone } from '../dist/skeleton.js';
-import { Renderer } from '../dist/renderer.js';
-import { loadTexture } from '../dist/texture.js';
-import { Practice } from '../dist/animation.js';
+import { parseCMX, parseSKN, parseCFP } from './parser.js';
+import { buildSkeleton, updateTransforms, deformMesh, findBone } from './skeleton.js';
+import { Renderer } from './renderer.js';
+import { loadTexture } from './texture.js';
+import { Practice } from './animation.js';
 
 const $ = id => document.getElementById(id);
 

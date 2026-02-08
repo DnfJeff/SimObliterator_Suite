@@ -1,0 +1,12 @@
+import { SkillData, MeshData, CMXFile } from './types.js';
+export declare function parseCMX(text: string): CMXFile;
+export declare function parseSKN(text: string): MeshData;
+export declare function parseBCF(buffer: ArrayBuffer): CMXFile;
+export declare function parseBMF(buffer: ArrayBuffer): MeshData;
+export declare function parseCFP(buffer: ArrayBuffer, skill: SkillData): void;
+export declare function writeBCF(cmx: CMXFile): ArrayBuffer;
+export declare function writeBMF(mesh: MeshData): ArrayBuffer;
+export declare function writeCMX(cmx: CMXFile): string;
+export declare function writeSKN(mesh: MeshData): string;
+export declare function writeReport(cmx: CMXFile, meshes?: MeshData[]): string;
+export declare function writeCFP(skill: SkillData): ArrayBuffer;
