@@ -393,6 +393,116 @@ function setSelectValue(selId, value) {
     }
 }
 
+// Top physics Easter egg: spin fast enough and the character tilts,
+// precesses like a gyroscope, drifts off-center, and wobbles back.
+const top = {
+    active: false,
+    tilt: 0,            // current tilt angle (radians)
+    tiltTarget: 0,      // desired tilt based on spin speed
+    precessionAngle: 0, // gyroscopic precession rotation
+    nutationPhase: 0,   // wobble oscillation phase
+    nutationAmp: 0,     // wobble amplitude
+    driftX: 0,          // off-center displacement
+    driftZ: 0,
+    driftVX: 0,         // drift velocity
+    driftVZ: 0,
+};
+
+const TOP_SPIN_THRESHOLD = 1.5;   // deg/frame to activate
+const TOP_TILT_SCALE = 0.012;     // tilt per unit spin speed
+const TOP_MAX_TILT = 0.7;         // max tilt radians (~40 degrees)
+const TOP_PRECESSION_RATE = 0.02; // precession speed relative to spin
+const TOP_NUTATION_FREQ = 3.5;    // wobble frequency multiplier
+const TOP_NUTATION_SCALE = 0.15;  // wobble amplitude relative to tilt
+const TOP_DRIFT_FORCE = 0.0004;   // drift from tilt
+const TOP_GRAVITY = 0.003;        // bowl restoring force
+const TOP_DRIFT_FRICTION = 0.97;  // drift velocity decay
+const TOP_TILT_DECAY = 0.97;      // tilt decay when slowing down
+const TOP_SETTLE_RATE = 0.05;     // how fast tilt lerps to target
+
+function tickTop() {
+    const spinSpeed = Math.abs(rotationVelocity);
+
+    if (spinSpeed > TOP_SPIN_THRESHOLD) {
+        top.active = true;
+        top.tiltTarget = Math.min(spinSpeed * TOP_TILT_SCALE, TOP_MAX_TILT);
+    } else if (top.active) {
+        top.tiltTarget *= TOP_TILT_DECAY;
+        if (top.tiltTarget < 0.005 && Math.abs(top.driftX) < 0.01 && Math.abs(top.driftZ) < 0.01) {
+            top.active = false;
+            top.tilt = 0;
+            top.driftX = 0;
+            top.driftZ = 0;
+            top.driftVX = 0;
+            top.driftVZ = 0;
+            top.nutationAmp = 0;
+            return;
+        }
+    }
+
+    if (!top.active) return;
+
+    // Smooth tilt toward target
+    top.tilt += (top.tiltTarget - top.tilt) * TOP_SETTLE_RATE;
+
+    // Precession: tilt axis rotates around Y, faster when spinning faster
+    top.precessionAngle += spinSpeed * TOP_PRECESSION_RATE;
+
+    // Nutation: wobble overlaid on precession
+    top.nutationPhase += TOP_NUTATION_FREQ * 0.05;
+    top.nutationAmp += (top.tilt * TOP_NUTATION_SCALE - top.nutationAmp) * 0.1;
+
+    // Drift: tilt causes the character to slide off-center
+    const tiltDirX = Math.sin(top.precessionAngle);
+    const tiltDirZ = Math.cos(top.precessionAngle);
+    top.driftVX += tiltDirX * top.tilt * TOP_DRIFT_FORCE;
+    top.driftVZ += tiltDirZ * top.tilt * TOP_DRIFT_FORCE;
+
+    // Gravity bowl: pulls back toward center (quadratic restoring force)
+    top.driftVX -= top.driftX * TOP_GRAVITY;
+    top.driftVZ -= top.driftZ * TOP_GRAVITY;
+
+    // Friction on drift
+    top.driftVX *= TOP_DRIFT_FRICTION;
+    top.driftVZ *= TOP_DRIFT_FRICTION;
+
+    top.driftX += top.driftVX;
+    top.driftZ += top.driftVZ;
+}
+
+// Apply top physics transform to a vertex: tilt + precession + nutation + drift
+function applyTopTransform(v) {
+    if (!top.active || !v) return v;
+
+    // Compute effective tilt with nutation wobble
+    const nutX = top.nutationAmp * Math.sin(top.nutationPhase);
+    const nutZ = top.nutationAmp * Math.cos(top.nutationPhase * 0.7);
+
+    // Tilt axis from precession angle
+    const tiltX = top.tilt * Math.sin(top.precessionAngle) + nutX;
+    const tiltZ = top.tilt * Math.cos(top.precessionAngle) + nutZ;
+
+    // Rotate vertex around the character's center (cameraTarget.y)
+    const cy = cameraTarget.y;
+    const relY = v.y - cy;
+
+    // Tilt around X axis (forward/back lean)
+    const cosZ = Math.cos(tiltZ), sinZ = Math.sin(tiltZ);
+    let y1 = relY * cosZ - v.x * sinZ;
+    let x1 = relY * sinZ + v.x * cosZ;
+
+    // Tilt around Z axis (left/right lean)
+    const cosX = Math.cos(tiltX), sinX = Math.sin(tiltX);
+    let y2 = y1 * cosX - v.z * sinX;
+    let z2 = y1 * sinX + v.z * cosX;
+
+    return {
+        x: x1 + top.driftX,
+        y: y2 + cy,
+        z: z2 + top.driftZ,
+    };
+}
+
 // CFP file index: maps lowercase animationFileName -> actual filename on disk
 const cfpIndex = new Map();
 
@@ -527,12 +637,23 @@ function renderFrame() {
                        cameraTarget.x, cameraTarget.y, cameraTarget.z);
 
     for (const { mesh, boneMap, texture } of activeMeshes) {
+        let verts, norms;
         if (activeSkeleton) {
-            const { vertices, normals } = deformMesh(mesh, activeSkeleton, boneMap);
-            renderer.drawMesh(mesh, vertices, normals, texture || null);
+            const deformed = deformMesh(mesh, activeSkeleton, boneMap);
+            verts = deformed.vertices;
+            norms = deformed.normals;
         } else {
-            renderer.drawMesh(mesh, mesh.vertices, mesh.normals, texture || null);
+            verts = mesh.vertices;
+            norms = mesh.normals;
         }
+
+        // Easter egg: apply top physics tilt + drift when spinning fast
+        if (top.active) {
+            verts = verts.map(applyTopTransform);
+            norms = norms.map(applyTopTransform); // tilt normals too
+        }
+
+        renderer.drawMesh(mesh, verts, norms, texture || null);
     }
 }
 
@@ -569,6 +690,10 @@ function animationLoop(timestamp) {
         rotationVelocity *= FRICTION;
         needsRender = true;
     }
+
+    // Top physics: spin fast enough and the character tilts like a top
+    tickTop();
+    if (top.active) needsRender = true;
 
     if (needsRender) renderFrame();
 
