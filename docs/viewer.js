@@ -225,59 +225,40 @@ async function loadContentIndex() {
         const resp = await fetch('content.json');
         contentIndex = await resp.json();
 
-        statusEl.textContent = 'Loading CMX files...';
+        // Start cycling Sims loading messages immediately
+        const loadingMessages = [
+            'Reticulating Splines...', 'Adjusting Emotional Weights...',
+            'Calibrating Personality Matrix...', 'Compressing Sim Genomes...',
+            'Calculating Snowfall Coefficients...', 'Tokenizing Elf Language...',
+            'Possessing Animate Objects...', 'Inserting Alarm Clock...',
+            'Computing Optimal Bin Packing...', 'Preparing Neighborly Greetings...',
+            'Simmifying Name Savant...', 'Synthesizing Gravity...',
+            'Collecting Bonus Diamonds...', 'Loading Lovingly Handcrafted Sims...',
+            'Applying Alarm Clock Patch...', 'Fabricating Social Constructs...',
+            'Convincing Sims They Have Free Will...', 'Polishing Countertop Surfaces...',
+            'Debugging Dream Sequences...', 'Unbarricading Elevator...',
+            'Reconfiguring Vertical Transporter...', 'Priming Geodesic Abreaction...',
+            'Lecturing Errant Unicorns...', 'Pressurizing Fruit Punch...',
+        ];
+        let loadMsgIdx = 0;
+        const loaderText = document.querySelector('.loader-text');
+        const cycleMessage = () => {
+            if (loaderText) loaderText.textContent = loadingMessages[loadMsgIdx++ % loadingMessages.length];
+        };
+        cycleMessage();
+        const msgInterval = setInterval(cycleMessage, 800);
 
-        // Load all CMX files (skeletons, suits, animations)
+        // PARALLEL LOAD: fetch all CMX, SKN, skeleton, and CFP files concurrently.
+        // This is dramatically faster than sequential await loops.
+
+        // Gather all file URLs to fetch
         const allCmx = [
             ...(contentIndex.skeletons || []),
             ...(contentIndex.suits || []),
             ...(contentIndex.animations || []),
         ];
-        let cmxLoaded = 0, cmxFailed = 0;
-        for (const name of allCmx) {
-            try {
-                const r = await fetch('data/' + name);
-                if (!r.ok) {
-                    console.error(`[loadContentIndex] CMX fetch FAILED: ${r.status} for "${name}"`);
-                    cmxFailed++;
-                    continue;
-                }
-                const cmx = parseCMX(await r.text());
-                cmx.skeletons.forEach(s => content.skeletons[s.name] = s);
-                cmx.suits.forEach(s => content.suits[s.name] = s);
-                cmx.skills.forEach(s => content.skills[s.name] = s);
-                cmxLoaded++;
-            } catch (e) {
-                console.error(`[loadContentIndex] CMX parse EXCEPTION for "${name}":`, e);
-                cmxFailed++;
-            }
-        }
-        console.log(`[loadContentIndex] CMX: ${cmxLoaded} loaded, ${cmxFailed} failed out of ${allCmx.length}`);
-        console.log(`[loadContentIndex] Skills loaded: [${Object.keys(content.skills).join(', ')}]`);
 
-        statusEl.textContent = 'Loading meshes...';
-
-        // Load all SKN meshes
-        let meshLoaded = 0, meshFailed = 0;
-        for (const name of (contentIndex.meshes || [])) {
-            try {
-                const r = await fetch('data/' + name);
-                if (!r.ok) {
-                    console.error(`[loadContentIndex] SKN fetch FAILED: ${r.status} for "${name}"`);
-                    meshFailed++;
-                    continue;
-                }
-                const mesh = parseSKN(await r.text());
-                content.meshes[mesh.name] = mesh;
-                meshLoaded++;
-            } catch (e) {
-                console.error(`[loadContentIndex] SKN parse EXCEPTION for "${name}":`, e);
-                meshFailed++;
-            }
-        }
-        console.log(`[loadContentIndex] Meshes: ${meshLoaded} loaded, ${meshFailed} failed out of ${(contentIndex.meshes || []).length}`);
-
-        // Index texture filenames — prefer PNG over BMP (smaller, browser-native)
+        // Index texture filenames first (no fetches, just bookkeeping)
         for (const name of (contentIndex.textures_bmp || [])) {
             const base = name.replace(/\.(bmp|png)$/i, '');
             if (!content.textures[base]) content.textures[base] = name;
@@ -287,64 +268,48 @@ async function loadContentIndex() {
             content.textures[base] = name;
         }
 
-        buildCfpIndex();
-
-        // Classic Sims loading screen messages
-        const loadingMessages = [
-            'Reticulating Splines...',
-            'Adjusting Emotional Weights...',
-            'Calibrating Personality Matrix...',
-            'Compressing Sim Genomes...',
-            'Calculating Snowfall Coefficients...',
-            'Tokenizing Elf Language...',
-            'Possessing Animate Objects...',
-            'Inserting Alarm Clock...',
-            'Computing Optimal Bin Packing...',
-            'Preparing Neighborly Greetings...',
-            'Simmifying Name Savant...',
-            'Synthesizing Gravity...',
-            'Collecting Bonus Diamonds...',
-            'Loading Lovingly Handcrafted Sims...',
-            'Applying Alarm Clock Patch...',
-            'Fabricating Social Constructs...',
-            'Convincing Sims They Have Free Will...',
-            'Polishing Countertop Surfaces...',
-            'Debugging Dream Sequences...',
-            'Unbarricading Elevator...',
-            'Reconfiguring Vertical Transporter...',
-            'Priming Geodesic Abreaction...',
-            'Lecturing Errant Unicorns...',
-            'Pressurizing Fruit Punch...',
-        ];
-        let loadMsgIdx = 0;
-        const loaderText = document.querySelector('.loader-text');
-        const cycleMessage = () => {
-            if (loaderText) loaderText.textContent = loadingMessages[loadMsgIdx % loadingMessages.length];
-            loadMsgIdx++;
-        };
-        cycleMessage();
-        const msgInterval = setInterval(cycleMessage, 800);
-
-        // Preload ALL character data so scene switching is instant:
-        // skeleton CMX files, all textures, and all CFP animation data.
-        statusEl.textContent = 'Preloading characters...';
-
-        // Cache skeleton CMX files (usually just "adult" and "child")
-        const skelNames = new Set();
+        // Build skeleton file list
+        const skelFiles = new Set();
         if (contentIndex.characters) {
-            for (const c of contentIndex.characters) skelNames.add(c.skeleton || 'adult');
-        }
-        for (const skelName of skelNames) {
-            const skelFile = skelName.includes('.cmx') ? skelName : skelName + '-skeleton.cmx';
-            if (!_skelCache[skelFile]) {
-                try {
-                    const r = await fetch('data/' + skelFile);
-                    if (r.ok) _skelCache[skelFile] = await r.text();
-                } catch (e) { console.error(`[preload] skeleton "${skelFile}":`, e); }
+            for (const c of contentIndex.characters) {
+                const n = c.skeleton || 'adult';
+                skelFiles.add(n.includes('.cmx') ? n : n + '-skeleton.cmx');
             }
         }
 
-        // Preload all textures referenced by characters
+        // Fetch all CMX files in parallel
+        const cmxResults = await Promise.all(allCmx.map(async name => {
+            try {
+                const r = await fetch('data/' + name);
+                if (!r.ok) return null;
+                return parseCMX(await r.text());
+            } catch (e) { return null; }
+        }));
+        for (const cmx of cmxResults) {
+            if (!cmx) continue;
+            cmx.skeletons.forEach(s => content.skeletons[s.name] = s);
+            cmx.suits.forEach(s => content.suits[s.name] = s);
+            cmx.skills.forEach(s => content.skills[s.name] = s);
+        }
+        console.log(`[loadContentIndex] CMX: ${cmxResults.filter(Boolean).length}/${allCmx.length}`);
+
+        // Fetch all SKN meshes in parallel
+        const meshNames = contentIndex.meshes || [];
+        const sknResults = await Promise.all(meshNames.map(async name => {
+            try {
+                const r = await fetch('data/' + name);
+                if (!r.ok) return null;
+                return parseSKN(await r.text());
+            } catch (e) { return null; }
+        }));
+        for (const mesh of sknResults) {
+            if (mesh) content.meshes[mesh.name] = mesh;
+        }
+        console.log(`[loadContentIndex] Meshes: ${sknResults.filter(Boolean).length}/${meshNames.length}`);
+
+        buildCfpIndex();
+
+        // Fetch skeleton CMXs, all character textures, and all CFP files in parallel
         const texNames = new Set();
         if (contentIndex.characters) {
             for (const c of contentIndex.characters) {
@@ -353,34 +318,34 @@ async function loadContentIndex() {
                 if (c.handTexture) texNames.add(c.handTexture);
             }
         }
-        let texLoaded = 0;
-        for (const texName of texNames) {
-            if (loaderText) loaderText.textContent = `Loading textures... ${++texLoaded}/${texNames.size}`;
-            await getTexture(texName);
-        }
-
-        // Preload all CFP animation data
         const cfpNames = new Set();
         for (const skill of Object.values(content.skills)) {
             const cfpName = skill.animationFileName;
-            if (cfpName && !cfpCache.has(cfpName) && (skill.numTranslations > 0 || skill.numRotations > 0)) {
-                cfpNames.add(cfpName);
-            }
+            if (cfpName && (skill.numTranslations > 0 || skill.numRotations > 0)) cfpNames.add(cfpName);
         }
-        let cfpLoaded = 0;
-        for (const cfpName of cfpNames) {
-            if (loaderText) loaderText.textContent = `Loading animations... ${++cfpLoaded}/${cfpNames.size}`;
-            const bare = cfpName.toLowerCase();
-            const cfpFile = cfpIndex.get(bare) || cfpIndex.get('xskill-' + bare);
-            if (cfpFile) {
+
+        await Promise.all([
+            // Skeletons
+            ...Array.from(skelFiles).map(async sf => {
+                try {
+                    const r = await fetch('data/' + sf);
+                    if (r.ok) _skelCache[sf] = await r.text();
+                } catch (e) { }
+            }),
+            // Textures
+            ...Array.from(texNames).map(tn => getTexture(tn)),
+            // CFP animation data
+            ...Array.from(cfpNames).map(async cfpName => {
+                const bare = cfpName.toLowerCase();
+                const cfpFile = cfpIndex.get(bare) || cfpIndex.get('xskill-' + bare);
+                if (!cfpFile) return;
                 try {
                     const r = await fetch('data/' + cfpFile);
                     if (r.ok) cfpCache.set(cfpName, await r.arrayBuffer());
                 } catch (e) { }
-            }
-        }
-
-        console.log(`[preload] skeletons=${skelNames.size} textures=${texNames.size} cfp=${cfpNames.size}`);
+            }),
+        ]);
+        console.log(`[preload] skeletons=${skelFiles.size} textures=${texNames.size} cfp=${cfpNames.size}`);
 
         populateMenus();
 
