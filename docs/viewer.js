@@ -54,6 +54,7 @@ function createBody() {
         x: 0, z: 0,         // world position offset
         direction: 0,        // facing angle (degrees)
         spinOffset: 0,       // per-body spin accumulated from drag (degrees)
+        spinVelocity: 0,     // per-body spin momentum (degrees per frame)
         top: {               // per-body top physics (independent spin/tilt/drift)
             active: false, tilt: 0, tiltTarget: 0,
             precessionAngle: 0, nutationPhase: 0, nutationAmp: 0,
@@ -1361,6 +1362,13 @@ function updateSpinSound() {
             const chain = bodyVoices[i];
             if (!chain) continue;
 
+            // Only voice the selected actor (or all in All mode)
+            const isActive = (selectedActorIndex < 0 || i === selectedActorIndex);
+            if (!isActive) {
+                chain.masterGain.gain.setTargetAtTime(0, now, 0.05);
+                continue;
+            }
+
             // Get this body's voice params from their character data
             const v = b.personData?.voice;
             const voice = v ? {
@@ -1736,6 +1744,15 @@ function animationLoop(timestamp) {
         needsRender = true;
     }
 
+    // Per-body independent spin momentum (from space-while-spinning)
+    for (const b of bodies) {
+        if (Math.abs(b.spinVelocity) > 0.001) {
+            b.spinOffset += b.spinVelocity;
+            b.spinVelocity *= FRICTION;
+            needsRender = true;
+        }
+    }
+
     // Top physics: all bodies respond to the same spin, each with independent state
     tickAllBodiesTop();
     const anyTopActive = bodies.length > 0
@@ -1759,8 +1776,8 @@ function animationLoop(timestamp) {
         const holdTime = _keysHeld.left
             ? (now - _keysHeld.leftStart) / 1000
             : (now - _keysHeld.rightStart) / 1000;
-        // Gentle ramp: starts at 0.3 deg/frame, maxes at ~3 deg/frame after 2 seconds
-        const speed = 0.3 + Math.min(holdTime * 1.5, 3.0);
+        // Ramp: starts at 0.5 deg/frame, maxes at ~8 deg/frame after 3 seconds
+        const speed = 0.5 + Math.min(holdTime * 2.5, 8.0);
         rotationVelocity = dir * speed;
         needsRender = true;
     }
@@ -2430,12 +2447,17 @@ function setupEventListeners() {
 
     canvas.addEventListener('keydown', e => {
         if (e.key === ' ') {
-            // Space: toggle between All and selected actor
-            if (selectedActorIndex >= 0) {
-                _lastSelectedBeforeAll = selectedActorIndex;
-                selectActor(-1);
-            } else {
-                selectActor(_lastSelectedBeforeAll < bodies.length ? _lastSelectedBeforeAll : 0);
+            // Space: next actor (same as Next button).
+            // If spinning, transfer momentum to per-body spin velocity.
+            if (bodies.length > 0) {
+                if (Math.abs(rotationVelocity) > 0.01 && selectedActorIndex >= 0 && selectedActorIndex < bodies.length) {
+                    bodies[selectedActorIndex].spinVelocity = rotationVelocity;
+                    rotationVelocity = 0;
+                }
+                const minIdx = bodies.length > 1 ? -1 : 0;
+                let idx = selectedActorIndex + 1;
+                if (idx >= bodies.length) idx = minIdx;
+                selectActor(idx);
             }
             e.preventDefault();
         }
