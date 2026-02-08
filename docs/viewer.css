@@ -301,7 +301,7 @@ kbd {
     position: fixed;
     top: 6px;
     right: 6px;
-    z-index: 10;
+    z-index: 1000;
     background: var(--accent);
     color: var(--bg-primary);
     border: none;
