@@ -555,10 +555,13 @@ async function loadAnimationForBody(animName, skeleton) {
         return null;
     }
 
-    // Load CFP using the same key scheme as the solo loader
+    // Load CFP: try bare name and xskill- prefixed name against the index
     const cfpName = skill.animationFileName;
     if (cfpName && !cfpCache.has(cfpName) && (skill.numTranslations > 0 || skill.numRotations > 0)) {
-        const cfpFile = cfpIndex.get(cfpName.toLowerCase());
+        // cfpIndex keys are like "xskill-a2o-test-animation5", skill.animationFileName is "A2O-test-animation5"
+        const bare = cfpName.toLowerCase();
+        const prefixed = 'xskill-' + bare;
+        const cfpFile = cfpIndex.get(bare) || cfpIndex.get(prefixed);
         if (cfpFile) {
             try {
                 const resp = await fetch('data/' + cfpFile);
@@ -584,13 +587,29 @@ async function loadAnimationForBody(animName, skeleton) {
     return practice;
 }
 
-// Exit scene mode, return to solo viewing
+// Exit scene mode, return to solo viewing with first person
 function exitScene() {
     activeScene = null;
     bodies = [];
+    // Silence any body voice chains
+    if (audioCtx) {
+        const now = audioCtx.currentTime;
+        for (const chain of bodyVoices) chain.masterGain.gain.setTargetAtTime(0, now, 0.05);
+    }
+    // Select Solo in scene dropdown
     const sel = $('selScene');
-    if (sel) sel.value = '';
-    updateScene();
+    if (sel) {
+        for (const opt of sel.options) {
+            if (opt.value === '') { sel.value = ''; break; }
+        }
+    }
+    // Load first person
+    if (contentIndex?.people?.length) {
+        $('selPerson').value = '0';
+        applyPerson(0);
+    } else {
+        applyDefaults();
+    }
 }
 
 // Set a <select> value — try exact match, then case-insensitive partial.
@@ -1106,7 +1125,8 @@ async function updateScene() {
         if (skill) {
             const cfpName = skill.animationFileName;
             if (!cfpCache.has(cfpName) && (skill.numTranslations > 0 || skill.numRotations > 0)) {
-                const cfpFile = cfpIndex.get(cfpName.toLowerCase());
+                const bare = cfpName.toLowerCase();
+                const cfpFile = cfpIndex.get(bare) || cfpIndex.get('xskill-' + bare);
                 if (cfpFile) {
                     try {
                         const r = await fetch('data/' + cfpFile);
