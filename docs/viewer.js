@@ -1489,45 +1489,50 @@ function renderFrame() {
         }
     }
 
-    // Plumb bob: floating green diamond above the selected actor's head
-    if (sceneMode && selectedActorIndex >= 0 && selectedActorIndex < bodiesToRender.length) {
-        const selBody = bodiesToRender[selectedActorIndex];
-        if (selBody.skeleton) {
-            // Find HEAD bone
-            const headBone = selBody.skeleton.find(b => b.name === 'HEAD');
-            if (headBone) {
-                const bTop = selBody.top || top;
-                const spinDeg = (selBody.direction || 0) + (selBody.spinOffset || 0) + rotYDeg;
-                const bodyDir = spinDeg * Math.PI / 180;
-                const cosD = Math.cos(bodyDir);
-                const sinD = Math.sin(bodyDir);
+    // Plumb bob: floating green diamond above actors' heads.
+    // All mode: plumb bob over every actor. Selected mode: just the one.
+    if (sceneMode) {
+        const now = performance.now();
+        const plumbRot = now * 0.001 * Math.PI; // half rev per second
+        const bob = Math.sin(now * 0.002) * 0.12;
 
-                // Head position in world space
-                let hx = headBone.worldPosition.x;
-                let hy = headBone.worldPosition.y;
-                let hz = headBone.worldPosition.z;
+        const drawPlumbBobForBody = (bi, body) => {
+            if (!body.skeleton) return;
+            const headBone = body.skeleton.find(b => b.name === 'HEAD');
+            if (!headBone) return;
 
-                // Apply top physics tilt
-                if (bTop.active) {
-                    const tilted = applyTopTransformFor({ x: hx, y: hy, z: hz }, bTop);
-                    hx = tilted.x; hy = tilted.y; hz = tilted.z;
-                }
+            const bTop = body.top || top;
+            const baseDir = (body.direction || 0) + (body.spinOffset || 0);
+            const sd = (selectedActorIndex < 0 || bi === selectedActorIndex) ? baseDir + rotYDeg : baseDir;
+            const bodyDir = sd * Math.PI / 180;
+            const cosD = Math.cos(bodyDir);
+            const sinD = Math.sin(bodyDir);
 
-                // Apply body rotation + position
-                const rx = hx * cosD - hz * sinD;
-                const rz = hx * sinD + hz * cosD;
-                const wx = rx + selBody.x;
-                const wy = hy + 1.5; // float above the head
-                const wz = rz + selBody.z;
+            let hx = headBone.worldPosition.x;
+            let hy = headBone.worldPosition.y;
+            let hz = headBone.worldPosition.z;
 
-                // Spin at half revolution per second (matching original HouseViewer.cpp)
-                // theta = time * 0.001 * 2pi * 0.5
-                const now = performance.now();
-                const plumbRot = now * 0.001 * Math.PI;
-                const bob = Math.sin(now * 0.002) * 0.12;
+            if (bTop.active) {
+                const tilted = applyTopTransformFor({ x: hx, y: hy, z: hz }, bTop);
+                hx = tilted.x; hy = tilted.y; hz = tilted.z;
+            }
 
-                // Classic Sims green
-                renderer.drawDiamond(wx, wy + bob, wz, 0.18, plumbRot, 0.2, 1.0, 0.2, 0.9);
+            const rx = hx * cosD - hz * sinD;
+            const rz = hx * sinD + hz * cosD;
+            const wx = rx + body.x;
+            const wy = hy + 1.5;
+            const wz = rz + body.z;
+
+            renderer.drawDiamond(wx, wy + bob, wz, 0.18, plumbRot, 0.2, 1.0, 0.2, 0.9);
+        };
+
+        if (selectedActorIndex >= 0 && selectedActorIndex < bodiesToRender.length) {
+            // One actor selected: plumb bob over just them
+            drawPlumbBobForBody(selectedActorIndex, bodiesToRender[selectedActorIndex]);
+        } else {
+            // All mode: plumb bob over everyone
+            for (let bi = 0; bi < bodiesToRender.length; bi++) {
+                drawPlumbBobForBody(bi, bodiesToRender[bi]);
             }
         }
     }
