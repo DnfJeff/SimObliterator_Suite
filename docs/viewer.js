@@ -92,7 +92,7 @@ const textureCache = new Map();
 
 
 // DOM references
-const statusEl = $('status');
+const statusEl = $('status'); // may be null if status bar removed
 const canvas = $('viewport');
 
 function initRenderer() {
@@ -102,7 +102,7 @@ function initRenderer() {
         renderer = new Renderer(canvas);
         renderer.context.viewport(0, 0, canvas.width, canvas.height);
     } catch (e) {
-        statusEl.textContent = 'WebGL error: ' + e.message;
+        if (statusEl) statusEl.textContent = 'WebGL error: ' + e.message;
     }
 }
 
@@ -318,7 +318,7 @@ async function loadContentIndex() {
             mesh: Object.keys(content.meshes).length,
             tex: Object.keys(content.textures).length,
         };
-        statusEl.textContent = `Loaded: ${counts.skel} skeletons, ${counts.suit} suits, ${counts.skill} anims, ${counts.mesh} meshes, ${counts.tex} textures`;
+        if (statusEl) statusEl.textContent = `Loaded: ${counts.skel} skeletons, ${counts.suit} suits, ${counts.skill} anims, ${counts.mesh} meshes, ${counts.tex} textures`;
 
         console.log('[loadContentIndex]', counts);
 
@@ -342,7 +342,7 @@ async function loadContentIndex() {
         }
 
     } catch (e) {
-        statusEl.textContent = 'Failed to load content.json: ' + e.message;
+        if (statusEl) statusEl.textContent = 'Failed to load content.json: ' + e.message;
         console.error('[loadContentIndex]', e);
     }
 }
@@ -1435,7 +1435,7 @@ async function updateScene() {
     const charIdx = parseInt($('selCharacter').value);
     const charName = contentIndex?.characters?.[charIdx]?.name;
     const animLabel = animName || 'idle';
-    statusEl.textContent = charName
+    if (statusEl) statusEl.textContent = charName
         ? `${charName} | ${animLabel}`
         : `${skelName} (${activeSkeleton.length} bones) | ${animLabel}`;
     renderFrame();
