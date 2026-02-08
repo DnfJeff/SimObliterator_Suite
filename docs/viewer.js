@@ -2214,6 +2214,7 @@ async function applyCharacterToActor(charIndex, actorIndex) {
     body.meshes = newMeshes;
     body.practice = newPractice;
 
+    simlishGreet(actorIndex);
     renderFrame();
 }
 
