@@ -247,8 +247,8 @@ async function loadContentIndex() {
                 cmxFailed++;
             }
         }
-        console.warn(`[loadContentIndex] CMX: ${cmxLoaded} loaded, ${cmxFailed} failed out of ${allCmx.length}`);
-        console.warn(`[loadContentIndex] Skills loaded: [${Object.keys(content.skills).join(', ')}]`);
+        console.log(`[loadContentIndex] CMX: ${cmxLoaded} loaded, ${cmxFailed} failed out of ${allCmx.length}`);
+        console.log(`[loadContentIndex] Skills loaded: [${Object.keys(content.skills).join(', ')}]`);
 
         statusEl.textContent = 'Loading meshes...';
 
@@ -270,7 +270,7 @@ async function loadContentIndex() {
                 meshFailed++;
             }
         }
-        console.warn(`[loadContentIndex] Meshes: ${meshLoaded} loaded, ${meshFailed} failed out of ${(contentIndex.meshes || []).length}`);
+        console.log(`[loadContentIndex] Meshes: ${meshLoaded} loaded, ${meshFailed} failed out of ${(contentIndex.meshes || []).length}`);
 
         // Index texture filenames — prefer PNG over BMP (smaller, browser-native)
         for (const name of (contentIndex.textures_bmp || [])) {
@@ -439,7 +439,7 @@ async function loadScene(sceneIndex) {
         return;
     }
     const scene = contentIndex.scenes[sceneIndex];
-    console.warn(`[loadScene] === LOADING SCENE "${scene.name}" with ${scene.cast.length} cast members ===`);
+    console.log(`[loadScene] === LOADING SCENE "${scene.name}" with ${scene.cast.length} cast members ===`);
     activeScene = scene.name;
     // Build into a LOCAL array — don't touch the live bodies[] until ALL are loaded.
     // This prevents the animation loop from ticking partially-loaded bodies.
@@ -568,7 +568,7 @@ async function loadScene(sceneIndex) {
     }
 
     // Scene health diagnostic
-    console.warn(`[loadScene] === SCENE "${scene.name}" LOADED: ${newBodies.length}/${scene.cast.length} bodies ===`);
+    console.log(`[loadScene] === SCENE "${scene.name}" LOADED: ${newBodies.length}/${scene.cast.length} bodies ===`);
     for (let i = 0; i < newBodies.length; i++) {
         const b = newBodies[i];
         const name = b.personData?.name || '?';
@@ -591,7 +591,7 @@ async function loadScene(sceneIndex) {
         if (status === 'DEAD') {
             console.error(`[loadScene] BODY[${i}] "${name}" ${status} skel=${hasSkel} meshes=${meshCount} practice=${hasPractice} ready=${practiceReady} trans=${transLen} rots=${rotLen} bindings=${bindingCount}${issueStr}`);
         } else {
-            console.warn(`[loadScene] BODY[${i}] "${name}" ${status} skel=${hasSkel} meshes=${meshCount} practice=${hasPractice} ready=${practiceReady} trans=${transLen} rots=${rotLen} bindings=${bindingCount}`);
+            console.log(`[loadScene] BODY[${i}] "${name}" ${status} meshes=${meshCount} bindings=${bindingCount}`);
         }
     }
 
@@ -708,7 +708,7 @@ async function loadAnimationForBody(animName, skeleton, debugLabel = '') {
         return null;
     }
 
-    console.warn(`${tag} "${animName}" → skill "${skill.name}" (match=${matchMethod}) motions=${skill.motions.length} numTrans=${skill.numTranslations} numRots=${skill.numRotations} cfpFile="${skill.animationFileName}"`);
+    console.log(`${tag} "${animName}" → skill "${skill.name}" (match=${matchMethod}) motions=${skill.motions.length} numTrans=${skill.numTranslations} numRots=${skill.numRotations} cfpFile="${skill.animationFileName}"`);
 
     // DEEP COPY the skill so multiple bodies sharing the same animation
     // don't corrupt each other's translations/rotations arrays.
@@ -727,7 +727,7 @@ async function loadAnimationForBody(animName, skeleton, debugLabel = '') {
                 const resp = await fetch('data/' + cfpFile);
                 if (resp.ok) {
                     cfpCache.set(cfpName, await resp.arrayBuffer());
-                    console.warn(`${tag} CFP loaded: "${cfpFile}" (${cfpCache.get(cfpName).byteLength} bytes)`);
+                    console.log(`${tag} CFP loaded: "${cfpFile}" (${cfpCache.get(cfpName).byteLength} bytes)`);
                 } else {
                     console.error(`${tag} CFP fetch FAILED: ${resp.status} for "${cfpFile}"`);
                 }
@@ -746,7 +746,7 @@ async function loadAnimationForBody(animName, skeleton, debugLabel = '') {
         skill.translations = [];
         skill.rotations = [];
         parseCFP(buffer, skill);
-        console.warn(`${tag} CFP parsed: translations=${skill.translations.length} rotations=${skill.rotations.length}`);
+        console.log(`${tag} CFP parsed: translations=${skill.translations.length} rotations=${skill.rotations.length}`);
     } else if (!buffer && (skill.numTranslations > 0 || skill.numRotations > 0)) {
         console.error(`${tag} NO CFP BUFFER for "${cfpName}" but skill expects ${skill.numTranslations} translations and ${skill.numRotations} rotations — animation will be BROKEN`);
     }
@@ -759,7 +759,7 @@ async function loadAnimationForBody(animName, skeleton, debugLabel = '') {
     if (practice.ready) {
         practice.tick(0);
         updateTransforms(skeleton);
-        console.warn(`${tag} Practice READY: bindings=${practice.bindings.length}/${skill.motions.length} duration=${practice.duration}ms`);
+        console.log(`${tag} Practice READY: bindings=${practice.bindings.length}/${skill.motions.length} duration=${practice.duration}ms`);
     } else {
         console.error(`${tag} Practice NOT READY: bindings=${practice.bindings.length}/${skill.motions.length} trans=${skill.translations.length} rots=${skill.rotations.length}`);
     }
@@ -1485,16 +1485,16 @@ function renderFrame() {
                 const rx = hx * cosD - hz * sinD;
                 const rz = hx * sinD + hz * cosD;
                 const wx = rx + selBody.x;
-                const wy = hy + 0.7; // float above the head
+                const wy = hy + 1.5; // float well above the head
                 const wz = rz + selBody.z;
 
-                // Gentle bob + spin
+                // Gentle bob + steady spin
                 const bobTime = performance.now() * 0.002;
-                const bob = Math.sin(bobTime) * 0.15;
-                const plumbRot = bobTime * 0.8;
+                const bob = Math.sin(bobTime) * 0.12;
+                const plumbRot = bobTime * 1.5;
 
-                // Classic Sims green: #3cff3c with slight glow
-                renderer.drawDiamond(wx, wy + bob, wz, 0.15, plumbRot, 0.2, 1.0, 0.2, 0.85);
+                // Classic Sims green
+                renderer.drawDiamond(wx, wy + bob, wz, 0.18, plumbRot, 0.2, 1.0, 0.2, 0.9);
             }
         }
     }
@@ -1518,7 +1518,7 @@ function animationLoop(timestamp) {
             // One-shot diagnostic: log every body's animation state on first tick
             if (!_animDiagLogged) {
                 _animDiagLogged = true;
-                console.warn(`[animLoop] FIRST TICK: ${bodies.length} bodies, animationTime=${animationTime.toFixed(1)}`);
+                console.log(`[animLoop] FIRST TICK: ${bodies.length} bodies, animationTime=${animationTime.toFixed(1)}`);
                 for (let i = 0; i < bodies.length; i++) {
                     const b = bodies[i];
                     const name = b.personData?.name || '?';
