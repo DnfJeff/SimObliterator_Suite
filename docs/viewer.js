@@ -2131,34 +2131,55 @@ function selectActor(idx) {
     updateActorEditingUI();
 }
 
-// Enable/disable actor editing controls based on whether a specific actor is selected.
-// When disabled (All mode), show neutral placeholder text in dropdowns.
+// Sync Character/Animation dropdowns to reflect current selection.
+// All mode with mixed values: show "-- many --". All same: show that value.
+// Single actor: show their values. Never disable anything.
 function updateActorEditingUI() {
-    const inScene = !!activeScene;
-    const hasActor = inScene && selectedActorIndex >= 0;
-    const disabled = !hasActor && inScene;
-
-    // Character controls
     const charSel = $('selCharacter');
-    const charPrev = $('btnCharacterPrev');
-    const charNext = $('btnCharacterNext');
-    if (charSel) {
-        charSel.disabled = disabled;
-        if (disabled) charSel.value = '';
-    }
-    if (charPrev) charPrev.disabled = disabled;
-    if (charNext) charNext.disabled = disabled;
-
-    // Animation controls
     const animSel = $('selAnim');
-    const animPrev = $('btnAnimPrev');
-    const animNext = $('btnAnimNext');
-    if (animSel) {
-        animSel.disabled = disabled;
-        if (disabled) animSel.value = '';
+
+    if (!activeScene || bodies.length === 0) return;
+
+    if (selectedActorIndex >= 0 && selectedActorIndex < bodies.length) {
+        // Single actor selected: show their character and animation
+        const body = bodies[selectedActorIndex];
+        if (body?.personData && contentIndex?.characters) {
+            const charIdx = contentIndex.characters.findIndex(c => c.name === body.personData.name);
+            if (charIdx >= 0 && charSel) charSel.value = String(charIdx);
+        }
+        if (body?.practice?.skill?.name && animSel) {
+            setSelectValue('selAnim', body.practice.skill.name);
+        }
+    } else {
+        // All mode: check if all bodies have the same character / animation
+        if (bodies.length > 0) {
+            // Character: all same?
+            const firstChar = bodies[0].personData?.name;
+            const allSameChar = bodies.every(b => b.personData?.name === firstChar);
+            if (charSel) {
+                if (allSameChar && firstChar) {
+                    const charIdx = contentIndex.characters?.findIndex(c => c.name === firstChar);
+                    if (charIdx >= 0) charSel.value = String(charIdx);
+                    else charSel.value = '';
+                } else {
+                    charSel.value = '';
+                    // Update placeholder text to "-- many --"
+                    if (charSel.options[0]) charSel.options[0].textContent = '-- many --';
+                }
+            }
+            // Animation: all same?
+            const firstAnim = bodies[0].practice?.skill?.name;
+            const allSameAnim = bodies.every(b => b.practice?.skill?.name === firstAnim);
+            if (animSel) {
+                if (allSameAnim && firstAnim) {
+                    setSelectValue('selAnim', firstAnim);
+                } else {
+                    animSel.value = '';
+                    if (animSel.options[0]) animSel.options[0].textContent = '-- many --';
+                }
+            }
+        }
     }
-    if (animPrev) animPrev.disabled = disabled;
-    if (animNext) animNext.disabled = disabled;
 }
 
 // Step through character presets
@@ -2166,6 +2187,7 @@ function stepCharacter(direction) {
     if (!contentIndex?.characters?.length) return;
     const sel = $('selCharacter');
     let idx = parseInt(sel.value);
+    // "many" (NaN): next goes to first, prev goes to last
     if (isNaN(idx)) idx = direction > 0 ? 0 : contentIndex.characters.length - 1;
     else idx += direction;
     if (idx < 0) idx = contentIndex.characters.length - 1;
@@ -2173,8 +2195,10 @@ function stepCharacter(direction) {
     sel.value = String(idx);
     if (activeScene && selectedActorIndex >= 0) {
         applyCharacterToActor(idx, selectedActorIndex);
+    } else if (activeScene && selectedActorIndex < 0) {
+        // All mode: set all actors to this character
+        for (let i = 0; i < bodies.length; i++) applyCharacterToActor(idx, i);
     } else {
-        exitScene();
         applyCharacter(idx);
     }
 }
@@ -2275,12 +2299,17 @@ function stepAnimation(direction) {
     const sel = $('selAnim');
     if (sel.options.length <= 1) return;
     let idx = sel.selectedIndex + direction;
-    // Wrap around (skip the first "-- idle --" placeholder)
+    // "many" (selectedIndex=0, placeholder): next goes to first, prev goes to last
     if (idx < 1) idx = sel.options.length - 1;
     if (idx >= sel.options.length) idx = 1;
     sel.selectedIndex = idx;
+    const animName = sel.value;
+    if (!animName) return;
     if (activeScene && selectedActorIndex >= 0) {
-        applyAnimationToActor(sel.value, selectedActorIndex);
+        applyAnimationToActor(animName, selectedActorIndex);
+    } else if (activeScene && selectedActorIndex < 0) {
+        // All mode: set all actors to this animation
+        for (let i = 0; i < bodies.length; i++) applyAnimationToActor(animName, i);
     } else {
         updateScene();
     }
@@ -2382,8 +2411,13 @@ function setupEventListeners() {
     }
     // Animation dropdown: in scene mode with selected actor, change that actor's anim
     $('selAnim').addEventListener('change', () => {
+        const animName = $('selAnim').value;
+        if (!animName) return;
         if (activeScene && selectedActorIndex >= 0) {
-            applyAnimationToActor($('selAnim').value, selectedActorIndex);
+            applyAnimationToActor(animName, selectedActorIndex);
+        } else if (activeScene && selectedActorIndex < 0) {
+            // All mode: set all actors to this animation
+            for (let i = 0; i < bodies.length; i++) applyAnimationToActor(animName, i);
         } else {
             updateScene();
         }
@@ -2409,8 +2443,10 @@ function setupEventListeners() {
         if (isNaN(idx)) return;
         if (activeScene && selectedActorIndex >= 0) {
             applyCharacterToActor(idx, selectedActorIndex);
+        } else if (activeScene && selectedActorIndex < 0) {
+            // All mode: set all actors to this character
+            for (let i = 0; i < bodies.length; i++) applyCharacterToActor(idx, i);
         } else {
-            exitScene();
             applyCharacter(idx);
         }
     });
@@ -2530,6 +2566,30 @@ function setupEventListeners() {
             $('btnPause').textContent = 'Pause';
             $('btnPause').classList.remove('active');
             e.preventDefault();
+        }
+
+        // Letter keys: map a-z to animations in the dropdown
+        if (e.key.length === 1 && e.key >= 'a' && e.key <= 'z' && !e.ctrlKey && !e.metaKey) {
+            const sel = $('selAnim');
+            // Options include placeholder at index 0, real anims start at 1
+            const animCount = sel.options.length - 1;
+            if (animCount > 0) {
+                const letterIdx = e.key.charCodeAt(0) - 97; // a=0, b=1, ...
+                const animIdx = (letterIdx % animCount) + 1; // +1 to skip placeholder
+                sel.selectedIndex = animIdx;
+                const animName = sel.value;
+                if (animName) {
+                    if (activeScene && selectedActorIndex < 0) {
+                        // All mode: set all actors to this animation
+                        for (let i = 0; i < bodies.length; i++) applyAnimationToActor(animName, i);
+                    } else if (activeScene && selectedActorIndex >= 0) {
+                        applyAnimationToActor(animName, selectedActorIndex);
+                    } else {
+                        updateScene();
+                    }
+                }
+                e.preventDefault();
+            }
         }
 
         // Track held arrow keys for smooth per-frame input

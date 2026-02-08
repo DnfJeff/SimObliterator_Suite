@@ -301,12 +301,6 @@ details summary h3 {
     border-color: var(--accent);
 }
 
-.nav-btn:disabled,
-select:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    pointer-events: none;
-}
 
 #loadingOverlay {
     position: fixed;
