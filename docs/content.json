@@ -372,6 +372,25 @@
 
   "scenes": [
     {
+      "name": "Simopolis",
+      "cast": [
+        { "person": "Dad (Fit)",          "x": -6,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation5" },
+        { "person": "Mom (Ponytail)",     "x": -2,   "z":  4,   "direction": 0,   "animation": "a2o-dance-inplace-twistloop" },
+        { "person": "Ross (Bald)",        "x":  2,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation" },
+        { "person": "Mercedes",           "x":  6,   "z":  4,   "direction": 0,   "animation": "a2o-test-animation2" },
+        { "person": "Biker Dude",         "x": -5,   "z":  0,   "direction": 0,   "animation": "a2o-walking-frantic-loop" },
+        { "person": "Hipster",            "x": -1.5, "z":  0,   "direction": 0,   "animation": "a2o-test-animation3" },
+        { "person": "Fat Lady Summer",    "x":  1.5, "z":  0,   "direction": 0,   "animation": "a2o-dance-inplace-twistloop" },
+        { "person": "The Boss",           "x":  5,   "z":  0,   "direction": 0,   "animation": "a2o-test-animation4" },
+        { "person": "Grandpa",            "x": -4,   "z": -3.5, "direction": 0,   "animation": "a2o-energetic1" },
+        { "person": "Grandma",            "x": -0.5, "z": -3.5, "direction": 0,   "animation": "a2o-test-animation5" },
+        { "person": "The Slob",           "x":  3,   "z": -3.5, "direction": 0,   "animation": "a2o-energetic1" },
+        { "person": "Deb",                "x":  6.5, "z": -3.5, "direction": 0,   "animation": "a2o-walking-loop" },
+        { "person": "Peg",                "x": -3,   "z": -7,   "direction": 0,   "animation": "a2o-approve" },
+        { "person": "Lizard King",        "x":  3,   "z": -7,   "direction": 0,   "animation": "a2o-test-animation6" }
+      ]
+    },
+    {
       "name": "Grand Chorus",
       "cast": [
         { "person": "Dad (Fit)",          "x": -4.5, "z":  2.5, "direction": 0,   "animation": "a2o-energetic1" },
