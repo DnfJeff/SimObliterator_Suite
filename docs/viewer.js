@@ -503,6 +503,67 @@ function applyTopTransform(v) {
     };
 }
 
+// Top spin sound: procedural whirring via Web Audio oscillator.
+// Pitch proportional to spin speed — you hear it wind up and slow down.
+let audioCtx = null;
+let spinOsc = null;
+let spinGain = null;
+
+function initSpinSound() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Two detuned sawtooth oscillators for a fat whirring sound
+    spinOsc = audioCtx.createOscillator();
+    spinOsc.type = 'sawtooth';
+    spinOsc.frequency.value = 0;
+
+    const osc2 = audioCtx.createOscillator();
+    osc2.type = 'sawtooth';
+    osc2.frequency.value = 0;
+    osc2.detune.value = 7; // slight detune for thickness
+
+    spinGain = audioCtx.createGain();
+    spinGain.gain.value = 0;
+
+    // Low-pass filter to tame the harsh sawtooth
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 800;
+    filter.Q.value = 2;
+
+    spinOsc.connect(filter);
+    osc2.connect(filter);
+    filter.connect(spinGain);
+    spinGain.connect(audioCtx.destination);
+
+    spinOsc.start();
+    osc2.start();
+    spinOsc._osc2 = osc2; // keep reference for frequency updates
+}
+
+function updateSpinSound() {
+    if (!audioCtx || !spinOsc || !spinGain) return;
+
+    const speed = Math.abs(rotationVelocity);
+
+    if (speed > 0.5) {
+        // Map spin speed to pitch: 80Hz (slow) to 400Hz (fast)
+        const pitch = 80 + Math.min(speed, 15) * 22;
+        const now = audioCtx.currentTime;
+        spinOsc.frequency.setTargetAtTime(pitch, now, 0.05);
+        spinOsc._osc2.frequency.setTargetAtTime(pitch, now, 0.05);
+
+        // Volume ramps with speed, max 0.15
+        const vol = Math.min(speed / 10, 0.15);
+        spinGain.gain.setTargetAtTime(vol, now, 0.05);
+    } else {
+        // Fade out
+        const now = audioCtx.currentTime;
+        spinGain.gain.setTargetAtTime(0, now, 0.1);
+    }
+}
+
 // CFP file index: maps lowercase animationFileName -> actual filename on disk
 const cfpIndex = new Map();
 
@@ -695,6 +756,9 @@ function animationLoop(timestamp) {
     tickTop();
     if (top.active) needsRender = true;
 
+    // Spin sound: pitch tracks velocity, fades as they slow down
+    updateSpinSound();
+
     if (needsRender) renderFrame();
 
     requestAnimationFrame(animationLoop);
@@ -717,6 +781,7 @@ function setupMouseInteraction() {
         smoothedVelocity = 0;
         canvas.style.cursor = 'grabbing';
         canvas.focus();
+        initSpinSound(); // init audio on first gesture (browser policy)
         e.preventDefault();
     });
 
