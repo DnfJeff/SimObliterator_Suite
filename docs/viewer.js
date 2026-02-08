@@ -286,10 +286,45 @@ async function loadContentIndex() {
 
         buildCfpIndex();
 
+        // Classic Sims loading screen messages
+        const loadingMessages = [
+            'Reticulating Splines...',
+            'Adjusting Emotional Weights...',
+            'Calibrating Personality Matrix...',
+            'Compressing Sim Genomes...',
+            'Calculating Snowfall Coefficients...',
+            'Tokenizing Elf Language...',
+            'Possessing Animate Objects...',
+            'Inserting Alarm Clock...',
+            'Computing Optimal Bin Packing...',
+            'Preparing Neighborly Greetings...',
+            'Simmifying Name Savant...',
+            'Synthesizing Gravity...',
+            'Collecting Bonus Diamonds...',
+            'Loading Lovingly Handcrafted Sims...',
+            'Applying Alarm Clock Patch...',
+            'Fabricating Social Constructs...',
+            'Convincing Sims They Have Free Will...',
+            'Polishing Countertop Surfaces...',
+            'Debugging Dream Sequences...',
+            'Unbarricading Elevator...',
+            'Reconfiguring Vertical Transporter...',
+            'Priming Geodesic Abreaction...',
+            'Lecturing Errant Unicorns...',
+            'Pressurizing Fruit Punch...',
+        ];
+        let loadMsgIdx = 0;
+        const loaderText = document.querySelector('.loader-text');
+        const cycleMessage = () => {
+            if (loaderText) loaderText.textContent = loadingMessages[loadMsgIdx % loadingMessages.length];
+            loadMsgIdx++;
+        };
+        cycleMessage();
+        const msgInterval = setInterval(cycleMessage, 800);
+
         // Preload ALL character data so scene switching is instant:
         // skeleton CMX files, all textures, and all CFP animation data.
         statusEl.textContent = 'Preloading characters...';
-        const loaderText = document.querySelector('.loader-text');
 
         // Cache skeleton CMX files (usually just "adult" and "child")
         const skelNames = new Set();
@@ -369,6 +404,7 @@ async function loadContentIndex() {
         }
 
         // Hide loading overlay
+        clearInterval(msgInterval);
         const overlay = $('loadingOverlay');
         if (overlay) {
             overlay.classList.add('done');
