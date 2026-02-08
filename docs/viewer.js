@@ -2472,6 +2472,7 @@ function setupEventListeners() {
     const helpDialog = $('helpDialog');
     if (btnHelp && helpDialog) {
         const toggleHelp = () => {
+            ensureAudio();
             const showing = helpDialog.style.display === 'flex';
             helpDialog.style.display = showing ? 'none' : 'flex';
             btnHelp.textContent = showing ? 'Help?!?' : 'Wow!!!';
