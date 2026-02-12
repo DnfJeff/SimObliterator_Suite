@@ -1,0 +1,28 @@
+import { Vec3, MeshData } from './types.js';
+export declare class Renderer {
+    private static loggedMeshes;
+    private gl;
+    private program;
+    private aPosition;
+    private aNormal;
+    private aTexCoord;
+    private uProjection;
+    private uModelView;
+    private uTexture;
+    private uHasTexture;
+    private uLightDir;
+    private uAlpha;
+    private uFadeColor;
+    constructor(canvas: HTMLCanvasElement);
+    clear(r?: number, g?: number, b?: number): void;
+    fadeScreen(r?: number, g?: number, b?: number, alpha?: number): void;
+    setCamera(fov: number, aspect: number, near: number, far: number, eyeX: number, eyeY: number, eyeZ: number, targetX?: number, targetY?: number, targetZ?: number): void;
+    setCulling(enable: boolean): void;
+    get context(): WebGLRenderingContext;
+    drawMesh(mesh: MeshData, vertices: Vec3[], normals: Vec3[], texture?: WebGLTexture | null): void;
+    drawDiamond(x: number, y: number, z: number, size: number, rotY: number, r: number, g: number, b: number, alpha?: number): void;
+    loadTexture(image: HTMLImageElement): WebGLTexture;
+    private setBuffer;
+    private createProgram;
+    private compileShader;
+}

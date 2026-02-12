@@ -67,7 +67,7 @@ class FAMI(IffChunk):
                 if not io.has_more:
                     break
                 io.read_int32()
-        except:
+        except Exception:
             pass
     
     def select_whole_family(self):
