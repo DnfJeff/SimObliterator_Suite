@@ -249,6 +249,7 @@ export class Renderer {
 
     // Draw a procedural diamond (octahedron) at a world position.
     // The classic Sims plumb bob: two pyramids stacked point-to-point.
+    // Sharp edges: no vertex sharing — each face has its own 3 vertices and face normal (own smoothing group).
     drawDiamond(x: number, y: number, z: number,
                 size: number, rotY: number,
                 r: number, g: number, b: number, alpha = 1.0): void {
@@ -267,14 +268,14 @@ export class Renderer {
         const top = { x: 0, y: h, z: 0 };
         const bot = { x: 0, y: -h, z: 0 };
 
-        // 2*N triangles: N top faces + N bottom faces
+        // 2*N triangles: N top + N bottom. Each tri has its own 3 verts (no sharing) = sharp edges.
         const tris: { x: number; y: number; z: number }[] = [];
         for (let i = 0; i < N; i++) {
             const next = (i + 1) % N;
-            // Top pyramid (CCW from outside)
+            // Top pyramid: CCW from outside so normal points up/out
             tris.push(eq[i], eq[next], top);
-            // Bottom pyramid (CCW from outside)
-            tris.push(eq[next], eq[i], bot);
+            // Bottom pyramid: CCW from below (eq[i], eq[next], bot) so normal points down/out
+            tris.push(eq[i], eq[next], bot);
         }
 
         const posData = new Float32Array(tris.length * 3);
