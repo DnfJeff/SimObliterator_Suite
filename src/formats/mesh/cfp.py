@@ -122,6 +122,7 @@ class CFPReader:
         Decompress translation vectors (X, Y, Z sequences).
         
         CFP stores all X values, then all Y values, then all Z values.
+        Coordinate conversion: Z is negated for DirectX -> WebGL handedness.
         """
         if count == 0:
             return []
@@ -144,13 +145,16 @@ class CFPReader:
         
         vectors = []
         for i in range(min(len(xs), len(ys), len(zs))):
-            vectors.append(Vector3(xs[i], ys[i], zs[i]))
+            # Negate Z for coordinate system conversion (per VitaMoo)
+            vectors.append(Vector3(xs[i], ys[i], -zs[i]))
         
         return vectors
     
     def decompress_quaternions(self, data: bytes, count: int, offset: int = 0) -> List[Quaternion]:
         """
         Decompress rotation quaternions (W, X, Y, Z sequences).
+        
+        Coordinate conversion: W is negated for DirectX -> WebGL handedness.
         """
         if count == 0:
             return []
@@ -176,7 +180,8 @@ class CFPReader:
         
         quats = []
         for i in range(min(len(ws), len(xs), len(ys), len(zs))):
-            q = Quaternion(ws[i], xs[i], ys[i], zs[i])
+            # Negate W for coordinate system conversion (per VitaMoo)
+            q = Quaternion(-ws[i], xs[i], ys[i], zs[i])
             quats.append(q.normalize())
         
         return quats

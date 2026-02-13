@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimObliterator - Character Viewer</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            overflow: hidden;
+        }
+        #container { display: flex; height: 100vh; }
+        
+        #sidebar {
+            width: 320px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #0f3460;
+        }
+        
+        #viewer {
+            flex: 1;
+            position: relative;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        h1 {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #e94560;
+        }
+        
+        .panel {
+            background: #0f3460;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .panel-title {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 0.85em;
+            color: #94b3fd;
+        }
+        
+        select, input[type="file"], button {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: #eee;
+            font-size: 0.9em;
+        }
+        
+        select:focus, input:focus {
+            outline: 2px solid #e94560;
+        }
+        
+        button {
+            background: #e94560;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        
+        button:hover { background: #ff6b6b; }
+        
+        button.secondary {
+            background: #0f3460;
+            border: 1px solid #94b3fd;
+        }
+        
+        button.secondary:hover { background: #1a3a5c; }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1a2e;
+            font-size: 0.85em;
+        }
+        
+        .info-label { color: #888; }
+        .info-value { color: #94b3fd; }
+        
+        #status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 15px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #94b3fd;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #0f3460;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin: 0;
+            font-size: 0.8em;
+        }
+        
+        .controls input[type="range"] {
+            width: 80px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #94b3fd;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        
+        .back-link:hover { color: #e94560; }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="sidebar">
+            <a href="library_browser.html" class="back-link">← Back to Library</a>
+            <h1>🎮 Character Viewer</h1>
+            
+            <div class="panel">
+                <div class="panel-title">Character Info</div>
+                <div id="character-info">
+                    <div class="info-row">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value" id="char-name">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Body:</span>
+                        <span class="info-value" id="char-body">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Head:</span>
+                        <span class="info-value" id="char-head">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Bones:</span>
+                        <span class="info-value" id="char-bones">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Vertices:</span>
+                        <span class="info-value" id="char-verts">-</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">Animation</div>
+                <select id="anim-select">
+                    <option value="">-- Select Animation --</option>
+                </select>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button id="btn-prev" class="secondary" style="flex:1">← Prev</button>
+                    <button id="btn-next" class="secondary" style="flex:1">Next →</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">Display Options</div>
+                <label>
+                    Speed: <span id="speed-value">100%</span>
+                    <input type="range" id="speed" min="0" max="300" value="100">
+                </label>
+                <label>
+                    Zoom: <span id="zoom-value">160</span>
+                    <input type="range" id="zoom" min="50" max="400" value="160">
+                </label>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-title">Export</div>
+                <button id="btn-export-gltf">Export to glTF</button>
+                <button id="btn-export-png" class="secondary">Screenshot (PNG)</button>
+            </div>
+        </div>
+        
+        <div id="viewer">
+            <canvas id="canvas"></canvas>
+            <div id="loading">
+                <div class="spinner"></div>
+                <p id="loading-text">Loading character...</p>
+            </div>
+            <div id="status">Ready</div>
+            <div class="controls">
+                <label>Rotate <input type="range" id="rotY" min="0" max="360" value="30"></label>
+                <label>Tilt <input type="range" id="rotX" min="-89" max="89" value="15"></label>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // VitaMoo imports
+        import { parseCMX, parseSKN, parseCFP } from './vitamoo/parser.js';
+        import { buildSkeleton, updateTransforms, deformMesh, findBone } from './vitamoo/skeleton.js';
+        import { Renderer } from './vitamoo/renderer.js';
+        import { loadTexture } from './vitamoo/texture.js';
+        import { Practice } from './vitamoo/animation.js';
+        
+        // DOM helpers
+        const $ = id => document.getElementById(id);
+        
+        // State
+        let renderer = null;
+        let skeleton = null;
+        let meshes = [];  // {mesh, boneMap, texture}[]
+        let practice = null;
+        let animationTime = 0;
+        let lastFrameTime = 0;
+        let paused = false;
+        
+        // Content caches
+        const content = {
+            skeletons: {},
+            suits: {},
+            skills: {},  // skill.name => skill object
+            meshes: {},
+            textures: {}
+        };
+        
+        // CFP cache - buffer keyed by skill.animationFileName
+        const cfpCache = new Map();
+        
+        // Animation list from server/content
+        let availableAnimations = [];
+        
+        // Data path - relative path to VitaMoo data files (fallback)
+        const DATA_PATH = '../../../docs/data/';
+        
+        // Initialize renderer
+        function initRenderer() {
+            const canvas = $('canvas');
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            try {
+                renderer = new Renderer(canvas);
+                renderer.context.viewport(0, 0, canvas.width, canvas.height);
+            } catch (e) {
+                $('status').textContent = 'WebGL error: ' + e.message;
+                console.error('WebGL init failed:', e);
+            }
+        }
+        
+        // Render frame
+        function renderFrame() {
+            if (!renderer) return;
+            
+            renderer.clear();
+            
+            const canvas = $('canvas');
+            const zoom = parseFloat($('zoom').value) / 10;
+            const rotY = parseFloat($('rotY').value) * Math.PI / 180;
+            const rotX = parseFloat($('rotX').value) * Math.PI / 180;
+            
+            const cosX = Math.cos(rotX);
+            const eyeX = Math.sin(rotY) * cosX * zoom;
+            const eyeY = 2.5 + Math.sin(rotX) * zoom;
+            const eyeZ = Math.cos(rotY) * cosX * zoom;
+            
+            renderer.setCamera(50, canvas.width / canvas.height, 0.01, 100,
+                eyeX, eyeY, eyeZ, 0, 2.5, 0);
+            
+            // Render all meshes
+            for (const { mesh, boneMap, texture } of meshes) {
+                try {
+                    let verts, norms;
+                    if (skeleton) {
+                        const deformed = deformMesh(mesh, skeleton, boneMap);
+                        verts = deformed.vertices;
+                        norms = deformed.normals;
+                    } else {
+                        verts = mesh.vertices;
+                        norms = mesh.normals;
+                    }
+                    renderer.drawMesh(mesh, verts, norms, texture || null);
+                } catch (e) {
+                    console.error('Mesh render error:', mesh.name, e);
+                }
+            }
+        }
+        
+        // Animation loop
+        function animationLoop(timestamp) {
+            requestAnimationFrame(animationLoop);
+            
+            if (!paused && practice) {
+                const speed = parseFloat($('speed').value) / 100;
+                if (lastFrameTime === 0) lastFrameTime = timestamp;
+                const delta = (timestamp - lastFrameTime) * speed;
+                lastFrameTime = timestamp;
+                animationTime += delta;
+                
+                practice.tick(animationTime);
+                if (skeleton) updateTransforms(skeleton);
+            }
+            
+            renderFrame();
+        }
+        
+        // Load skeleton from CMX data
+        async function loadSkeleton(cmxText) {
+            const data = parseCMX(cmxText);
+            if (data.skeletons?.length) {
+                skeleton = buildSkeleton(data.skeletons[0]);
+                updateTransforms(skeleton);
+                $('char-bones').textContent = skeleton.length;
+                
+                // Store skills for animation
+                for (const skill of data.skills || []) {
+                    // Initialize empty arrays for CFP data
+                    skill.translations = skill.translations || [];
+                    skill.rotations = skill.rotations || [];
+                    content.skills[skill.name] = skill;
+                }
+                
+                return skeleton;
+            }
+            return null;
+        }
+        
+        // Load CMX file and extract skills
+        async function loadAnimationCMX(cmxUrl) {
+            try {
+                const resp = await fetch(cmxUrl);
+                if (!resp.ok) return null;
+                const text = await resp.text();
+                const data = parseCMX(text);
+                
+                // Add all skills from this CMX
+                for (const skill of data.skills || []) {
+                    skill.translations = [];
+                    skill.rotations = [];
+                    content.skills[skill.name] = skill;
+                }
+                return data.skills || [];
+            } catch (e) {
+                console.error('CMX load error:', cmxUrl, e);
+                return null;
+            }
+        }
+        
+        // Load animation by name - following VitaMoo's pattern
+        async function loadAnimationByName(animName) {
+            // First find or load the skill
+            let skill = content.skills[animName];
+            
+            if (!skill) {
+                // Try case-insensitive match
+                const lower = animName.toLowerCase();
+                skill = Object.values(content.skills).find(
+                    s => s.name?.toLowerCase() === lower
+                );
+            }
+            
+            if (!skill) {
+                // Try loading the CMX file for this animation
+                const cmxFile = `${animName}.cmx`;
+                await loadAnimationCMX(DATA_PATH + cmxFile);
+                
+                // Try finding skill again
+                const lower = animName.toLowerCase();
+                skill = Object.values(content.skills).find(s => 
+                    s.name?.toLowerCase() === lower ||
+                    s.name?.toLowerCase().includes(lower.replace('adult-', ''))
+                );
+            }
+            
+            if (!skill) {
+                console.error('Skill not found:', animName);
+                return null;
+            }
+            
+            // Load CFP if needed
+            const cfpName = skill.animationFileName;
+            if (cfpName && (skill.numTranslations > 0 || skill.numRotations > 0)) {
+                if (!cfpCache.has(cfpName)) {
+                    // Try various CFP file naming patterns
+                    const tryFiles = [cfpName, 'xskill-' + cfpName.toLowerCase()];
+                    for (const tryFile of tryFiles) {
+                        try {
+                            const resp = await fetch(DATA_PATH + tryFile);
+                            if (resp.ok) {
+                                cfpCache.set(cfpName, await resp.arrayBuffer());
+                                console.log('CFP loaded:', tryFile);
+                                break;
+                            }
+                        } catch (e) { /* try next */ }
+                    }
+                }
+                
+                // Parse CFP into skill
+                const buffer = cfpCache.get(cfpName);
+                if (buffer && skill.translations.length === 0 && skill.rotations.length === 0) {
+                    parseCFP(buffer, skill);
+                    console.log(`CFP parsed: trans=${skill.translations.length} rots=${skill.rotations.length}`);
+                }
+            }
+            
+            // Create Practice
+            const p = new Practice(skill, skeleton);
+            if (p.ready) {
+                p.tick(0);
+                updateTransforms(skeleton);
+            }
+            return p;
+        }
+        
+        // Load mesh from SKN data
+        async function loadMesh(sknText, texturePath = null) {
+            const mesh = parseSKN(sknText);
+            if (!mesh) return null;
+            
+            content.meshes[mesh.name] = mesh;
+            
+            const boneMap = new Map();
+            if (skeleton) {
+                for (const bone of skeleton) {
+                    boneMap.set(bone.name, bone);
+                }
+            }
+            
+            let texture = null;
+            if (texturePath && renderer) {
+                try {
+                    texture = await loadTexture(texturePath, renderer.context);
+                } catch (e) {
+                    console.warn('Texture load failed:', texturePath, e);
+                }
+            }
+            
+            return { mesh, boneMap, texture };
+        }
+        
+        // Load animation from CFP data
+        async function loadAnimation(skillName, cfpData) {
+            const skill = content.skills[skillName];
+            if (!skill) {
+                console.warn('Skill not found:', skillName);
+                return null;
+            }
+            
+            // Parse CFP and attach keyframes to skill
+            const cfp = parseCFP(cfpData);
+            if (cfp) {
+                skill.translations = cfp.translations || [];
+                skill.rotations = cfp.rotations || [];
+            }
+            
+            practice = new Practice(skill, skeleton);
+            return practice;
+        }
+        
+        // Fetch data from server API
+        async function fetchFromServer(endpoint, data) {
+            try {
+                const response = await fetch('/api/' + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                return await response.json();
+            } catch (e) {
+                console.error('Server fetch failed:', endpoint, e);
+                return null;
+            }
+        }
+        
+        // Load character from URL params or demo mode
+        async function loadCharacter() {
+            const params = new URLSearchParams(window.location.search);
+            let charName = params.get('char');
+            let bodyMesh = params.get('body');
+            let headMesh = params.get('head');
+            
+            // Demo mode if no params - load a default character
+            if (!charName && !bodyMesh && !headMesh) {
+                charName = 'Demo Character';
+                bodyMesh = 'B001MAFit_01';  // Male fit body
+                headMesh = 'C003MA_RomanCrew';  // Roman crew head
+            }
+            
+            $('loading').style.display = 'block';
+            $('loading-text').textContent = 'Loading skeleton...';
+            
+            // Load skeleton first (required for mesh binding)
+            // Try VitaMoo data first
+            try {
+                const skelResp = await fetch(DATA_PATH + 'adult-skeleton.cmx');
+                if (skelResp.ok) {
+                    await loadSkeleton(await skelResp.text());
+                }
+            } catch (e) {
+                console.log('VitaMoo skeleton not found, trying server API');
+                try {
+                    const apiResp = await fetch('/api/skeleton/adult');
+                    if (apiResp.ok) {
+                        const skelData = await apiResp.json();
+                        if (skelData.cmx) {
+                            await loadSkeleton(skelData.cmx);
+                        }
+                    }
+                } catch (e2) {
+                    console.error('Skeleton load failed:', e2);
+                }
+            }
+            
+            if (!skeleton) {
+                $('status').textContent = 'Failed to load skeleton';
+                $('loading').style.display = 'none';
+                return;
+            }
+            
+            // Update UI
+            $('char-name').textContent = charName || 'Unknown';
+            $('char-body').textContent = bodyMesh || '-';
+            $('char-head').textContent = headMesh || '-';
+            
+            // Load meshes
+            $('loading-text').textContent = 'Loading meshes...';
+            meshes = [];
+            let totalVerts = 0;
+            
+            // Try to load body mesh
+            if (bodyMesh) {
+                const result = await loadMeshFromServer(bodyMesh);
+                if (result) {
+                    meshes.push(result);
+                    totalVerts += result.mesh.vertices?.length || 0;
+                }
+            }
+            
+            // Try to load head mesh  
+            if (headMesh) {
+                const result = await loadMeshFromServer(headMesh);
+                if (result) {
+                    meshes.push(result);
+                    totalVerts += result.mesh.vertices?.length || 0;
+                }
+            }
+            
+            $('char-verts').textContent = totalVerts;
+            
+            // Load available animations
+            await loadAnimationList();
+            
+            $('loading').style.display = 'none';
+            $('status').textContent = `Loaded: ${meshes.length} meshes, ${skeleton?.length || 0} bones`;
+        }
+        
+        // Load mesh - try VitaMoo data first, then server API
+        async function loadMeshFromServer(meshName) {
+            // Clean up mesh name for file lookup
+            const cleanName = meshName.toLowerCase().replace(/\.skn$/i, '');
+            
+            // Determine if this is likely a head or body mesh
+            const isHead = cleanName.startsWith('c') || cleanName.includes('head');
+            const attachmentSuffix = isHead ? '-HEAD-HEAD' : '-PELVIS-BODY';
+            
+            // Try various VitaMoo data file patterns
+            const tryFileNames = [
+                `xskin-${cleanName}${attachmentSuffix}.skn`,
+                `xskin-${cleanName}-PELVIS-BODY.skn`,
+                `xskin-${cleanName}-HEAD-HEAD.skn`,
+                `xskin-${cleanName}-HEAD-HEADB.skn`,
+                `${cleanName}.skn`,
+                `xskin-${cleanName}.skn`,
+            ];
+            
+            for (const fileName of tryFileNames) {
+                try {
+                    const resp = await fetch(DATA_PATH + fileName);
+                    if (resp.ok) {
+                        console.log('Mesh loaded from VitaMoo data:', fileName);
+                        return await loadMesh(await resp.text());
+                    }
+                } catch (e) { /* try next */ }
+            }
+            
+            // Fall back to server API
+            try {
+                const response = await fetch('/api/mesh/skn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mesh_name: meshName })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.skn) {
+                        return await loadMesh(data.skn, data.texture_path);
+                    }
+                }
+            } catch (e) {
+                console.log('Server API not available, using static data only');
+            }
+            
+            console.warn('Mesh not found:', meshName);
+            return null;
+        }
+        
+        // Load animation list from VitaMoo content.json
+        async function loadAnimationList() {
+            const select = $('anim-select');
+            
+            // Try to load content.json from VitaMoo
+            try {
+                const response = await fetch('../../../docs/content.json');
+                if (response.ok) {
+                    const contentJson = await response.json();
+                    // Extract animation names, strip .cmx extension
+                    availableAnimations = (contentJson.animations || []).map(
+                        a => a.replace('.cmx', '')
+                    );
+                }
+            } catch (e) {
+                console.log('content.json not found, using defaults');
+            }
+            
+            // Fallback: use hardcoded list
+            if (!availableAnimations.length) {
+                availableAnimations = [
+                    'adult-idle1', 'adult-idle2', 'adult-idle3',
+                    'adult-idle4', 'adult-idle5', 'adult-idle6',
+                    'adult-approve', 'adult-bored1', 'adult-energetic1',
+                    'adult-dance-inplace-twistloop', 'adult-walking-frantic-loop'
+                ];
+            }
+            
+            // Populate dropdown
+            select.innerHTML = '<option value="">-- Select Animation --</option>';
+            for (const anim of availableAnimations) {
+                const opt = document.createElement('option');
+                opt.value = anim;
+                opt.textContent = anim.replace(/^adult-/i, '').replace(/-/g, ' ');
+                select.appendChild(opt);
+            }
+        }
+        
+        // Event handlers
+        function setupEventHandlers() {
+            // Animation select
+            $('anim-select').addEventListener('change', async (e) => {
+                const animName = e.target.value;
+                if (!animName) {
+                    practice = null;
+                    return;
+                }
+                
+                $('status').textContent = 'Loading animation...';
+                
+                try {
+                    practice = await loadAnimationByName(animName);
+                    animationTime = 0;
+                    lastFrameTime = 0;
+                    
+                    if (practice?.ready) {
+                        $('status').textContent = `Playing: ${animName}`;
+                    } else {
+                        $('status').textContent = 'Animation loaded but not ready';
+                    }
+                } catch (e) {
+                    console.error('Animation load error:', e);
+                    $('status').textContent = 'Animation load failed';
+                }
+            });
+            
+            // Prev/Next animation
+            $('btn-prev').addEventListener('click', () => {
+                const select = $('anim-select');
+                if (select.selectedIndex > 0) {
+                    select.selectedIndex--;
+                    select.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            $('btn-next').addEventListener('click', () => {
+                const select = $('anim-select');
+                if (select.selectedIndex < select.options.length - 1) {
+                    select.selectedIndex++;
+                    select.dispatchEvent(new Event('change'));
+                }
+            });
+            
+            // Speed slider
+            $('speed').addEventListener('input', (e) => {
+                $('speed-value').textContent = e.target.value + '%';
+            });
+            
+            // Zoom slider
+            $('zoom').addEventListener('input', (e) => {
+                $('zoom-value').textContent = e.target.value;
+            });
+            
+            // Export glTF
+            $('btn-export-gltf').addEventListener('click', async () => {
+                $('status').textContent = 'Exporting...';
+                const params = new URLSearchParams(window.location.search);
+                const response = await fetchFromServer('export/character', {
+                    name: params.get('char') || 'character',
+                    body_mesh: params.get('body'),
+                    head_mesh: params.get('head')
+                });
+                
+                if (response?.success) {
+                    $('status').textContent = 'Export complete!';
+                } else {
+                    $('status').textContent = 'Export failed: ' + (response?.error || 'Unknown error');
+                }
+            });
+            
+            // Screenshot
+            $('btn-export-png').addEventListener('click', () => {
+                const canvas = $('canvas');
+                const link = document.createElement('a');
+                link.download = 'character.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                $('status').textContent = 'Screenshot saved';
+            });
+            
+            // Window resize
+            window.addEventListener('resize', () => {
+                const canvas = $('canvas');
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                if (renderer) renderer.context.viewport(0, 0, canvas.width, canvas.height);
+            });
+            
+            // Mouse drag for rotation
+            let isDragging = false;
+            let lastX = 0;
+            const canvas = $('canvas');
+            
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                lastX = e.clientX;
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const delta = e.clientX - lastX;
+                lastX = e.clientX;
+                
+                const rotY = $('rotY');
+                let val = parseFloat(rotY.value) + delta * 0.5;
+                if (val < 0) val += 360;
+                if (val > 360) val -= 360;
+                rotY.value = val;
+            });
+            
+            canvas.addEventListener('mouseup', () => isDragging = false);
+            canvas.addEventListener('mouseleave', () => isDragging = false);
+            
+            // Scroll for zoom
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoom = $('zoom');
+                let val = parseFloat(zoom.value) - e.deltaY * 0.5;
+                val = Math.max(50, Math.min(400, val));
+                zoom.value = val;
+                $('zoom-value').textContent = Math.round(val);
+            });
+        }
+        
+        // Initialize
+        async function init() {
+            initRenderer();
+            setupEventHandlers();
+            await loadCharacter();
+            requestAnimationFrame(animationLoop);
+        }
+        
+        init();
+    </script>
+</body>
+</html>

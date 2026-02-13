@@ -408,8 +408,17 @@ class ANIM:
 # Register chunk
 @register_chunk('ANIM')
 class ANIMChunk(ANIM):
-    """ANIM chunk registered with IFF parser."""
-    pass
+    \"\"\"ANIM chunk registered with IFF parser.\"\"\"
+    
+    def write(self, iff=None, io=None) -> bool:
+        \"\"\"Write ANIM chunk through IFF interface.\"\"\"
+        if io is None:
+            # Call parent bytes-returning write
+            return super().write()
+        # IFF-style write
+        data = super().write()
+        io.write_bytes(data)
+        return True
 
 
 __all__ = [

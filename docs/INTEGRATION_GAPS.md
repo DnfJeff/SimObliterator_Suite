@@ -2,20 +2,112 @@
 
 **Discovery Date**: February 4, 2026  
 **Source**: Analysis of `SimObliterator_Private_Versions/Iff_Study/`  
-**Status**: 🚨 CRITICAL - Major research and tooling not yet integrated
+**Status**: ✅ COMPLETE - All critical integrations done
+
+---
+
+## GUI Architecture Status
+
+### Current State (February 2026)
+
+The project has **two parallel UI systems**:
+
+| Interface | Technology | Files | Status |
+|-----------|------------|-------|--------|
+| **Desktop App** | DearPyGui | 32 files in `src/Tools/gui/` | Stable, full editing |
+| **Web Viewers** | HTML/JS/Flask | 6 files in `src/Tools/webviewer/` | Active development |
+| **VitaMoo** | TypeScript/WebGL | `docs/` + `vitamoo/` | 3D character viewer |
+
+### DearPyGui Desktop GUI (32 files)
+
+Location: `src/Tools/gui/`
+
+```
+src/Tools/gui/
+├── theme.py              # DearPyGui theming
+├── menu.py               # Menu bar
+├── events.py             # Event bus
+├── focus.py              # Focus management
+├── selection.py          # Selection state
+├── state.py              # Application state
+├── opcodes.py            # Opcode display
+├── safety/               # Safety system
+│   ├── edit_mode.py
+│   └── help_system.py
+└── panels/               # 27 panel modules
+    ├── archiver_panel.py
+    ├── batch_runner.py
+    ├── bhav_editor.py
+    ├── character_viewer_panel.py
+    ├── chunk_inspector.py
+    ├── diff_compare_panel.py
+    ├── diff_view.py
+    ├── far_browser.py
+    ├── file_loader.py
+    ├── graph_canvas.py
+    ├── iff_inspector.py
+    ├── iff_viewer.py
+    ├── library_browser_panel.py
+    ├── navigation_bar_panel.py
+    ├── object_inspector.py
+    ├── safety_indicator.py
+    ├── safety_trust_panel.py
+    ├── save_editor_panel.py
+    ├── scope_banner.py
+    ├── scope_switcher.py
+    ├── semantic_inspector.py
+    ├── sprite_export_panel.py
+    ├── status_bar.py
+    ├── support_panels.py
+    ├── system_overview_panel.py
+    ├── task_runner_panel.py
+    └── visual_object_browser_panel.py
+```
+
+**Capabilities:** Full IFF/FAR/DBPF editing, save mutations, BHAV authoring, batch operations
+
+### Web-Based Viewers (Browser Direction)
+
+Location: `src/Tools/webviewer/`
+
+| File | Size | Description |
+|------|------|-------------|
+| `export_server.py` | 34KB | Flask server for web exports |
+| `character_viewer.html` | 34KB | Interactive character browser |
+| `object_viewer.html` | 36KB | Interactive object browser |
+| `library_browser.html` | 29KB | Mesh/sprite library browser |
+| `graph_viewer_embed.html` | 10KB | Interactive graph visualization |
+| `character_exporter.py` | 5KB | Export characters for web viewing |
+
+### VitaMoo 3D Viewer
+
+Location: `docs/` (GitHub Pages) + `vitamoo/` (TypeScript source)
+
+- 3D character rendering with WebGL
+- Animation playback controls
+- Scene presets with multiple characters
+- Keyboard navigation
+
+### Architecture Direction
+
+> **Note:** Browser-based tooling is the emerging direction for visualization and cross-platform support. The DearPyGui desktop app remains the primary editing interface. No immediate migration planned - both systems coexist and share the same Python backend.
 
 ---
 
 ## Executive Summary
 
-Found approximately **~500KB of research documentation** and **~10MB of data files** in the private research folder that haven't been integrated into SimObliterator Suite. This includes:
+~~Found approximately **~500KB of research documentation** and **~10MB of data files** in the private research folder that haven't been integrated into SimObliterator Suite.~~
 
-- **FOUND_TREASURE.md** - Documents 80KB+ of pre-built forensic infrastructure
-- **DEFINITIVE_BHAV_REFERENCE.md** (25KB) - Complete BHAV technical guide
-- **FREESO_BEHAVIORAL_ARCHITECTURE.md** (35KB) - Deep FreeSO engine analysis
-- **GLOBAL_BEHAVIOR_DATABASE.json** (23KB) - Complete global BHAV ID mappings
-- **semantic_globals.py** (14KB) - Expansion-aware BHAV labeling
-- **Webviewer** folder - Complete web-based viewers for characters, objects, meshes
+**All critical integrations complete as of February 4, 2026.**
+
+Integrated items:
+
+- ✅ **DEFINITIVE_BHAV_REFERENCE.md** (25KB) - Complete BHAV technical guide
+- ✅ **FREESO_BEHAVIORAL_ARCHITECTURE.md** (35KB) - Deep FreeSO engine analysis
+- ✅ **GLOBAL_BEHAVIOR_DATABASE.json** (23KB) - Complete global BHAV ID mappings
+- ✅ **Webviewer** folder - Complete web-based viewers for characters, objects, meshes
+- ✅ **VitaMoo** - 3D character viewer (TypeScript/WebGL)
+- ✅ **characters.json** (2MB), **objects.json** (3MB), **meshes.json** (209KB)
 
 ---
 
@@ -60,17 +152,19 @@ Found approximately **~500KB of research documentation** and **~10MB of data fil
 | semantic_globals.py         | 14KB | Expansion-aware global ID resolution |
 | SAVE_FILE_STRUCTURE.py      | 10KB | Save file format reference           |
 
-### Program/webviewer/ - Complete Web Interface (MISSING)
+### Program/webviewer/ - Web Interface ✅ INTEGRATED
 
-| File                    | Size | Description                       |
-| ----------------------- | ---- | --------------------------------- |
-| export_server.py        | 34KB | Flask server for web exports      |
-| character_viewer.html   | 34KB | Interactive character browser     |
-| object_viewer.html      | 36KB | Interactive object browser        |
-| library_browser.html    | 29KB | Mesh/sprite library browser       |
-| graph_viewer_embed.html | 10KB | Interactive graph visualization   |
-| character_exporter.py   | 5KB  | Export characters for web viewing |
-| TESTING_VALIDATION.js   | 17KB | JavaScript test suite             |
+| File                    | Size | Status | Description                       |
+| ----------------------- | ---- | ------ | --------------------------------- |
+| export_server.py        | 34KB | ✅ | Flask server for web exports      |
+| character_viewer.html   | 34KB | ✅ | Interactive character browser     |
+| object_viewer.html      | 36KB | ✅ | Interactive object browser        |
+| library_browser.html    | 29KB | ✅ | Mesh/sprite library browser       |
+| graph_viewer_embed.html | 10KB | ✅ | Interactive graph visualization   |
+| character_exporter.py   | 5KB  | ✅ | Export characters for web viewing |
+| TESTING_VALIDATION.js   | 17KB | ✅ | JavaScript test suite             |
+
+**Location:** `src/Tools/webviewer/`
 
 ### Program/scripts/ - Utility Scripts (MISSING)
 
@@ -196,11 +290,25 @@ BHAVs fall into 4 categories:
 
 ### Lower Priority (Later)
 
-- [ ] Port forensic analyzer GUI from PyQt6 to DearPyGUI
+- [ ] Evaluate browser-based editing (currently view-only)
 - [ ] Integrate graph visualization into main app
-- [ ] Add web export server integration
+- [ ] Add web export server auto-launch option
 - [ ] Full FreeSO parity report generation
 - [ ] Copy SQLite databases (asset_database.sqlite, maxis_objects.sqlite)
+
+### GUI Architecture Decisions (Pending)
+
+The DearPyGui desktop GUI (`src/Tools/gui/`, 32 files) provides full editing functionality:
+- All 27 panels are functional
+- Complete save mutation pipeline
+- Transaction-based safety system
+
+Browser-based tooling (`src/Tools/webviewer/`, `docs/vitamoo`) handles visualization:
+- Read-only browsing of game data
+- 3D character/animation preview
+- Cross-platform via any modern browser
+
+**No migration currently planned.** Both systems share the Python backend and can coexist. If browser-based editing becomes viable, the DearPyGui code is cleanly separated and can be deprecated without affecting core functionality.
 
 ---
 

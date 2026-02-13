@@ -117,10 +117,13 @@ class Skeleton:
 
 @dataclass
 class Binding:
-    """Maps a mesh to a bone."""
+    """Maps a mesh to a bone (skin in VitaMoo terminology)."""
+    name: str = ""  # Skin name
     bone_name: str = ""
+    flags: int = 0  # Censor flags etc
     mesh_name: str = ""
     texture_name: str = ""
+    props: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -258,44 +261,48 @@ class BCFReader:
     def _read_bone(self) -> Bone:
         """Read bone data in BCF binary format.
         
-        BCF format (per FreeSO):
-        - Read name, then parent (both must be read even if empty)
-        - NO has_props byte - properties always present
-        - Properties: count (int32), then [pair_count (int32), [key, val]...]
-        - Translation: X negated
-        - Rotation: Y, Z, W negated
-        - Flags: int32 each (not bytes)
+        BCF format per VitaMoo (matching text CMX but binary primitives):
+        - name: string
+        - parent_name: string
+        - hasProps: bool (int32, 0 or 1)
+        - if hasProps: property count, then key-value pairs
+        - position: vec3 (3 floats)
+        - rotation: quat (4 floats, x,y,z,w order in file)
+        - canTranslate, canRotate, canBlend, canWiggle: bool (int32 each)
+        - wigglePower: float
+        
+        Note: Coordinates are stored RAW - transforms applied in CFP, not here!
         """
         bone = Bone()
         bone.name = self._read_pascal_string()
-        bone.parent_name = self._read_pascal_string()  # Must read parent even for empty markers
+        bone.parent_name = self._read_pascal_string()
         
         # Skip empty bones (BCF marker) - but parent was already read
         if bone.name == "":
             return None
         
-        # Properties (always present in BCF, NO has_props byte!)
-        prop_count = self._read_int32()
-        for _ in range(prop_count):
-            pair_count = self._read_int32()
-            for _ in range(pair_count):
+        # hasProps boolean MUST be read (VitaMoo matches this)
+        has_props = self._read_int32() != 0
+        if has_props:
+            # Properties: count, then key-value pairs
+            prop_count = self._read_int32()
+            for _ in range(prop_count):
                 key = self._read_pascal_string()
                 val = self._read_pascal_string()
                 bone.properties[key] = val
         
-        # Transform
-        # Note: X is negated per FreeSO
+        # Transform - read RAW values (transforms happen in CFP, not here)
         bone.translation = Vector3(
-            -self._read_float(),
+            self._read_float(),
             self._read_float(),
             self._read_float()
         )
         
-        # Quaternion (X, -Y, -Z, -W per FreeSO)
+        # Quaternion (stored as x, y, z, w in file, we store as w, x, y, z)
         qx = self._read_float()
-        qy = -self._read_float()
-        qz = -self._read_float()
-        qw = -self._read_float()
+        qy = self._read_float()
+        qz = self._read_float()
+        qw = self._read_float()
         bone.rotation = Quaternion(qw, qx, qy, qz)
         
         bone.can_translate = bool(self._read_int32())
@@ -307,19 +314,46 @@ class BCFReader:
         return bone
     
     def _read_appearance(self) -> Appearance:
-        """Read appearance/suit data."""
+        """Read appearance/suit data (matches VitaMoo's readSuit).
+        
+        Structure per VitaMoo:
+        - name: string
+        - type: int32
+        - hasProps: bool (int32)
+        - if hasProps: properties
+        - skinCount: int32
+        - skins[]: each with name, boneName, flags, meshName, hasProps, [props]
+        """
         app = Appearance()
         app.name = self._read_pascal_string()
         app.appearance_type = self._read_int32()
-        _zero = self._read_int32()  # Always 0
         
-        binding_count = self._read_uint32()
-        for _ in range(binding_count):
+        # hasProps boolean
+        has_props = self._read_int32() != 0
+        if has_props:
+            prop_count = self._read_int32()
+            for _ in range(prop_count):
+                key = self._read_pascal_string()
+                val = self._read_pascal_string()
+                # Store props if needed
+        
+        # Skins (bindings)
+        skin_count = self._read_int32()
+        for _ in range(skin_count):
             binding = Binding()
+            binding.name = self._read_pascal_string()  # Skin name
             binding.bone_name = self._read_pascal_string()
+            binding.flags = self._read_int32()
             binding.mesh_name = self._read_pascal_string()
-            _censor_flags = self._read_int32()
-            _zero2 = self._read_int32()
+            
+            # Skin hasProps
+            skin_has_props = self._read_int32() != 0
+            if skin_has_props:
+                prop_count = self._read_int32()
+                for _ in range(prop_count):
+                    key = self._read_pascal_string()
+                    val = self._read_pascal_string()
+            
             app.bindings.append(binding)
         
         return app
@@ -348,34 +382,37 @@ class BCFReader:
         return anim
     
     def _read_motion_bcf(self) -> AnimationMotion:
-        """Read animation motion from BCF."""
+        """Read animation motion from BCF (matches VitaMoo's readMotion)."""
         motion = AnimationMotion()
         motion.bone_name = self._read_pascal_string()
-        motion.frame_count = self._read_uint32()
+        motion.frame_count = self._read_int32()
         motion.duration = self._read_float()
         motion.has_translation = bool(self._read_int32())
         motion.has_rotation = bool(self._read_int32())
         motion.first_translation_index = self._read_int32()
         motion.first_rotation_index = self._read_int32()
         
-        # Properties
-        prop_count = self._read_uint32()
-        for _ in range(prop_count):
-            pair_count = self._read_uint32()
-            for _ in range(pair_count):
+        # Properties with hasProps check
+        has_props = self._read_int32() != 0
+        if has_props:
+            prop_count = self._read_int32()
+            for _ in range(prop_count):
                 key = self._read_pascal_string()
                 val = self._read_pascal_string()
                 motion.properties[key] = val
         
-        # Time properties
-        time_prop_count = self._read_uint32()
-        for _ in range(time_prop_count):
-            id_count = self._read_uint32()
-            for _ in range(id_count):
-                time = self._read_float()
-                event = self._read_pascal_string()
-                value = self._read_pascal_string()
-                motion.time_properties.append((time, event, value))
+        # Time properties with hasTimeProps check
+        has_time_props = self._read_int32() != 0
+        if has_time_props:
+            tp_count = self._read_int32()
+            for _ in range(tp_count):
+                time_key = self._read_int32()
+                # Read props for this time key
+                prop_count = self._read_int32()
+                for _ in range(prop_count):
+                    key = self._read_pascal_string()
+                    val = self._read_pascal_string()
+                    motion.time_properties.append((float(time_key), key, val))
         
         return motion
     

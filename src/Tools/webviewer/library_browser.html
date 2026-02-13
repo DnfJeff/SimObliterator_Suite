@@ -866,8 +866,9 @@
       }
 
       function viewObject(guid) {
+        const guidNum = parseInt(guid, 10);
         const obj = data.objects.find(
-          (o) => o.guid === guid || o.guid_hex === guid,
+          (o) => o.guid === guidNum || o.guid == guid || o.guid_hex === guid,
         );
         if (!obj) {
           alert("Object not found: " + guid);
@@ -887,8 +888,9 @@
 
       function viewObjectDetails(guid) {
         // Show detailed modal (for additional info)
+        const guidNum = parseInt(guid, 10);
         const obj = data.objects.find(
-          (o) => o.guid === guid || o.guid_hex === guid,
+          (o) => o.guid === guidNum || o.guid == guid || o.guid_hex === guid,
         );
         if (!obj) {
           alert("Object not found: " + guid);

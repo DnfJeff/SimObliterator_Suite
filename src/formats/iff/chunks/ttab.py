@@ -15,7 +15,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 class TTABFlags(IntFlag):
@@ -186,6 +186,46 @@ class TTAB(IffChunk):
                 interaction.flags2 = TSOFlags(io.read_uint32())
             
             self.interactions.append(interaction)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write TTAB chunk to stream."""
+        io.write_uint16(len(self.interactions))
+        if not self.interactions:
+            return True
+        
+        io.write_uint16(self.version)
+        
+        # Write compression code for versions 9-10 (0 = not field encoded)
+        if 9 <= self.version <= 10:
+            io.write_byte(0)
+        
+        for interaction in self.interactions:
+            io.write_uint16(interaction.action_function)
+            io.write_uint16(interaction.test_function)
+            io.write_uint32(len(interaction.motive_entries))
+            io.write_uint32(interaction.flags)
+            io.write_uint32(interaction.tta_index)
+            
+            if self.version > 6:
+                io.write_uint32(interaction.attenuation_code)
+            
+            io.write_float(interaction.attenuation_value)
+            io.write_uint32(interaction.autonomy_threshold)
+            io.write_int32(interaction.joining_index)
+            
+            # Write motive entries
+            for motive in interaction.motive_entries:
+                if self.version > 6:
+                    io.write_int16(motive.effect_range_minimum)
+                io.write_int16(motive.effect_range_delta)
+                if self.version > 6:
+                    io.write_uint16(motive.personality_modifier)
+            
+            # TSO flags for version > 9
+            if self.version > 9:
+                io.write_uint32(interaction.flags2)
+        
+        return True
     
     def get_interaction(self, index: int) -> Optional[TTABInteraction]:
         """Get interaction by index."""

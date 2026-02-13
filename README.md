@@ -20,7 +20,9 @@
 
 ## 🎯 Overview
 
-SimObliterator Suite is a comprehensive desktop application for working with The Sims 1 game files. Whether you're a modder, researcher, or just curious about how the game works, this toolkit provides everything you need.
+SimObliterator Suite is a comprehensive toolkit for working with The Sims 1 game files. Whether you're a modder, researcher, or just curious about how the game works, this toolkit provides everything you need.
+
+**Two interfaces, one backend:** Desktop app (DearPyGui) for editing, browser-based viewers for visualization.
 
 ### Key Features
 
@@ -34,12 +36,50 @@ SimObliterator Suite is a comprehensive desktop application for working with The
 | **Localization**      | 20-language STR# support, translation audit, batch copy       |
 | **Safety**            | Transaction pipeline, snapshots, rollback, validation, audit  |
 | **Research**          | Unknowns database, opcode documentation, execution model      |
+| **Web Viewers**       | VitaMoo 3D viewer, character/object browsers, graph viz       |
+
+---
+
+## �️ GUI Architecture
+
+SimObliterator Suite has **two parallel UI systems** that share the same backend:
+
+| Interface | Technology | Status | Use Case |
+|-----------|------------|--------|----------|
+| **Desktop App** | DearPyGui | Stable | Full editing, save mutations, batch operations |
+| **Web Viewers** | HTML/JS/Flask | Active Development | Browsing, visualization, 3D preview |
+
+### Desktop Application (DearPyGui)
+
+The main `launch.py` entry point opens a DearPyGui-based desktop application with:
+- 27 panel modules in `src/Tools/gui/panels/`
+- Full IFF/FAR/DBPF editing capabilities
+- Save file mutation with safety pipeline
+- Integrated theming and event system
+
+**Files:** `src/main_app.py`, `src/Tools/gui/` (32 files total)
+
+### Web-Based Viewers (Browser)
+
+Browser-based tools for visualization and data exploration:
+
+| Viewer | File | Description |
+|--------|------|-------------|
+| **VitaMoo** | `docs/index.html` | 3D character viewer with animation playback |
+| **Character Browser** | `src/Tools/webviewer/character_viewer.html` | Browse all game sims |
+| **Object Browser** | `src/Tools/webviewer/object_viewer.html` | Browse all game objects |
+| **Library Browser** | `src/Tools/webviewer/library_browser.html` | Mesh/sprite library |
+| **Graph Viewer** | `src/Tools/webviewer/graph_viewer_embed.html` | Interactive dependency graphs |
+
+**Server:** `src/Tools/webviewer/export_server.py` (Flask) serves the web interfaces.
+
+> **Direction:** Browser-based tooling is actively expanding. The web viewers offer better cross-platform support and easier sharing of visualizations. Core editing remains in the desktop app for now.
 
 ---
 
 ## 🚀 Quick Start
 
-### Option 1: Run from Source
+### Option 1: Desktop App (Full Features)
 
 ```bash
 # Install dependencies
@@ -49,7 +89,17 @@ pip install -r requirements.txt
 python launch.py
 ```
 
-### Option 2: Standalone EXE (Not ready)
+### Option 2: Web Viewers (Visualization Only)
+
+```bash
+# Start the web server
+cd src/Tools/webviewer
+python export_server.py
+
+# Open browser to http://localhost:5000
+```
+
+### Option 3: Standalone EXE (Not ready)
 
 Download the latest release and run `SimObliterator.exe` - no installation required!
 
@@ -142,8 +192,8 @@ UI               ████████████████████ 10
 
 ```
 SimObliterator_Suite/
-├── launch.py              # 🚀 START HERE - Application entry point
-├── requirements.txt       # Python dependencies
+├── launch.py              # 🚀 START HERE - Desktop app entry point
+├── requirements.txt       # Python dependencies (DearPyGui, Pillow, numpy)
 ├── README.md              # This file
 ├── LICENSE                # MIT License
 ├── VERSION                # Version info
@@ -164,51 +214,64 @@ SimObliterator_Suite/
 │   ├── meshes.json               # Mesh metadata
 │   └── execution_model.json      # BHAV execution patterns
 │
-├── Docs/                  # Documentation
+├── docs/                  # Web-based VitaMoo 3D viewer
+│   ├── index.html                # VitaMoo main page (GitHub Pages)
+│   ├── viewer.js                 # 3D character renderer
+│   ├── viewer.css                # Viewer styling
+│   ├── data/                     # Animation/mesh data for viewer
 │   ├── guides/                   # User & Developer guides
-│   │   ├── USER_GUIDE.md         # End-user documentation
-│   │   ├── QUICK_REFERENCE.md    # Cheat sheet for common tasks
-│   │   ├── UI_DEVELOPER_GUIDE.md # Panel architecture & events
-│   │   └── ARCHIVER_GUIDE.md     # Archiver tool usage
 │   ├── technical/                # Technical references
-│   │   ├── ACTION_MAP.md         # Feature inventory
-│   │   ├── ACTION_SURFACE.md     # 110 canonical actions
-│   │   ├── TECHNICAL_REFERENCE.md# IFF/BHAV/SLOT/TTAB formats
-│   │   └── PRIMITIVE_REFERENCE.md# SimAntics operands
-│   ├── research/                 # Deep research docs
-│   │   ├── DEFINITIVE_BHAV_REFERENCE.md
-│   │   ├── FREESO_BEHAVIORAL_ARCHITECTURE.md
-│   │   ├── BHAV_OPCODE_REFERENCE.md
-│   │   └── ...                   # More research docs
-│   └── INTEGRATION_GAPS.md       # Integration status
+│   └── research/                 # Deep research docs (BHAV, FreeSO, etc.)
+│
+├── vitamoo/               # VitaMoo TypeScript source
+│   ├── src/                      # TypeScript modules
+│   ├── package.json              # npm dependencies
+│   └── tsconfig.json             # TypeScript config
 │
 ├── Examples/              # Sample files for testing
 │   ├── IFF_Files/
 │   └── SaveGames/
 │
 ├── src/                   # Source code
-│   ├── main_app.py        # Main window (Dear PyGui)
-│   ├── formats/           # File parsers (IFF, FAR, DBPF)
-│   ├── Tools/core/        # Parsers, analyzers, editors
-│   ├── Tools/forensic/    # Deep analysis tools
-│   ├── Tools/graph/       # Resource dependency graphs
-│   ├── Tools/gui/         # Panel implementations (incomplete)
-│   ├── Tools/save_editor/ # Save file editing
-│   ├── Tools/webviewer/   # Web-based viewers & export server
-│   └── utils/             # Binary utilities
+│   ├── main_app.py               # Main window (DearPyGui desktop app)
+│   ├── formats/                  # File parsers (IFF, FAR, DBPF)
+│   ├── Tools/core/               # Parsers, analyzers, editors (47 modules)
+│   ├── Tools/forensic/           # Deep analysis tools
+│   ├── Tools/graph/              # Resource dependency graphs
+│   ├── Tools/gui/                # DearPyGui panels (32 files) ⚠️ LEGACY
+│   │   ├── panels/               # 27 panel implementations
+│   │   ├── safety/               # Edit mode & help system
+│   │   ├── theme.py              # DearPyGui theming
+│   │   ├── menu.py               # Menu bar
+│   │   └── events.py             # Event bus
+│   ├── Tools/save_editor/        # Save file editing
+│   ├── Tools/webviewer/          # Web-based viewers (browser) ✨ ACTIVE
+│   │   ├── export_server.py      # Flask server (34KB)
+│   │   ├── character_viewer.html # Character browser
+│   │   ├── object_viewer.html    # Object browser
+│   │   ├── library_browser.html  # Mesh/sprite library
+│   │   └── graph_viewer_embed.html # Graph visualization
+│   └── utils/                    # Binary utilities
 │
 └── dev/                   # Development tools
-    ├── tests/             # Test suite
-    │   ├── tests.py          # Main runner (--api, --game, --quick, --verbose)
-    │   ├── test_api.py       # API tests (174 tests)
-    │   ├── test_game.py      # Game file tests (73 tests)
-    │   ├── action_coverage.py
-    │   └── test_paths.txt
-    └── build/             # Build configuration
+    ├── tests/                    # Test suite (276 tests)
+    │   ├── tests.py              # Main runner
+    │   ├── test_api.py           # API tests (174)
+    │   └── test_game.py          # Game file tests (73)
+    └── build/                    # Build configuration
         ├── SimObliterator.spec
-        ├── pyproject.toml
-        └── BUILD.md
+        └── pyproject.toml
 ```
+
+### GUI Technology Notes
+
+| Path | Technology | Files | Status |
+|------|------------|-------|--------|
+| `src/Tools/gui/` | DearPyGui | 32 | Stable, full editing features |
+| `src/Tools/webviewer/` | HTML/JS/Flask | 6 | Active development |
+| `docs/` + `vitamoo/` | TypeScript/WebGL | 15+ | VitaMoo 3D viewer |
+
+> **Note:** The DearPyGui desktop GUI (`src/Tools/gui/`) provides all editing functionality. Browser-based tooling (`webviewer/`, `vitamoo/`) focuses on visualization and is the emerging direction for cross-platform support.
 
 ---
 

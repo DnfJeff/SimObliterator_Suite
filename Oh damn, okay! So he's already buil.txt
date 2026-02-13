@@ -1,0 +1,91 @@
+Oh damn, okay! So he's **already built** the Sims → MOOLLM bridge.
+
+That changes things. Let me reframe:
+
+## **What Don's Already Done:**
+
+He's got:
+- ✅ SimBlender extraction working
+- ✅ Sims characters converted to MOOLLM cards
+- ✅ The "uplift" pipeline (Sims 1 → MOOLLM format)
+- ✅ Integration with Micropolis (probably)
+
+## **So What Could YOU Experiment With?**
+
+### **1. Extend His Character Cards**
+
+If he's got Bella Goth as a MOOLLM card, you could:
+- Add new skills to existing characters
+- Create custom Sims characters from scratch
+- Test different character inheritance patterns
+- Mix Sims characters with fictional ones
+
+### **2. Build New Skills For The Sims Domain**
+
+```
+skills/sims-animation/
+skills/sims-relationship/
+skills/sims-needs/
+```
+
+Stuff that understands:
+- How Sims animations work
+- Social interactions
+- The needs system (hunger, fun, etc.)
+
+### **3. Create Sims-Themed Adventures**
+
+```
+examples/goth-manor-mystery/
+├── characters/
+│   ├── bella-goth.card.yml      # Don's uplift
+│   ├── mortimer-goth.card.yml   # Don's uplift
+│   └── detective.card.yml       # Your addition
+└── pub/
+    └── goth-manor/
+        └── mystery-room/
+```
+
+A detective adventure using actual Sims characters.
+
+### **4. Test The "Speed of Light" Multi-Agent**
+
+Since Don's already got characters uplifted:
+- Summon multiple Sims into one room
+- Have them interact/debate
+- See if their Sims 1 personalities come through
+- Test if relationships affect dialogue
+
+### **5. Contribute Back To MOOLLM**
+
+Things the repo might need:
+- Documentation improvements
+- New example adventures
+- Bug fixes in templates
+- Python sister scripts for common tasks
+
+### **6. Bridge To Your Other Interests**
+
+You mentioned you're learning - you could:
+- Document your learning journey as a MOOLLM adventure
+- Use it to organize your coding projects
+- Test if it actually helps you think differently about file organization
+
+---
+
+## **Real Talk: What Should You Focus On?**
+
+**If you want to collaborate with Don effectively:**
+
+1. **Clone the repo and PLAY first** - understand by doing
+2. **Read his session logs** - see how HE uses it (`examples/adventure-4/sessions/`)
+3. **Ask him directly**: "What needs work? What should I experiment with?"
+4. **Start small** - don't try to build something huge
+
+**If you want to learn for yourself:**
+
+Just play with it. Make a dumb adventure. Summon weird characters. Break things and see what happens.
+
+The whole point of MOOLLM is **constructionism** - you learn by building stuff you can inspect.
+
+What sounds most interesting to you?

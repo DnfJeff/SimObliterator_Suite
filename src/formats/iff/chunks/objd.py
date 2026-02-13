@@ -13,7 +13,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 class OBJDType(IntEnum):
@@ -360,6 +360,129 @@ class OBJD(IffChunk):
             self.num_type_attributes = get(88)
             self.misc_flags = get(89)
             self.type_attr_guid = get(90) | (get(91) << 16)
+    
+    def _unmap_fields(self):
+        """Map named properties back to raw field data."""
+        def put(i: int, val: int, signed: bool = False):
+            while len(self.raw_data) <= i:
+                self.raw_data.append(0)
+            if signed and val < 0:
+                val = val + 65536
+            self.raw_data[i] = val & 0xFFFF
+        
+        put(0, self.stack_size)
+        put(1, self.base_graphic_id)
+        put(2, self.num_graphics)
+        put(3, self.bhav_main_id)
+        put(4, self.bhav_gardening_id)
+        put(5, self.tree_table_id)
+        put(6, self.interaction_group_id, signed=True)
+        put(7, self.object_type.value if isinstance(self.object_type, OBJDType) else self.object_type)
+        put(8, self.master_id)
+        put(9, self.sub_index, signed=True)
+        put(10, self.bhav_wash_hands_id)
+        put(11, self.animation_table_id)
+        put(12, self.guid & 0xFFFF)
+        put(13, (self.guid >> 16) & 0xFFFF)
+        put(14, self.disabled)
+        put(15, self.bhav_portal)
+        put(16, self.price)
+        put(17, self.body_string_id)
+        put(18, self.slot_id)
+        put(19, self.bhav_allow_intersection_id)
+        put(20, self.uses_fn_table)
+        put(21, self.bit_field1)
+        put(22, self.bhav_prepare_food_id)
+        put(23, self.bhav_cook_food_id)
+        put(24, self.bhav_place_surface_id)
+        put(25, self.bhav_dispose_id)
+        put(26, self.bhav_eat_id)
+        put(27, self.bhav_pickup_from_slot_id)
+        put(28, self.bhav_wash_dish_id)
+        put(29, self.bhav_eat_surface_id)
+        put(30, self.bhav_sit_id)
+        put(31, self.bhav_stand_id)
+        put(32, self.sale_price)
+        put(33, self.initial_depreciation)
+        put(34, self.daily_depreciation)
+        put(35, self.self_depreciating)
+        put(36, self.depreciation_limit)
+        put(37, self.room_flags)
+        put(38, self.function_flags)
+        put(39, self.catalog_strings_id)
+        put(40, self.global_sim)
+        put(41, self.bhav_init)
+        put(42, self.bhav_place)
+        put(43, self.bhav_user_pickup)
+        put(44, self.wall_style)
+        put(45, self.bhav_load)
+        put(46, self.bhav_user_place)
+        put(47, self.object_version)
+        put(48, self.bhav_room_change)
+        put(49, self.motive_effects_id)
+        put(50, self.bhav_cleanup)
+        put(51, self.bhav_level_info)
+        put(52, self.catalog_id)
+        put(53, self.bhav_serving_surface)
+        put(54, self.level_offset)
+        put(55, self.shadow)
+        put(56, self.num_attributes)
+        
+        if len(self.raw_data) > 57 or self.bhav_clean or self.bhav_queue_skipped or self.front_direction:
+            put(57, self.bhav_clean)
+            put(58, self.bhav_queue_skipped)
+            put(59, self.front_direction)
+            put(60, self.bhav_wall_adjacency_changed)
+            put(61, self.my_lead_object)
+            put(62, self.dynamic_sprite_base_id)
+            put(63, self.num_dynamic_sprites)
+        
+        if len(self.raw_data) > 64 or self.chair_entry_flags or self.tile_width:
+            put(64, self.chair_entry_flags)
+            put(65, self.tile_width)
+            put(66, self.lot_categories)
+            put(67, self.build_mode_type)
+            put(68, self.original_guid & 0xFFFF)
+            put(69, (self.original_guid >> 16) & 0xFFFF)
+            put(70, self.suit_guid & 0xFFFF)
+            put(71, (self.suit_guid >> 16) & 0xFFFF)
+            put(72, self.bhav_pickup)
+            put(73, self.thumbnail_graphic)
+            put(74, self.shadow_flags)
+            put(75, self.footprint_mask)
+            put(76, self.bhav_dynamic_multitile_update)
+            put(77, self.shadow_brightness)
+            put(78, self.bhav_repair)
+        
+        if len(self.raw_data) > 79 or self.wall_style_sprite_id or self.rating_hunger:
+            put(79, self.wall_style_sprite_id)
+            put(80, self.rating_hunger, signed=True)
+            put(81, self.rating_comfort, signed=True)
+            put(82, self.rating_hygiene, signed=True)
+            put(83, self.rating_bladder, signed=True)
+            put(84, self.rating_energy, signed=True)
+            put(85, self.rating_fun, signed=True)
+            put(86, self.rating_room, signed=True)
+            put(87, self.rating_skill_flags)
+        
+        if len(self.raw_data) > 88 or self.num_type_attributes or self.type_attr_guid:
+            put(88, self.num_type_attributes)
+            put(89, self.misc_flags)
+            put(90, self.type_attr_guid & 0xFFFF)
+            put(91, (self.type_attr_guid >> 16) & 0xFFFF)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write OBJD chunk to stream."""
+        self._unmap_fields()
+        
+        # Version = field count * 2
+        io.write_uint32(len(self.raw_data) * 2)
+        
+        # Write all fields as uint16s
+        for val in self.raw_data:
+            io.write_uint16(val)
+        
+        return True
     
     def __str__(self) -> str:
         return f"OBJD #{self.chunk_id}: {self.chunk_label} (GUID: 0x{self.guid:08X}, Type: {self.object_type.name})"

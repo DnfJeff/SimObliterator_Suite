@@ -13,7 +13,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 @register_chunk("BCON")
@@ -34,6 +34,16 @@ class BCON(IffChunk):
         self.constants = []
         for _ in range(num):
             self.constants.append(io.read_uint16())
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write BCON chunk to stream."""
+        io.write_byte(len(self.constants) & 0xFF)
+        io.write_byte(self.flags & 0xFF)
+        
+        for const in self.constants:
+            io.write_uint16(const & 0xFFFF)
+        
+        return True
     
     def get_constant(self, index: int) -> int:
         """Get a constant by index."""

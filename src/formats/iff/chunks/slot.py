@@ -14,7 +14,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 class SLOTFlags(IntFlag):
@@ -160,6 +160,49 @@ class SLOT(IffChunk):
                 self.slots[item.type] = []
             self.slots[item.type].append(item)
             self.chronological.append(item)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write SLOT chunk to stream."""
+        io.write_uint32(0)  # Padding
+        io.write_uint32(self.version)
+        io.write_bytes(b'TOLS')  # Magic
+        io.write_uint32(len(self.chronological))
+        
+        for item in self.chronological:
+            io.write_uint16(item.type)
+            io.write_float(item.offset_x)
+            io.write_float(item.offset_y)
+            io.write_float(item.offset_z)
+            
+            io.write_int32(item.standing)
+            io.write_int32(item.sitting)
+            io.write_int32(item.ground)
+            io.write_int32(item.rsflags)
+            io.write_int32(item.snap_target_slot)
+            
+            if self.version >= 6:
+                # Unscale proximity if version <= 9 (they were scaled up on read)
+                scale = 16 if self.version <= 9 else 1
+                io.write_int32(item.min_proximity // scale)
+                io.write_int32(item.max_proximity // scale)
+                io.write_int32(item.optimal_proximity // scale)
+                io.write_int32(item.max_size)
+                io.write_int32(item.i10)
+            
+            if self.version >= 7:
+                io.write_float(item.gradient)
+            
+            if self.version >= 8:
+                # Write 0 if height is 5 (non-standard default, set from 0 on read)
+                io.write_int32(0 if item.height == 5 else item.height)
+            
+            if self.version >= 9:
+                io.write_int32(item.facing)
+            
+            if self.version >= 10:
+                io.write_int32(item.resolution)
+        
+        return True
     
     def get_slots_by_type(self, slot_type: int) -> list[SLOTItem]:
         """Get all slots of a specific type."""

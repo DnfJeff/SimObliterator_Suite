@@ -180,9 +180,8 @@ class BMFReader:
         mesh.blend_data = []
         for _ in range(blend_count):
             bd = BlendData()
-            # Weight stored as fixed point in some versions
-            weight_raw = self._read_int32()
-            bd.weight = weight_raw / 0x8000 if weight_raw > 1 else self._reinterpret_as_float(weight_raw)
+            # Weight is fixed-point int32: 0x8000 = 1.0 (per VitaMoo)
+            bd.weight = self._read_int32() / 0x8000
             bd.other_vertex = self._read_int32()
             mesh.blend_data.append(bd)
         
@@ -207,13 +206,15 @@ class BMFReader:
         return mesh
     
     def _read_vertex(self) -> Vertex:
-        """Read a vertex (position + normal)."""
+        """Read a vertex (position + normal).
+        
+        Per VitaMoo: read raw values, no coordinate transforms in BMF.
+        """
         v = Vertex()
-        # Note: X is negated per FreeSO
-        v.x = -self._read_float()
+        v.x = self._read_float()
         v.y = self._read_float()
         v.z = self._read_float()
-        v.nx = -self._read_float()
+        v.nx = self._read_float()
         v.ny = self._read_float()
         v.nz = self._read_float()
         return v

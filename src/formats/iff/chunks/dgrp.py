@@ -14,7 +14,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 class DGRPSpriteFlags(IntFlag):
@@ -126,6 +126,44 @@ class DGRPImage:
             if version == 20004:
                 sprite.object_offset_x = io.read_float()
                 sprite.object_offset_y = io.read_float()
+    
+    def write(self, version: int, io: 'IoWriter'):
+        """Write DGRPImage to stream."""
+        if version < 20003:
+            io.write_uint16(len(self.sprites))
+            io.write_byte(self.direction)
+            io.write_byte(self.zoom)
+        else:
+            io.write_uint32(self.direction)
+            io.write_uint32(self.zoom)
+            io.write_uint32(len(self.sprites))
+        
+        for sprite in self.sprites:
+            self._write_sprite(sprite, version, io)
+    
+    def _write_sprite(self, sprite: DGRPSprite, version: int, io: 'IoWriter'):
+        """Write a single sprite reference."""
+        if version < 20003:
+            io.write_uint16(0)  # Type (ignored on read)
+            io.write_uint16(sprite.sprite_id)
+            io.write_uint16(sprite.sprite_frame_index)
+            io.write_uint16(sprite.flags)
+            io.write_int16(int(sprite.sprite_offset_x))
+            io.write_int16(int(sprite.sprite_offset_y))
+            
+            if version == 20001:
+                io.write_float(sprite.object_offset_z)
+        else:
+            io.write_uint32(sprite.sprite_id)
+            io.write_uint32(sprite.sprite_frame_index)
+            io.write_int32(int(sprite.sprite_offset_x))
+            io.write_int32(int(sprite.sprite_offset_y))
+            io.write_float(sprite.object_offset_z)
+            io.write_uint32(sprite.flags)
+            
+            if version == 20004:
+                io.write_float(sprite.object_offset_x)
+                io.write_float(sprite.object_offset_y)
 
 
 @register_chunk("DGRP")
@@ -160,6 +198,20 @@ class DGRP(IffChunk):
             image = DGRPImage()
             image.read(self.version, io)
             self.images.append(image)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write DGRP chunk to stream."""
+        io.write_uint16(self.version)
+        
+        if self.version < 20003:
+            io.write_uint16(len(self.images))
+        else:
+            io.write_uint32(len(self.images))
+        
+        for image in self.images:
+            image.write(self.version, io)
+        
+        return True
     
     def get_image(self, direction: int, zoom: int, world_rotation: int = 0) -> Optional[DGRPImage]:
         """

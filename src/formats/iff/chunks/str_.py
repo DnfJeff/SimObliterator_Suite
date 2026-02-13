@@ -11,7 +11,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 class STRLangCode(IntEnum):
@@ -71,6 +71,7 @@ class STR(IffChunk):
     """
     language_sets: list[STRLanguageSet] = field(default_factory=lambda: [STRLanguageSet() for _ in range(20)])
     default_lang_code: STRLangCode = STRLangCode.ENGLISH_US
+    format_code: int = -2  # Track original format for round-trip
     
     def __post_init__(self):
         if not self.language_sets:
@@ -131,13 +132,13 @@ class STR(IffChunk):
         """Read STR chunk from stream."""
         self.language_sets = [STRLanguageSet() for _ in range(20)]
         
-        format_code = io.read_int16()
+        self.format_code = io.read_int16()
         
         if not io.has_more:
             return
         
         # Format 0: Pascal strings, single language
-        if format_code == 0:
+        if self.format_code == 0:
             num_strings = io.read_uint16()
             strings = []
             for _ in range(num_strings):
@@ -145,7 +146,7 @@ class STR(IffChunk):
             self.language_sets[0].strings = strings
         
         # Format -1 (0xFFFF): C strings, single language
-        elif format_code == -1:
+        elif self.format_code == -1:
             num_strings = io.read_uint16()
             strings = []
             for _ in range(num_strings):
@@ -153,7 +154,7 @@ class STR(IffChunk):
             self.language_sets[0].strings = strings
         
         # Format -2 (0xFFFE): String pairs (value + comment)
-        elif format_code == -2:
+        elif self.format_code == -2:
             num_strings = io.read_uint16()
             strings = []
             for _ in range(num_strings):
@@ -163,7 +164,7 @@ class STR(IffChunk):
             self.language_sets[0].strings = strings
         
         # Format -3 (0xFFFD): Multi-language with string pairs
-        elif format_code == -3:
+        elif self.format_code == -3:
             num_strings = io.read_uint16()
             for _ in range(num_strings):
                 lang_code = io.read_byte()
@@ -176,7 +177,7 @@ class STR(IffChunk):
                     )
         
         # Format -4 (0xFFFC): Multi-language, length-prefixed
-        elif format_code == -4:
+        elif self.format_code == -4:
             num_language_sets = io.read_byte()
             for _ in range(num_language_sets):
                 num_strings = io.read_uint16()
@@ -197,6 +198,68 @@ class STR(IffChunk):
             return ""
         data = io.read_bytes(length)
         return data.decode('utf-8', errors='replace').rstrip('\x00')
+    
+    def _write_length_prefixed_string(self, io: 'IoWriter', s: str):
+        """Write a string with 2-byte length prefix."""
+        data = s.encode('utf-8', errors='replace')
+        io.write_uint16(len(data))
+        if data:
+            io.write_bytes(data)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write STR chunk to stream."""
+        io.write_int16(self.format_code)
+        
+        # Format 0: Pascal strings, single language
+        if self.format_code == 0:
+            strings = self.language_sets[0].strings if self.language_sets else []
+            io.write_uint16(len(strings))
+            for item in strings:
+                io.write_pascal_string(item.value)
+        
+        # Format -1 (0xFFFF): C strings, single language
+        elif self.format_code == -1:
+            strings = self.language_sets[0].strings if self.language_sets else []
+            io.write_uint16(len(strings))
+            for item in strings:
+                io.write_null_terminated_string(item.value)
+        
+        # Format -2 (0xFFFE): String pairs (value + comment)
+        elif self.format_code == -2:
+            strings = self.language_sets[0].strings if self.language_sets else []
+            io.write_uint16(len(strings))
+            for item in strings:
+                io.write_null_terminated_string(item.value)
+                io.write_null_terminated_string(item.comment)
+        
+        # Format -3 (0xFFFD): Multi-language with string pairs
+        elif self.format_code == -3:
+            # Count total strings across all languages
+            total = sum(len(ls.strings) for ls in self.language_sets)
+            io.write_uint16(total)
+            for lang_idx, lang_set in enumerate(self.language_sets):
+                lang_code = lang_idx + 1
+                for item in lang_set.strings:
+                    io.write_byte(lang_code)
+                    io.write_null_terminated_string(item.value)
+                    io.write_null_terminated_string(item.comment)
+        
+        # Format -4 (0xFFFC): Multi-language, length-prefixed
+        elif self.format_code == -4:
+            # Count non-empty language sets
+            non_empty = [ls for ls in self.language_sets if ls.strings]
+            io.write_byte(len(non_empty))
+            for lang_idx, lang_set in enumerate(self.language_sets):
+                if not lang_set.strings:
+                    continue
+                lang_code = lang_idx + 1
+                io.write_uint16(len(lang_set.strings))
+                for item in lang_set.strings:
+                    io.write_byte(lang_code)
+                    self._write_length_prefixed_string(io, item.value)
+                    self._write_length_prefixed_string(io, item.comment)
+        
+        return True
     
     def __len__(self) -> int:
         return self.length

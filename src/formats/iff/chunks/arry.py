@@ -149,6 +149,37 @@ class ARRY(IffChunk):
         
         return bytes(result)
     
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write ARRY chunk with RLE compression."""
+        io.write_int32(0)  # Zero
+        io.write_int32(self.width)
+        io.write_int32(self.height)
+        io.write_int32(int(self.arry_type))
+        io.write_int32(0)  # Unknown
+        
+        # Simple RLE write: emit raw chunks (no skip/fill optimization)
+        # Max raw chunk size is 32767 (fits in 15 bits)
+        pos = 0
+        data = self.data
+        
+        while pos < len(data):
+            chunk_size = min(len(data) - pos, 32767)
+            
+            # Raw mode: bit 15 clear
+            io.write_uint16(chunk_size)
+            io.write_bytes(data[pos:pos + chunk_size])
+            
+            # Pad to 16-bit alignment
+            if chunk_size & 1:
+                io.write_byte(0)
+            
+            pos += chunk_size
+        
+        # Terminator
+        io.write_uint16(0)
+        
+        return True
+    
     def debug_print(self) -> str:
         """Print array as text grid for debugging."""
         lines = []

@@ -13,7 +13,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 @register_chunk("GLOB")
@@ -41,6 +41,14 @@ class GLOB(IffChunk):
                     break
                 chars.append(chr(byte))
             self.name = ''.join(chars)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write GLOB chunk to stream."""
+        # Write as pascal string (length byte + chars)
+        name_bytes = self.name.encode('ascii', errors='replace')
+        io.write_byte(len(name_bytes))
+        io.write_bytes(name_bytes)
+        return True
     
     def __str__(self) -> str:
         return f"GLOB #{self.chunk_id}: {self.name}"

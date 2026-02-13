@@ -836,6 +836,7 @@
           if (response.ok) {
             document.getElementById("export-status").innerHTML =
               '<span style="color:#4CAF50;">✓ Found existing export - loading...</span>';
+            clearModel();
             loadGLTF(exportUrl);
           } else {
             // For characters, try body mesh
@@ -845,17 +846,24 @@
               if (bodyResp.ok) {
                 document.getElementById("export-status").innerHTML =
                   '<span style="color:#4CAF50;">✓ Found body export - loading...</span>';
+                clearModel();
                 loadGLTF(bodyUrl);
               } else {
-                createDemoCube();
+                clearModel();
+                document.getElementById("export-status").innerHTML =
+                  '<span style="color:#FFC107;">⚠ No export found - click Export to glTF to generate</span>';
               }
             } else {
-              createDemoCube();
+              clearModel();
+              document.getElementById("export-status").innerHTML =
+                '<span style="color:#FFC107;">⚠ No export found - click Export to glTF to generate</span>';
             }
           }
         } catch (e) {
           console.log("No existing export found:", e);
-          createDemoCube();
+          clearModel();
+          document.getElementById("export-status").innerHTML =
+            '<span style="color:#FFC107;">⚠ No export found - click Export to glTF to generate</span>';
         }
       }
 

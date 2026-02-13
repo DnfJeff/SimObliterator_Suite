@@ -12,7 +12,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 @dataclass
@@ -101,6 +101,44 @@ class BHAV(IffChunk):
             inst.false_pointer = io.read_byte()
             inst.operand = io.read_bytes(8)
             self.instructions.append(inst)
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write BHAV chunk to stream."""
+        io.write_uint16(self.file_version)
+        count = len(self.instructions)
+        
+        if self.file_version == 0x8000:
+            io.write_uint16(count)
+            io.write_bytes(bytes(8))
+            
+        elif self.file_version == 0x8001:
+            io.write_uint16(count)
+            io.write_bytes(bytes(8))
+            
+        elif self.file_version == 0x8002:
+            io.write_uint16(count)
+            io.write_byte(self.type)
+            io.write_byte(self.args)
+            io.write_uint16(self.locals)
+            io.write_uint16(self.version)
+            io.write_bytes(bytes(2))
+            
+        elif self.file_version == 0x8003:
+            io.write_byte(self.type)
+            io.write_byte(self.args)
+            io.write_byte(self.locals)
+            io.write_bytes(bytes(2))
+            io.write_uint16(self.version)
+            io.write_uint32(count)
+        
+        # Write instructions
+        for inst in self.instructions:
+            io.write_uint16(inst.opcode)
+            io.write_byte(inst.true_pointer)
+            io.write_byte(inst.false_pointer)
+            io.write_bytes(inst.operand if len(inst.operand) == 8 else inst.operand.ljust(8, b'\x00')[:8])
+        
+        return True
     
     def get_instruction(self, index: int) -> Optional[BHAVInstruction]:
         """Get instruction by index."""

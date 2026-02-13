@@ -57,6 +57,27 @@ DEFAULT_FAR_ARCHIVE_PATHS = [
 # Mutable search paths (can be set by API)
 MESH_SEARCH_PATHS = list(DEFAULT_MESH_SEARCH_PATHS)
 FAR_ARCHIVE_PATHS = list(DEFAULT_FAR_ARCHIVE_PATHS)
+
+# Data directory for pre-extracted JSON files
+# Path: webviewer -> Tools -> src -> (project root) -> data
+DATA_DIR = Path(__file__).parent.parent.parent.parent / "data"
+
+# Routes to serve pre-extracted data files
+@app.route('/objects.json')
+def serve_objects_json():
+    """Serve the pre-extracted objects.json from data directory."""
+    return send_from_directory(DATA_DIR, 'objects.json')
+
+@app.route('/characters.json')
+def serve_characters_json():
+    """Serve the pre-extracted characters.json from data directory."""
+    return send_from_directory(DATA_DIR, 'characters.json')
+
+@app.route('/meshes.json')
+def serve_meshes_json():
+    """Serve the pre-extracted meshes.json from data directory."""
+    return send_from_directory(DATA_DIR, 'meshes.json')
+
 # API to set search paths
 @app.route('/api/config', methods=['POST'])
 def set_config():
@@ -741,7 +762,7 @@ def get_object_sprites():
         # Load objects.json for suggestions
         suggestions = []
         try:
-            objects_file = Path(__file__).parent.parent / 'data' / 'objects.json'
+            objects_file = DATA_DIR / 'objects.json'
             if not objects_file.exists():
                 objects_file = Path(__file__).parent / 'objects.json'
             if objects_file.exists():
@@ -856,7 +877,7 @@ def export_sprite_sheet():
 def list_objects():
     """List all scanned objects from objects.json."""
     try:
-        objects_file = Path(__file__).parent.parent / 'data' / 'objects.json'
+        objects_file = DATA_DIR / 'objects.json'
         if not objects_file.exists():
             # Try webviewer directory
             objects_file = Path(__file__).parent / 'objects.json'
@@ -899,4 +920,4 @@ if __name__ == '__main__':
     print("Open http://localhost:5000/library_browser.html")
     print("=" * 60)
     
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)

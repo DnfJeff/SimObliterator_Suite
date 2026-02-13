@@ -13,7 +13,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 # Family flags (Unknown field)
@@ -69,6 +69,29 @@ class FAMI(IffChunk):
                 io.read_int32()
         except Exception:
             pass
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write FAMI chunk to stream."""
+        io.write_uint32(0)  # Padding
+        io.write_uint32(self.version)
+        io.write_bytes(b'IMAF')  # Magic
+        
+        io.write_int32(self.house_number)
+        io.write_int32(self.family_number)
+        io.write_int32(self.budget)
+        io.write_int32(self.value_in_arch)
+        io.write_int32(self.family_friends)
+        io.write_int32(self.unknown)
+        
+        io.write_int32(len(self.family_guids))
+        for guid in self.family_guids:
+            io.write_uint32(guid)
+        
+        # Write 4 trailing zeros
+        for _ in range(4):
+            io.write_int32(0)
+        
+        return True
     
     def select_whole_family(self):
         """Select all family members for runtime."""

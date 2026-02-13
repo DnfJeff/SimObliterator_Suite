@@ -13,7 +13,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 @dataclass
@@ -71,6 +71,32 @@ class NGBH(IffChunk):
                 inventory.append(item)
             
             self.inventory_by_id[neigh_id] = inventory
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write NGBH chunk to stream."""
+        io.write_uint32(0)  # Padding
+        io.write_uint32(self.version)
+        io.write_bytes(b'HBGN')  # Magic
+        
+        # Write 16 shorts of neighborhood data
+        for i in range(16):
+            val = self.neighborhood_data[i] if i < len(self.neighborhood_data) else 0
+            io.write_int16(val)
+        
+        # Write inventory data
+        io.write_int32(len(self.inventory_by_id))
+        
+        for neigh_id, inventory in self.inventory_by_id.items():
+            io.write_int32(1)  # Always 1
+            io.write_int16(neigh_id)
+            io.write_int32(len(inventory))
+            
+            for item in inventory:
+                io.write_int32(item.type)
+                io.write_uint32(item.guid)
+                io.write_uint16(item.count)
+        
+        return True
     
     def get_inventory(self, neighbor_id: int) -> list[InventoryItem]:
         """Get inventory for a specific neighbor."""

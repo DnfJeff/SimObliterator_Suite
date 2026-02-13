@@ -14,7 +14,7 @@ from ..base import IffChunk, register_chunk
 
 if TYPE_CHECKING:
     from ..iff_file import IffFile
-    from ....utils.binary import IoBuffer
+    from ....utils.binary import IoBuffer, IoWriter
 
 
 @dataclass
@@ -147,6 +147,38 @@ class SPR(IffChunk):
             return self.frames[index]
         return None
     
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write SPR chunk to stream."""
+        # Write version (little endian, non-zero)
+        io.write_uint16(self.version if self.version else 500)
+        io.write_uint16(0)
+        
+        io.write_uint32(len(self.frames))
+        io.write_uint32(self.palette_id)
+        
+        if self.version != 1001:
+            # Write offset table then data
+            # Calculate offsets
+            header_size = 4 + 4 + 4 + 4 + len(self.frames) * 4  # version + count + palette + offsets
+            current_offset = header_size
+            
+            # Write offsets
+            for frame in self.frames:
+                io.write_uint32(current_offset)
+                current_offset += len(frame.raw_data) if frame.raw_data else 0
+            
+            # Write frame data
+            for frame in self.frames:
+                if frame.raw_data:
+                    io.write_bytes(frame.raw_data)
+        else:
+            # Streaming version - just write frames sequentially
+            for frame in self.frames:
+                if frame.raw_data:
+                    io.write_bytes(frame.raw_data)
+        
+        return True
+    
     def __len__(self) -> int:
         return len(self.frames)
     
@@ -244,6 +276,36 @@ class SPR2(IffChunk):
         if 0 <= index < len(self.frames):
             return self.frames[index]
         return None
+    
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write SPR2 chunk to stream."""
+        # Use version 1001 (streaming) for simpler output
+        io.write_uint32(1001)
+        io.write_uint32(self.default_palette_id)
+        io.write_uint32(len(self.frames))
+        
+        for frame in self.frames:
+            # Calculate sprite size (header + raw data)
+            header_size = 14  # 2+2+4+2+2+2 = 14 bytes
+            sprite_size = header_size + (len(frame.raw_data) if frame.raw_data else 0)
+            
+            io.write_uint32(1001)  # sprite_version
+            io.write_uint32(sprite_size)
+            
+            # Write frame header
+            io.write_uint16(frame.width)
+            io.write_uint16(frame.height)
+            io.write_uint32(frame.flags)
+            io.write_uint16(frame.palette_id)
+            io.write_uint16(frame.transparent_index)
+            io.write_int16(frame.position_y)
+            io.write_int16(frame.position_x)
+            
+            # Write raw encoded pixel data
+            if frame.raw_data:
+                io.write_bytes(frame.raw_data)
+        
+        return True
     
     def __len__(self) -> int:
         return len(self.frames)

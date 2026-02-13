@@ -2,6 +2,8 @@
 
 Reference for completing the GUI implementation using Dear PyGui.
 
+> **Architecture Note:** This guide covers the DearPyGui desktop application (`src/Tools/gui/`, 32 files). Browser-based tooling exists in `src/Tools/webviewer/` and `docs/` (VitaMoo). Both systems share the Python backend in `src/Tools/core/`. See [INTEGRATION_GAPS.md](../INTEGRATION_GAPS.md) for architecture overview.
+
 ---
 
 ## Architecture Overview

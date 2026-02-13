@@ -72,6 +72,29 @@ class FCNS(STR):
             item.comment = const.description
             self.language_sets[0].strings.append(item)
     
+    def write(self, iff: 'IffFile', io: 'IoWriter') -> bool:
+        """Write FCNS chunk to stream."""
+        io.write_int32(0)  # Zero padding
+        io.write_int32(self.fcns_version)
+        io.write_bytes(b'NSCF')  # Magic
+        io.write_int32(len(self.constants))
+        
+        for const in self.constants:
+            if self.fcns_version == 2:
+                io.write_variable_length_pascal_string(const.name)
+                io.write_float(const.value)
+                io.write_variable_length_pascal_string(const.description)
+            else:
+                io.write_null_terminated_string(const.name)
+                if len(const.name) % 2 == 0:
+                    io.write_byte(0)  # Padding to 2-byte align
+                io.write_float(const.value)
+                io.write_null_terminated_string(const.description)
+                if len(const.description) % 2 == 0:
+                    io.write_byte(0)  # Padding
+        
+        return True
+    
     def get_constant(self, name: str) -> float:
         """Get a constant value by name."""
         for const in self.constants:
