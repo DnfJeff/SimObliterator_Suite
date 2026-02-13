@@ -44,14 +44,15 @@ SimObliterator Suite is a comprehensive toolkit for working with The Sims 1 game
 
 SimObliterator Suite has **two parallel UI systems** that share the same backend:
 
-| Interface | Technology | Status | Use Case |
-|-----------|------------|--------|----------|
-| **Desktop App** | DearPyGui | Stable | Full editing, save mutations, batch operations |
-| **Web Viewers** | HTML/JS/Flask | Active Development | Browsing, visualization, 3D preview |
+| Interface       | Technology    | Status             | Use Case                                       |
+| --------------- | ------------- | ------------------ | ---------------------------------------------- |
+| **Desktop App** | DearPyGui     | Stable             | Full editing, save mutations, batch operations |
+| **Web Viewers** | HTML/JS/Flask | Active Development | Browsing, visualization, 3D preview            |
 
 ### Desktop Application (DearPyGui)
 
 The main `launch.py` entry point opens a DearPyGui-based desktop application with:
+
 - 27 panel modules in `src/Tools/gui/panels/`
 - Full IFF/FAR/DBPF editing capabilities
 - Save file mutation with safety pipeline
@@ -63,13 +64,13 @@ The main `launch.py` entry point opens a DearPyGui-based desktop application wit
 
 Browser-based tools for visualization and data exploration:
 
-| Viewer | File | Description |
-|--------|------|-------------|
-| **VitaMoo** | `docs/index.html` | 3D character viewer with animation playback |
-| **Character Browser** | `src/Tools/webviewer/character_viewer.html` | Browse all game sims |
-| **Object Browser** | `src/Tools/webviewer/object_viewer.html` | Browse all game objects |
-| **Library Browser** | `src/Tools/webviewer/library_browser.html` | Mesh/sprite library |
-| **Graph Viewer** | `src/Tools/webviewer/graph_viewer_embed.html` | Interactive dependency graphs |
+| Viewer                | File                                          | Description                                 |
+| --------------------- | --------------------------------------------- | ------------------------------------------- |
+| **VitaMoo**           | `docs/index.html`                             | 3D character viewer with animation playback |
+| **Character Browser** | `src/Tools/webviewer/character_viewer.html`   | Browse all game sims                        |
+| **Object Browser**    | `src/Tools/webviewer/object_viewer.html`      | Browse all game objects                     |
+| **Library Browser**   | `src/Tools/webviewer/library_browser.html`    | Mesh/sprite library                         |
+| **Graph Viewer**      | `src/Tools/webviewer/graph_viewer_embed.html` | Interactive dependency graphs               |
 
 **Server:** `src/Tools/webviewer/export_server.py` (Flask) serves the web interfaces.
 
@@ -265,11 +266,11 @@ SimObliterator_Suite/
 
 ### GUI Technology Notes
 
-| Path | Technology | Files | Status |
-|------|------------|-------|--------|
-| `src/Tools/gui/` | DearPyGui | 32 | Stable, full editing features |
-| `src/Tools/webviewer/` | HTML/JS/Flask | 6 | Active development |
-| `docs/` + `vitamoo/` | TypeScript/WebGL | 15+ | VitaMoo 3D viewer |
+| Path                   | Technology       | Files | Status                        |
+| ---------------------- | ---------------- | ----- | ----------------------------- |
+| `src/Tools/gui/`       | DearPyGui        | 32    | Stable, full editing features |
+| `src/Tools/webviewer/` | HTML/JS/Flask    | 6     | Active development            |
+| `docs/` + `vitamoo/`   | TypeScript/WebGL | 15+   | VitaMoo 3D viewer             |
 
 > **Note:** The DearPyGui desktop GUI (`src/Tools/gui/`) provides all editing functionality. Browser-based tooling (`webviewer/`, `vitamoo/`) focuses on visualization and is the emerging direction for cross-platform support.
 
