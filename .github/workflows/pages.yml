@@ -1,6 +1,6 @@
 name: Deploy VitaMoo to GitHub Pages
 
-# Manual trigger only — each fork/repo must:
+# Manual trigger only — enable Pages in Settings > Pages > Source: GitHub Actions.
 #   1. Enable Pages: Settings > Pages > Source: GitHub Actions
 #   2. (Optional) Set custom domain in Settings > Pages > Custom domain
 #   3. Trigger this workflow manually, or add a push trigger for automation
