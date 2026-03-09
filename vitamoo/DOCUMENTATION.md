@@ -8,19 +8,19 @@ This document describes all layers, components, data flow, and how to reuse or e
 
 ```mermaid
 flowchart TB
-  subgraph app["vitamoospace (SvelteKit app)"]
-    A[Routes, VitaMooSpace.svelte, menus, app state]
+  subgraph app["vitamoospace<br>(SvelteKit app)"]
+    A["Routes, VitaMooSpace.svelte,<br>menus, app state"]
   end
-  subgraph runtime["mooshow (graphics/runtime)"]
-    B[MooShowStage, ContentLoader, SpinController]
-    C[picking, audio]
-    D[Hooks: onPick, onSceneChange, onKeyAction, onPlumbBobChange…]
+  subgraph runtime["mooshow<br>(graphics/runtime)"]
+    B["MooShowStage, ContentLoader,<br>SpinController"]
+    C["picking, audio"]
+    D["Hooks: onPick, onSceneChange,<br>onKeyAction, onPlumbBobChange…"]
   end
-  subgraph core["vitamoo (core)"]
-    E[Parsers: CMX, SKN, CFP…]
-    F[skeleton, mesh deformation, Practice]
-    G[Renderer WebGL, loadTexture]
-    H[No DOM; Node or browser]
+  subgraph core["vitamoo<br>(core)"]
+    E["Parsers: CMX, SKN, CFP…"]
+    F["skeleton, mesh deformation,<br>Practice"]
+    G["Renderer WebGL,<br>loadTexture"]
+    H["No DOM;<br>Node or browser"]
   end
   app --> runtime
   runtime --> core

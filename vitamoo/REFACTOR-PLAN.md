@@ -11,7 +11,7 @@
 | **4** GitHub Pages | Done | `.github/workflows/pages.yml` builds vitamoo → mooshow → vitamoospace and deploys `vitamoospace/build`. |
 | **5** Cleanup and parity | Open | Legacy `demo/` still present and runnable. Parity doc and monorepo migration notes not yet written. |
 
-Definition of Done: 1–4 and 6 are met. Item 5 (parity review + optional migration notes) is the only remaining checklist item.
+Definition of Done: items 1–4 are met. Item 5 (parity review + optional migration notes) is the only remaining checklist item.
 
 ---
 
