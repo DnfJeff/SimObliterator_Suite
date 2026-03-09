@@ -149,7 +149,7 @@ Goal: push as much Sims-style look and feel into shaders as we can (performance,
 
 ## 5. Advanced goal: GPU-side skeletal deformation
 
-**Idea:** Upload all undeformed character meshes and skeletons to the GPU once; run skeletal mesh deformation (and ideally animation) on the GPU; render from the resulting mesh state without streaming deformed vertices back from the CPU each frame.
+**Idea:** Upload all undeformed character meshes and skeletons to the GPU once; run skeletal mesh deformation (and ideally animation) on the GPU; render from the resulting mesh state without streaming deformed vertices back from the CPU each frame. We can put the animations on the GPU too — keyframes or motion curves resident in buffers/textures, so the GPU evaluates pose from a time uniform and then deforms. No per-frame animation or skeleton data from the CPU.
 
 ### 5.1 Current divide
 
@@ -199,5 +199,15 @@ Alternatively, we could **pre-convert** the mesh to a conventional format (e.g. 
 - **No per-frame vertex upload:** Deformed mesh stays on GPU; only small uniform/buffer updates (bone matrices or time).
 - **Scalability:** Many characters mean many small compute dispatches and draws, not huge CPU→GPU vertex streams.
 - **Pipeline clarity:** Load → upload assets once; each frame: update pose (or time), run deformation, draw. Same mental model as “holodeck”: static and skinned data on GPU, animate on that side of the divide.
+
+### 5.6 How many characters could animate at once?
+
+With the **current CPU pipeline** (deform in JS, upload deformed verts every frame), the limit is CPU cost per character (deformMesh + building buffers) and the bus (upload size × character count). For Sims-style meshes (hundreds to a few thousand verts each), **tens to low hundreds** of characters is typical before frame time or upload becomes the bottleneck.
+
+With **full GPU** (Option B: animations + deformation on GPU, only time or a tiny uniform set per character per frame):
+
+- **CPU** does almost nothing per character: no `Practice.tick`, no `deformMesh`, no vertex upload — just submit compute + draw and maybe update a time or sequence ID.
+- **GPU** does: one (or batched) compute pass to evaluate animation → bone matrices, then deformation → deformed buffer, then draw. Compute and draw scale with GPU parallelism; vertex and bone counts per character are small by modern standards.
+- **Practical limits** then shift to: **draw calls** (hundreds to a few thousand is fine with batching or multi-draw), **fill rate** (how many pixels of characters on screen), **GPU memory** (all undeformed meshes, skeletons, and animation data resident). Sims-style characters are light: a few KB of mesh + a few dozen bones + keyframes per skill. So **hundreds to thousands** of characters animating at once is in reach on typical hardware — the kind of crowd or busy neighbourhood that would bring a CPU-bound pipeline to its knees. The exact number depends on mesh complexity, resolution, and batching strategy, but the order of magnitude jumps from "tens–hundreds" to "hundreds–thousands" once animation and deformation live on the GPU.
 
 This document is the single design reference for the WebGPU upgrade and advanced Sims-style renderer features; implementation can be done incrementally with AI-assisted development and typically shortens the calendar time (e.g. full refactor in a few days with AI assist).
