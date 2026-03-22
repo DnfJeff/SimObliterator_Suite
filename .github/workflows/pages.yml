@@ -51,8 +51,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # GitHub does not allow `secrets` in job-level `if`. Gate in a tiny job, then deploy.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.check.outputs.deploy }}
+    steps:
+      - id: check
+        env:
+          VAR_URL: ${{ vars.VITAMOOSPACE_PAGES_URL }}
+          SECRET_URL: ${{ secrets.VITAMOOSPACE_PAGES_URL }}
+        run: |
+          if [ -n "${VAR_URL}" ] || [ -n "${SECRET_URL}" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-and-deploy:
-    if: ${{ (vars.VITAMOOSPACE_PAGES_URL != '') || (secrets.VITAMOOSPACE_PAGES_URL != '') }}
+    needs: gate
+    if: needs.gate.outputs.deploy == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
