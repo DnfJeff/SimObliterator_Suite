@@ -62,7 +62,6 @@ declare module '$env/static/private' {
 	export const FNM_COREPACK_ENABLED: string;
 	export const NVM_DIR: string;
 	export const USER: string;
-	export const npm_config_recursive: string;
 	export const COMMAND_MODE: string;
 	export const npm_config_globalconfig: string;
 	export const PNPM_SCRIPT_SRC_DIR: string;
@@ -226,7 +225,6 @@ declare module '$env/dynamic/private' {
 		FNM_COREPACK_ENABLED: string;
 		NVM_DIR: string;
 		USER: string;
-		npm_config_recursive: string;
 		COMMAND_MODE: string;
 		npm_config_globalconfig: string;
 		PNPM_SCRIPT_SRC_DIR: string;

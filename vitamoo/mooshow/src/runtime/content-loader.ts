@@ -82,6 +82,7 @@ export class ContentLoader {
 
     setTextureFactory(factory: TextureFactory): void {
         this._textureFactory = factory;
+        console.log('[content-loader] setTextureFactory', factory ? 'ok' : 'null');
     }
 
     async loadIndex(url: string): Promise<ContentIndex> {
@@ -203,17 +204,29 @@ export class ContentLoader {
     }
 
     async getTexture(baseName: string): Promise<TextureHandle | null> {
-        if (!baseName || !this._textureFactory) return null;
+        if (!baseName) {
+            console.warn('[content-loader] getTexture: empty baseName');
+            return null;
+        }
+        if (!this._textureFactory) {
+            console.warn('[content-loader] getTexture: no texture factory set', { baseName });
+            return null;
+        }
         if (this._textureCache.has(baseName)) return this._textureCache.get(baseName)!;
 
         const fileName = this.store.textures[baseName];
-        if (!fileName) return null;
+        if (!fileName) {
+            console.warn('[content-loader] getTexture: no fileName in store', { baseName, storeKeys: Object.keys(this.store.textures) });
+            return null;
+        }
 
+        const url = this.baseUrl + fileName;
         try {
-            const tex = await this._textureFactory.createTextureFromUrl(this.baseUrl + fileName);
+            const tex = await this._textureFactory.createTextureFromUrl(url);
             this._textureCache.set(baseName, tex);
             return tex;
-        } catch {
+        } catch (e) {
+            console.warn('[content-loader] getTexture failed', { baseName, url }, e);
             return null;
         }
     }
@@ -303,6 +316,9 @@ export class ContentLoader {
             const boneMap = new Map<string, any>();
             for (const bone of body.skeleton!) boneMap.set(bone.name, bone);
             const texture = part.tex ? await this.getTexture(part.tex) : null;
+            if (part.tex && !texture) {
+                console.warn('[content-loader] body part has texture key but got null', { character: char.name, part: part.name, texKey: part.tex });
+            }
             body.meshes.push({ mesh, boneMap, texture });
         }
 

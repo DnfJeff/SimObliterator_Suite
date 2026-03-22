@@ -1,7 +1,7 @@
 {
   "name": "mooshow",
   "version": "0.1.0",
-  "description": "Graphics/runtime layer for VitaMoo — WebGL rendering, picking, camera, hooks",
+  "description": "Graphics/runtime layer for VitaMoo — WebGPU rendering, picking, camera, hooks",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -338,7 +338,7 @@ export function parseBMF(buffer: ArrayBuffer): MeshData {
 // Fills skill.translations[] and skill.rotations[] from the binary stream.
 //
 // Coordinate conversion: Z negated for translations, W negated for quaternions.
-// The Sims used DirectX left-handed coordinates; WebGL uses right-handed.
+// The Sims used DirectX left-handed coordinates; we use right-handed (CCW) for GPU.
 export function parseCFP(buffer: ArrayBuffer, skill: SkillData): void {
     const r = new BinaryReader(buffer);
 

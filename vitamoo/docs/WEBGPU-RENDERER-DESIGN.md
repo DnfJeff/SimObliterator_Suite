@@ -1,47 +1,35 @@
-# WebGPU renderer: upgrade and advanced features
+# WebGPU renderer: current state and advanced features
 
-Design for replacing the current WebGL renderer with a WebGPU-only backend and extending it to support Sims-style holodeck rendering: z-buffered sprites, procedural terrain and architecture, and UI feedback (highlighting, selection, pie menu).
+Design for the WebGPU-only renderer and its extension to Sims-style holodeck rendering: z-buffered sprites, procedural terrain and architecture, and UI feedback (highlighting, selection, pie menu).
 
 ---
 
-## 1. WebGL to WebGPU upgrade
+## 1. Current WebGPU surface
 
-### 1.1 Current surface (vitamoo)
+### 1.1 Implemented (vitamoo)
 
-All GPU use is in **vitamoo**:
+All GPU use is in **vitamoo**; WebGL has been removed.
 
 | File | Role |
 |------|------|
-| `vitamoo/renderer.ts` | Single `Renderer` class, WebGL 1 context, one vertex + one fragment shader (GLSL). Methods: `clear`, `fadeScreen`, `setCamera`, `setCulling`, `drawMesh`, `drawDiamond`, `loadTexture`. Exposes `context` (WebGLRenderingContext) for texture upload. |
-| `vitamoo/texture.ts` | `parseBMP` (pure); `loadTexture(url, gl)` creates and uploads a WebGLTexture. |
+| `vitamoo/renderer.ts` | Single `Renderer` class. WebGPU only. `Renderer.create(canvas)` → `Promise<Renderer \| null>`. Methods: `clear`, `fadeScreen`, `setCamera`, `setCulling`, `drawMesh(mesh, verts, norms, texture)`, `drawDiamond(…)`, `setViewport(x,y,w,h)`, `endFrame()`, `getTextureFactory()`. WGSL mesh pass + fullscreen quad (fade) + diamond via mesh pipeline (solid color). One encoder/pass per frame; depth buffer from `setViewport`. |
+| `vitamoo/texture.ts` | `parseBMP(buffer)` (pure). `loadTexture(device, queue, url)` → `Promise<TextureHandle>` (GPUTexture). BMP → parseBMP → ImageData → createImageBitmap → copyExternalImageToTexture; other formats → fetch → createImageBitmap → same. |
 
-**mooshow** uses only: `new Renderer(canvas)`, then `clear`, `setCamera`, `context.viewport(…)`, `fadeScreen`, `drawMesh`, `drawDiamond`, and `loader.setGL(renderer.context)` so the content loader can create textures. No other WebGL calls.
+**mooshow:** Resolves renderer via `Renderer.create(canvas)`; `setTextureFactory(renderer.getTextureFactory())`, `setViewport(0,0,w,h)`. Per frame: `clear` or `fadeScreen` → `setCamera` → `drawMesh` / `drawDiamond` → `endFrame()`. No raw WebGPU in stage or loader.
 
-### 1.2 Target WebGPU surface
+**Procedural meshes and display list:** The plumb-bob diamond is implemented as a procedural mesh plug-in: `createDiamondMesh(size?, segments?)` in `vitamoo/procedural/diamond.ts` returns a `MeshData` in model space. The renderer caches one diamond mesh and uses `transformMesh(mesh, x, y, z, rotY, scale)` from `display-list.ts` each frame to get world-space vertices/normals, then draws via `drawMesh` (with optional objectId). So geometry is generated once and reused; only the transform is applied per draw. A **display list** is represented by `DisplayListEntry[]`: each entry has a `kind` (`'static'` | `'skinned'` | `'ui'`) and the right data (mesh + transform for static/UI; mesh + skeleton + boneMap for skinned). See §7 for the full generalized format covering characters, terrain, walls, roofs, UI, and optional UV/texture-ID for paint-on-skin.
 
-- **Device/queue:** `navigator.gpu.requestAdapter()` → `adapter.requestDevice()`; use one `GPUDevice` and its default `queue` for the lifetime of the renderer.
-- **Canvas:** `canvas.getContext('webgpu')`, configure with `device`, `format`, and optional `alphaMode`. Resize and get current texture each frame.
-- **Shaders:** WGSL. One or more shader modules; at least:
-  - **Mesh pass:** vertex (position, normal, uv, MVP, light direction) → fragment (diffuse + texture, alpha, optional fade color). Matches current GLSL behavior.
-  - **Fullscreen quad pass:** for `fadeScreen` (motion blur overlay).
-  - **Diamond (plumb bob):** same mesh pipeline with solid color and no texture; or a tiny dedicated pipeline.
-- **Pipelines:** `GPURenderPipeline` for mesh, for fullscreen quad, and for diamond if separate. Shared bind group layout for uniforms (projection, modelView, lightDir, alpha, fadeColor, texture).
-- **Buffers:** `GPUBuffer` for vertex/index data. Uniforms in a small `GPUBuffer` updated each frame (or per draw). No long-lived vertex buffers for dynamic meshes unless we adopt staging buffers and copy.
-- **Textures:** `loadTexture` becomes `loadTexture(device, url)` (or `device` + queue), returns `GPUTexture` (or an opaque handle the renderer accepts in `drawMesh`). Upload via `queue.copyExternalImageToTexture` from `createImageBitmap` or from decoded BMP data.
-- **Public API preserved:** `clear`, `setCamera`, `setViewport` (method on renderer, no raw context), `fadeScreen`, `drawMesh(mesh, verts, norms, texture)`, `drawDiamond(…)`. Callers (mooshow stage, content-loader) receive a device or a texture-upload interface instead of `gl`; they never touch WebGPU objects except through the renderer.
+### 1.2 Shaders (WGSL, as implemented)
 
-### 1.3 Shader migration (GLSL → WGSL)
+- **Mesh:** `@location(0)` position, `@location(1)` normal, `@location(2)` texCoord. Uniforms: projection, modelView, lightDir, alpha, fadeColor (fade when .r ≥ 0), hasTexture. Fragment: diffuse + texture or untextured gray.
+- **Fullscreen quad:** NDC positions; fragment solid color (fade). No texture.
+- **Diamond:** Same mesh pipeline, solid color, no texture.
 
-- **Vertex:** `aPosition`, `aNormal`, `aTexCoord` → `@location(0)` position, `@location(1)` normal, `@location(2)` texCoord. Output position, uv, normal to fragment. Uniforms: `uProjection`, `uModelView` (or single `uModelViewProjection`).
-- **Fragment:** `vTexCoord`, `vNormal` from vertex; `uniform sampler2D uTexture`, `uniform bool uHasTexture`, `uLightDir`, `uAlpha`, `uFadeColor`. Same math: if `uFadeColor` is “use fade” sentinel, output fade color; else diffuse + texture or untextured gray. WGSL uses `textureSample`, `textureSampleLevel`, and `@binding`/`@group` for texture and sampler.
-- **Fullscreen quad:** vertex outputs NDC position and optional uv; fragment samples nothing (solid color) for fadeScreen. Uniform: clear color + alpha.
-- **Entry points:** `@vertex` and `@fragment` per pipeline.
+### 1.3 Next phases (implementation order in §4)
 
-### 1.4 Phases
-
-1. **Parity:** Replace `renderer.ts` and `loadTexture` with WebGPU; keep the same public API and behavior (skinned mesh, motion blur, plumb bob). No new features. mooshow passes device (or renderer’s texture factory) to the loader; viewport set via `renderer.setViewport`.
-2. **Object-ID and layered sprites (optional next):** Add a second pass or alternate pipeline that writes object ID (e.g. R32Uint or packed RGB) for picking and for baking RGB+alpha+z layers for object authoring.
-3. **Advanced features:** Sims-style pipeline, procedural architecture, and UI shader effects (below).
+1. ~~WebGPU parity + setViewport + loader texture factory~~ — **done**.
+2. **Object-ID and layered sprites (optional next):** Second pass or alternate pipeline writing object ID per pixel for picking and baking.
+3. **Advanced features:** Sims-style pipeline, terrain, UI effects (below).
 
 ---
 
@@ -63,9 +51,16 @@ One camera, one depth buffer, one render pass (or a small number of passes) so c
 - **Composition:** Draw sprites in back-to-front or use depth buffer: draw each sprite with its depth so characters and other geometry correctly interleave. Same pipeline as “background” above when background is image-based.
 - **Object creation:** 3D model (OBJ, glTF, or Sims assets) → render to RGB + alpha + z → export as layered sprite for use in holodeck or in object tools.
 
-### 2.3 Object-ID and picking
+### 2.3 Object-ID buffer (type + object id + sub-object id per pixel)
 
-- **ID pass:** Optional render pass that writes a stable object ID per pixel (e.g. integer in R or RGB). Read back on click or sample in a small region to resolve which object was picked. Supports both procedural geometry and sprites if we assign IDs consistently.
+Every pixel has **type** (8 bits), **object id** (32 bits), and **sub-object id** (8 bits). The buffer is shared: characters, objects, walls, floor tiles, and future passes all write into the same ID texture using the same depth buffer so the visible pixel wins. Picking maps back to the original content (catalog, character, or part).
+
+- **Format:** One `rgba32uint` pixel: R = type, G = objectId, B = subObjectId, A = 0. So 8-bit type (0–255), 32-bit object id (0–~4B), 8-bit sub-object id (0–255). No 64k limit: 32-bit objectId supports very large scenes (e.g. huge crowds).
+- **Reserved types:** `0` = none/background, `1` = character, `2` = object (prop), `3` = wall, `4` = floor, `5` = terrain, `6` = plumb-bob (diamond or custom mesh). Plumb-bob uses the same objectId as the character it hovers over. The plumb-bob shape can be the built-in procedural diamond or a user-supplied mesh (see §6). Extend as we add passes.
+- **Sub-object id semantics:** Keep a **single low-level granular ID** in the buffer: e.g. the mesh index (or draw index) within the object. So for characters, subObjectId is the index of the mesh in the body’s mesh list (0 = first skin, 1 = second, …). For props, it’s the draw group or sprite index. The renderer does not encode dressing, suite, or character in the ID; it only writes (type, objectId, subObjectId). The **application maintains maps** from (type, objectId, subObjectId) up to higher-level identities: e.g. (CHARACTER, bodyIndex, meshIndex) → dressing → suite → character. One granular sub-object id at the GPU, then derive dressing ⇒ suite ⇒ character (and any other hierarchy) via app-side lookups. That keeps the buffer format simple and stable while allowing flexible resolution for UI, paint tools, and selection.
+- **TODO (future):** Character renderer could render which (main) bone each triangle was skinned to into the ID buffer (e.g. via vertex attribute or per-draw bone id), so you get bone-based selection: click on an arm and resolve to the upper-arm bone. Not yet implemented.
+- **Flow:** One pass with **two color attachments** (main framebuffer + object-ID texture) and one depth buffer. The mesh pipeline fragment shader writes both color (location 0) and object ID (location 1, vec4u type/objectId/subObjectId/0). Same depth test and write for both; no second pass. Geometry is submitted once per object; the same draw that writes color also writes ID. For fullscreen overlay (e.g. fade quad), a dual-target quad pipeline writes color and (0,0,0,0) to the ID buffer so the pass always has two attachments when the ID texture exists.
+- **API:** `drawMesh(mesh, verts, norms, texture?, objectId?)` and `drawDiamond(..., objectId?)`. When `objectId` is provided, the mesh uniform includes type/objectId/subObjectId and the fragment writes them to the second attachment. When omitted, (0,0,0,0) is written. `readObjectIdAt(x, y)` returns `Promise<{ type, objectId, subObjectId }>`. No separate `beginObjectIdPass()` or `drawMeshObjectId`; one pass, one draw per object.
 - **Layered sprite authoring:** Same ID or a separate “bake” pass used to generate the RGB+alpha+z layers for new objects.
 
 ---
@@ -134,10 +129,10 @@ Goal: push as much Sims-style look and feel into shaders as we can (performance,
 
 ---
 
-## 4. Implementation order (suggested)
+## 4. Implementation order
 
-1. **WebGL → WebGPU parity** (renderer + texture, same API, no new features).
-2. **setViewport** and loader texture interface (device or factory) so mooshow and vitamoospace work unchanged.
+1. ~~WebGPU parity (renderer + texture)~~ — **done**.
+2. ~~setViewport + loader texture factory~~ — **done**.
 3. **Object-ID pass** (optional) for picking and future baking.
 4. **Background layer:** z-buffered sprites and/or procedural terrain + floor (minimal: grid + height + one tile texture).
 5. **Walls and roofs** (procedural or tiled in shaders).
@@ -209,5 +204,131 @@ With **full GPU** (Option B: animations + deformation on GPU, only time or a tin
 - **CPU** does almost nothing per character: no `Practice.tick`, no `deformMesh`, no vertex upload — just submit compute + draw and maybe update a time or sequence ID.
 - **GPU** does: one (or batched) compute pass to evaluate animation → bone matrices, then deformation → deformed buffer, then draw. Compute and draw scale with GPU parallelism; vertex and bone counts per character are small by modern standards.
 - **Practical limits** then shift to: **draw calls** (hundreds to a few thousand is fine with batching or multi-draw), **fill rate** (how many pixels of characters on screen), **GPU memory** (all undeformed meshes, skeletons, and animation data resident). Sims-style characters are light: a few KB of mesh + a few dozen bones + keyframes per skill. So **hundreds to thousands** of characters animating at once is in reach on typical hardware — the kind of crowd or busy neighbourhood that would bring a CPU-bound pipeline to its knees. The exact number depends on mesh complexity, resolution, and batching strategy, but the order of magnitude jumps from "tens–hundreds" to "hundreds–thousands" once animation and deformation live on the GPU.
+
+---
+
+## 6. Plumb-bob and static meshes: glTF and plug-in shapes
+
+The plumb-bob is currently a **procedural diamond** (see §1.1). To allow custom plumb-bobs (and other static props) without code changes, support loading from a standard 3D format.
+
+### 6.1 Display list (no per-frame geometry regeneration)
+
+- **Mesh identity:** Procedural meshes (e.g. `createDiamondMesh()`) or loaded meshes (e.g. from glTF) are created or loaded once and stored as `MeshData`.
+- **Per frame:** Only the **transform** (position, rotation, scale) is applied each frame via `transformMesh(mesh, x, y, z, rotY, scale)`; the result is passed to `drawMesh` / `drawMeshObjectId`. No regeneration of triangles or topology.
+
+### 6.2 Standard format: glTF 2.0
+
+- **Recommendation:** Use **glTF 2.0** (JSON `.gltf` or binary `.glb`) as the standard format for static meshes such as plumb-bobs. It is widely supported, toolable (Blender, glTF viewers), and has a well-defined schema.
+- **Loader:** Use a small, engine-agnostic glTF loader that outputs positions, normals, UVs, and indices (e.g. **minimal-gltf-loader** or similar) and convert the result into `MeshData` (vertices, normals, uvs, faces). No need for a full scene graph or PBR; only mesh geometry is required for the plumb-bob use case.
+- **Placement:** Add a loader under e.g. `vitamoo/loaders/` that: given a URL or parsed glTF JSON, extracts the first mesh (or a named mesh), and returns `MeshData` compatible with `drawMesh` and `transformMesh`. The default plumb-bob can remain the procedural diamond; an optional config or URL can point to a `.gltf`/`.glb` file to use as the plumb-bob shape instead.
+
+### 6.3 Plug-in plumb-bobs
+
+- **User flow:** Provide a way (config, UI, or asset path) to specify a glTF file for the plumb-bob. At load time, fetch and parse the glTF, convert to `MeshData`, and store it. Each frame, use that mesh with the same display-list path: `transformMesh(plumbBobMesh, x, y, z, rotY, scale)` then `drawMesh` / `drawMeshObjectId`. No code change required for new shapes; users can author plumb-bobs in Blender (or any glTF exporter) and drop the file in.
+
+### 6.4 Summary
+
+| Item | Approach |
+|------|----------|
+| Procedural plumb-bob | `createDiamondMesh()` → cached; draw via transform + `drawMesh`. |
+| Display list | `DisplayListEntry`: mesh + transform + color/objectId; run = transform + draw per entry. |
+| Custom plumb-bob | Load glTF → `MeshData` once; same transform + draw path. |
+| Library | Use a minimal glTF 2.0 JSON (and optionally binary) parser that outputs positions, normals, indices; map to `MeshData`. |
+
+---
+
+## 7. Generalized display list — one format for all drawing
+
+The display list is designed to be **general and powerful enough** to represent every kind of draw: character bodies and accessories, user interface, terrain, floor tiles, walls, wall gap covers, roofs, props, and plumb-bobs. One executor runs the list each frame; each entry type is handled appropriately.
+
+### 7.1 Entry kinds
+
+| Kind | Use case | Per-frame work |
+|------|----------|----------------|
+| **static** | Plumb-bobs, props, terrain tiles, floor, walls, wall gap covers, roofs | `transformMesh(mesh, transform)` → `drawMesh`. Mesh and topology are fixed; only position/rotation/scale applied. |
+| **skinned** | Character bodies, accessories | `deformMesh(mesh, skeleton, boneMap)` then optional world transform → `drawMesh`. Skeleton poses updated by animation; deformation runs each frame. |
+| **ui** | Pie menu, HUD, buttons, fullscreen fade | Draw with orthographic/screen-space camera (or NDC). Optional depth; often `layer: 'overlay'` and drawn last. |
+
+- **Transform:** Static and UI entries use `Transform3D` (position + optional rotY + scale) or `Transform3DFull` (position + quaternion rotation + scale) for walls, rotated props, etc. Skinned entries can add an optional world `transform` applied after deformation (e.g. body position and direction).
+- **Layer:** `'world'` (default) = depth-tested 3D; `'overlay'` = typically no depth write, drawn after world; or a numeric sort key so the executor can order passes (e.g. terrain → floor → walls → gap covers → roofs → characters → UI).
+- **Picking:** Every entry can carry optional `picking` (type, objectId, subObjectId) so the same pass writes object ID for click resolution. For paint-on-skin, see §7.3.
+
+### 7.2 What goes in the list
+
+- **Character bodies and accessories:** Skinned entries (mesh + skeleton + boneMap). One entry per mesh; accessories are just more skinned meshes with the same skeleton. Executor runs `updateTransforms` on the skeleton, then for each skinned entry runs `deformMesh` and `drawMesh` with picking if needed.
+- **User interface:** UI entries (quads or meshes) with `layer: 'overlay'`. Ortho camera or NDC; optional texture (icons, menu art). Picking for buttons/menu items.
+- **Terrain, floor tiles, walls, wall gap covers, roofs:** Static entries. Mesh is procedural or loaded (e.g. glTF); transform places and orients. Full 3D rotation for walls at any angle. Instancing (same mesh, many transforms) can be a later optimization; initially one entry per instance.
+- **Props and plumb-bobs:** Static entries; mesh from procedural or glTF, transform per frame.
+
+The executor’s job: sort by layer, then for each entry dispatch to the right path (static → transformMesh + draw; skinned → deformMesh + draw; UI → ortho/NDC + draw). Same `drawMesh` and color/objectId pipeline for all; only the source of vertices (transformed static, deformed skinned, or UI geometry) and camera (perspective vs ortho) vary.
+
+### 7.3 UV map and texture-ID map for painting on skins
+
+To support **painting on character skins** (and other textured surfaces), the renderer can expose an **optional, enable/disable** pair of buffers:
+
+- **UV map (enable/disable):** When enabled, a third color attachment (e.g. `rg32float`) stores the **interpolated UV** at each pixel. On click, the app reads not only `readObjectIdAt(x, y)` but also `readUVAt(x, y)` → `{ u, v }` in texture space. The paint tool can then draw at `(u, v)` on the correct texture (identified by objectId/subObjectId). When disabled, no UV buffer is allocated and the mesh pass does not write UV; zero cost when not painting.
+- **Texture ID map (optional):** Object ID already identifies *which* mesh/part (objectId + subObjectId). To know *which texture* to paint on, the app can map (objectId, subObjectId) to a texture handle or atlas region. If needed, a separate “texture ID” channel could encode atlas tile or texture index in the same pass (e.g. pack in unused bits or a fourth attachment). For most paint tools, objectId + subObjectId + UV are enough: the app maintains the mapping from (objectId, subObjectId) to the skin texture and uses (u, v) for the brush. So “texture ID map” can mean: (1) same as objectId/subObjectId (app resolves to texture), or (2) optional fourth output for atlas/texture index when using atlases. Design choice: start with UV only; add explicit texture/atlas ID in the buffer only if needed.
+
+**Implementation sketch:**
+
+- **Renderer:** `setUVBufferEnabled(true | false)`. When true, `setViewport` creates a third texture (e.g. `r32float` or `rg32float` for u,v); the mesh pass has a third fragment target and writes `vec2f(texCoord)` (and optionally 0 for “no UV”). `readUVAt(screenX, screenY)` returns `Promise<{ u, v } | null>` (null if disabled or out of bounds).
+- **Mesh WGSL:** When the pipeline has three targets, fragment output is `struct { color, objectId, uv }`; `uv = vec2f(input.texCoord)` (or 0 if no texture). No change to object ID or color path.
+- **Display list:** Entries with `picking.writeUV: true` (or a global “UV capture” mode when painting is active) ensure the pass is run with the UV buffer enabled. So: one format, one list; UV is a render-time option and a readback API, not a new entry type.
+
+This keeps the display list format general: same entries for characters, terrain, UI, etc.; UV and texture-ID are **output options** of the same pass for paint tools, not a separate kind of drawing.
+
+---
+
+## 8. Importing standard JSON 3D formats (skeletons, meshes, animations)
+
+To support external assets and eventually skeletons, deformable meshes, and animations from standard tools (Blender, etc.), we need a well-supported interchange format. Recommendation: **prioritize one format** that can cover static meshes, skinned meshes, and animation, then add loaders that map into vitamoo’s types.
+
+### 8.1 Which format to support
+
+- **glTF 2.0** (`.gltf` JSON or `.glb` binary) is the best choice:
+  - **Industry standard:** Khronos, used everywhere (Blender, Unity, Unreal, web).
+  - **Single format** for meshes, materials, **skeletons (nodes)**, **skins** (joints + inverse-bind + per-vertex joint indices and weights), and **animations** (channels + samplers over time).
+  - **JSON option:** `.gltf` is JSON; `.glb` is binary with an optional JSON chunk. Start with `.gltf` for simplicity; add `.glb` when needed.
+  - **Tooling:** Export from Blender/Maya/etc.; validate with glTF viewers and validators.
+- **Alternatives (not recommended as primary):**
+  - **COLLADA (.dae):** XML, not JSON; heavier; glTF supersedes it for runtime.
+  - **FBX:** Binary (or ASCII FBX, not JSON); SDK-heavy; use only if you need direct FBX in the pipeline; otherwise export FBX → glTF from the DCC.
+  - **Three.js JSON / legacy formats:** Not a standard; glTF is the replacement.
+
+So: **support glTF 2.0 first** (JSON `.gltf`, then binary `.glb` if desired). It is the standard that contains meshes, skeletons, skins, and animations in one place.
+
+### 8.2 What glTF provides vs what vitamoo uses
+
+| glTF 2.0 | Vitamoo | Notes |
+|----------|---------|--------|
+| **Mesh** (attributes: POSITION, NORMAL, TEXCOORD_0; indices) | **MeshData** (vertices, normals, uvs, faces) | Direct for static; for skinned, see below. |
+| **Node** (tree; translation, rotation, scale; optional mesh, skin) | **SkeletonData** / **BoneData** (name, parentName, position, rotation) | Nodes that are joints → bones; build hierarchy. |
+| **Skin** (inverseBindMatrices, joints = node indices) + mesh **JOINTS_0**, **WEIGHTS_0** | **MeshData** (boneNames, boneBindings, blendBindings) + **SkinData** (mesh → bone) | glTF uses **per-vertex** joint indices (e.g. 4) + weights. Vitamoo uses **bone-ranged** bindings + blend bindings. Conversion required (see §8.4). |
+| **Animation** (channels: node + path translation/rotation/scale; samplers: input time, output values) | **SkillData** / **MotionData** (boneName, translations[], rotations[], duration) | Map each channel to a Motion; fill shared translation/rotation arrays from samplers. |
+
+### 8.3 Phased support (eventually: static → skinned → animated)
+
+1. **Static meshes (now / first):** Load glTF → extract first (or named) mesh → **MeshData** (vertices, normals, uvs, faces; no bone bindings). Use for plumb-bobs, props, terrain tiles, etc. No skeleton or animation. Easiest; already scoped in §6.
+2. **Skeletons and deformable meshes (next):** Load glTF → build **SkeletonData** from nodes that participate in a **Skin** (joints array). For each skinned mesh, convert glTF’s per-vertex JOINTS_0/WEIGHTS_0 into Vitamoo’s **boneBindings** and **blendBindings**, or introduce a “glTF-style” skinning path (vertex shader with joint matrices) and keep two mesh types. Prefer conversion to Vitaboy format so one deformation pipeline stays in place.
+3. **Animations (later):** Load glTF **animations** → for each channel (node + path), create **MotionData** (boneName from node name, frames/duration from sampler input, translation/rotation from sampler output); aggregate into **SkillData** with shared translation/rotation arrays. Drive existing **Practice** so glTF-authored clips play on the same skeleton.
+
+### 8.4 Skinning model: glTF vs Vitamoo
+
+- **glTF:** Each vertex has up to 4 joint indices and 4 weights. Deform: `pos = sum(weight[i] * jointMatrix[i] * bindPos)`. Standard and well documented.
+- **Vitamoo (Vitaboy):** Bone-ranged: each bone owns a contiguous block of vertices (boneBindings); plus blend bindings that lerp from one bone’s “blended” vertex into another’s. Different layout, same idea (multi-bone influence).
+
+**Conversion (glTF → Vitamoo):** For each bone (joint), find vertices that have that joint in their top-4; assign them to that bone’s binding range. Vertices influenced by multiple joints become blend bindings (dominant bone = bound, others = blended with weight). This approximates glTF skinning with Vitaboy’s model; some quality loss at 4+ influences is acceptable for many assets. Alternative: add a second deformation path that takes glTF-style (joint indices + weights) and joint matrices and runs the usual 4-weight vertex skinning in JS (or later GPU), then feed the same `drawMesh`; then no conversion of mesh layout, only skeleton and animation mapping.
+
+### 8.5 Summary
+
+| Goal | Format | Output types | Phase |
+|------|--------|---------------|--------|
+| Static meshes (plumb-bobs, props, terrain) | glTF 2.0 (.gltf) | MeshData | First |
+| Skeletons + skinned meshes | glTF 2.0 | SkeletonData, MeshData (with bone/blend bindings or glTF-style path) | Next |
+| Animations | glTF 2.0 | SkillData, MotionData | Later |
+
+Use **one standard JSON 3D format (glTF 2.0)** and map it into existing vitamoo structures so we can eventually support skeletons, deformable meshes, and animations from Blender and other tools without maintaining multiple interchange formats.
+
+---
 
 This document is the single design reference for the WebGPU upgrade and advanced Sims-style renderer features; implementation can be done incrementally with AI-assisted development and typically shortens the calendar time (e.g. full refactor in a few days with AI assist).
