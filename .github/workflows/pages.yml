@@ -12,8 +12,8 @@
 #   - User/org site at root: https://YOUR_USER.github.io/
 #   - Custom domain: https://example.com/
 #
-# The workflow derives SvelteKit paths.base from the URL path and, for non-github.io hosts,
-# writes a CNAME file into the build output so GitHub Pages can serve the custom domain.
+# The workflow derives SvelteKit paths.base from the URL path. For real custom domains it
+# writes CNAME into the build output. Localhost, loopback, *.local, and github.io never get CNAME.
 #
 # Also enable: Settings → Pages → Build and deployment → Source: GitHub Actions.
 #
@@ -37,7 +37,7 @@ on:
       - 'pnpm-lock.yaml'
       - 'package.json'
       - '.github/workflows/pages.yml'
-      - '.github/scripts/resolve-vitamoospace-pages-site.mjs'
+      - 'vitamoo/scripts/resolve-public-site-url.mjs'
 
   workflow_dispatch:
 
@@ -89,7 +89,7 @@ jobs:
         id: site
         env:
           PAGES_SITE_URL: ${{ vars.VITAMOOSPACE_PAGES_URL || secrets.VITAMOOSPACE_PAGES_URL }}
-        run: node .github/scripts/resolve-vitamoospace-pages-site.mjs
+        run: node vitamoo/scripts/resolve-public-site-url.mjs
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile

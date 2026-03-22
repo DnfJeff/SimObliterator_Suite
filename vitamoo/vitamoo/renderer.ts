@@ -740,15 +740,16 @@ export class Renderer {
         view.setUint32(156, hasTexU32, true);
         view.setFloat32(160, this.ambient, true);
         view.setFloat32(164, this.diffuseFactor, true);
-        view.setFloat32(168, this.highlight[0], true);
-        view.setFloat32(172, this.highlight[1], true);
-        view.setFloat32(176, this.highlight[2], true);
-        view.setFloat32(180, this.highlight[3], true);
-        view.setUint32(184, (objectId?.type ?? 0) & 0xff, true);
-        view.setUint32(188, (objectId?.objectId ?? 0) >>> 0, true);
-        view.setUint32(192, ((objectId?.subObjectId ?? 0) & 0xff) >>> 0, true);
+        // WGSL: vec4f highlight aligns to 16; diffuseFactor ends at 168 → pad 168–175, highlight @176.
+        view.setFloat32(176, this.highlight[0], true);
+        view.setFloat32(180, this.highlight[1], true);
+        view.setFloat32(184, this.highlight[2], true);
+        view.setFloat32(188, this.highlight[3], true);
+        view.setUint32(192, (objectId?.type ?? 0) & 0xff, true);
+        view.setUint32(196, (objectId?.objectId ?? 0) >>> 0, true);
+        view.setUint32(200, ((objectId?.subObjectId ?? 0) & 0xff) >>> 0, true);
         const debugModeU32 = (this.debugSliceMode ?? 0) >>> 0;
-        view.setUint32(196, debugModeU32, true);
+        view.setUint32(204, debugModeU32, true);
         if (debugModeU32 !== 0 && !Renderer._loggedDebugSlice) {
             Renderer._loggedDebugSlice = true;
             console.log('[renderer] debugSlice active', { mode: debugModeU32, '0=normal 1=UV 2=checker 3=red': true });
