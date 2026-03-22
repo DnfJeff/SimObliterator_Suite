@@ -18,7 +18,7 @@
 export type TextureHandle = GPUTexture;
 
 // Parse a BMP file from an ArrayBuffer. Returns an ImageData-compatible
-// object with RGBA pixels ready for WebGL texturing.
+// object with RGBA pixels (for createImageBitmap → WebGPU upload).
 export function parseBMP(buffer: ArrayBuffer): {
     width: number; height: number; data: Uint8ClampedArray
 } {
@@ -170,7 +170,8 @@ function decodeRLE8(
 }
 
 // Load a texture from a file. Detects format by extension.
-// BMP: parsed directly (handles indexed 8-bit + RLE), then ImageBitmap → copyExternalImageToTexture.
+// BMP: parseBMP (8/24/32 bpp, BI_RGB + BI_RLE8) → ImageData → createImageBitmap → copyExternalImageToTexture.
+//      Success: console "[texture] loaded <url> WxH". Verify in-render with ?debugSlice=1 (UV as color) or debugSlice=0 (normal).
 // PNG/JPG: browser decode → createImageBitmap → copyExternalImageToTexture.
 export async function loadTexture(
     device: GPUDevice,
@@ -180,25 +181,32 @@ export async function loadTexture(
     const ext = url.split('.').pop()?.toLowerCase() ?? '';
     let bitmap: ImageBitmap;
 
-    if (ext === 'bmp') {
-        const response = await fetch(url);
-        const buffer = await response.arrayBuffer();
-        const { width, height, data } = parseBMP(buffer);
-        const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
-        bitmap = await createImageBitmap(imageData);
-    } else {
-        const response = await fetch(url, { mode: 'cors' });
-        if (!response.ok) throw new Error(`Failed to load image: ${url}`);
-        const blob = await response.blob();
-        bitmap = await createImageBitmap(blob);
+    try {
+        if (ext === 'bmp') {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
+            const buffer = await response.arrayBuffer();
+            const { width, height, data } = parseBMP(buffer);
+            const imageData = new ImageData(new Uint8ClampedArray(data), width, height);
+            bitmap = await createImageBitmap(imageData);
+        } else {
+            const response = await fetch(url, { mode: 'cors' });
+            if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}: ${url}`);
+            const blob = await response.blob();
+            bitmap = await createImageBitmap(blob);
+        }
+    } catch (e) {
+        console.warn('[texture] loadTexture failed:', url, e);
+        throw e;
     }
 
     const w = bitmap.width;
     const h = bitmap.height;
     const tex = device.createTexture({
+        label: `tex:${url.replace(/^.*\//, '')}`,
         size: [w, h, 1],
         format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
     queue.copyExternalImageToTexture(
         { source: bitmap },
@@ -206,5 +214,6 @@ export async function loadTexture(
         [w, h, 1],
     );
     bitmap.close();
+    console.log('[texture] loaded', url, `${w}x${h}`);
     return tex;
 }

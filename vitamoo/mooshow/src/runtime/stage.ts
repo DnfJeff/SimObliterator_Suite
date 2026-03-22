@@ -1,7 +1,8 @@
 /// <reference types="@webgpu/types" />
-import { Renderer, updateTransforms, deformMesh } from 'vitamoo';
+import { Renderer, ObjectIdType, updateTransforms, deformMesh, loadGltfMeshes } from 'vitamoo';
 
 type ResolvedRenderer = Awaited<ReturnType<typeof Renderer.create>> | null;
+type RendererWithDebug = NonNullable<ResolvedRenderer> & { setDebugSlice(mode: 0 | 1 | 2 | 3): void };
 import type { MooShowHooks } from '../hooks/types.js';
 import { defaultHooks } from '../hooks/defaults.js';
 import { ContentLoader } from './content-loader.js';
@@ -9,13 +10,19 @@ import type { ContentIndex, CharacterDef, SceneDef } from './content-loader.js';
 import type { Body, Vec3 } from './types.js';
 import { SpinController } from '../interaction/spin-controller.js';
 import { tickTopPhysics, applyTopTransform, TOP_MAX_TILT } from '../interaction/top-physics.js';
-import { pickActorAtScreen, perspectiveMatrix, lookAtMatrix } from '../interaction/picking.js';
 import { SoundEngine } from '../audio/sound-engine.js';
+
+let _stagePickLogCount = 0;
+const DEBUG_STAGE_PICK_LOGS = 5;
 
 export interface StageConfig {
     canvas: HTMLCanvasElement;
     hooks?: MooShowHooks;
     assetsBaseUrl?: string;
+    /** If set, load this glTF URL as the plumb-bob; all meshes in the file are used. */
+    plumbBobUrl?: string;
+    /** Scale multiplier for the plumb-bob. Default 1. */
+    plumbBobScale?: number;
 }
 
 export class MooShowStage {
@@ -38,6 +45,10 @@ export class MooShowStage {
     private _selectedActor = -1;
     private _activeScene: string | null = null;
     private _cameraTarget: Vec3 = { x: 0, y: 2.5, z: 0 };
+    private _plumbBobUrl: string | undefined;
+    private _plumbBobScale: number;
+    private _plumbBobThrobStart = 0;
+    private _plumbBobSelectionTime = 0;
 
     constructor(config: StageConfig) {
         this.canvas = config.canvas;
@@ -45,6 +56,8 @@ export class MooShowStage {
         this.loader = new ContentLoader(config.assetsBaseUrl ?? '');
         this.spin = new SpinController();
         this.sound = new SoundEngine();
+        this._plumbBobUrl = config.plumbBobUrl;
+        this._plumbBobScale = config.plumbBobScale ?? 1;
 
         this._initRenderer();
         this._bindCanvasEvents();
@@ -53,13 +66,32 @@ export class MooShowStage {
     private _initRenderer(): void {
         this.canvas.width = this.canvas.clientWidth;
         this.canvas.height = this.canvas.clientHeight;
+        const plumbBobUrl = this._plumbBobUrl;
         this._renderer = Renderer.create(this.canvas).catch((e) => {
             console.error('WebGPU init failed:', e);
             return null;
-        }).then((r) => {
+        }).then(async (r) => {
             if (r) {
                 this.loader.setTextureFactory(r.getTextureFactory());
                 r.setViewport(0, 0, this.canvas.width, this.canvas.height);
+                if (plumbBobUrl) {
+                    const url = /^https?:\/\//i.test(plumbBobUrl) ? plumbBobUrl : this.loader.baseUrl + plumbBobUrl;
+                    try {
+                        const meshes = await loadGltfMeshes(url);
+                        r.setPlumbBobMeshes(meshes.length > 0 ? meshes : null);
+                    } catch (e) {
+                        console.warn('Failed to load plumb-bob glTF:', url, e);
+                    }
+                }
+                r.setPlumbBobScale(this._plumbBobScale);
+                const ds = new URLSearchParams(window.location.search).get('debugSlice');
+                if (ds !== null) {
+                    const m = parseInt(ds, 10);
+                    if (m >= 0 && m <= 3) {
+                        (r as RendererWithDebug).setDebugSlice(m as 0 | 1 | 2 | 3);
+                        console.log('[stage] debugSlice from URL', m, '(0=normal 1=UV RG 2=checker 3=red)');
+                    }
+                }
             }
             return r;
         });
@@ -72,6 +104,11 @@ export class MooShowStage {
             if (this._renderer) {
                 this.loader.setTextureFactory(this._renderer.getTextureFactory());
                 this._renderer.setViewport(0, 0, this.canvas.width, this.canvas.height);
+                const ds = new URLSearchParams(window.location.search).get('debugSlice');
+                if (ds !== null) {
+                    const m = parseInt(ds, 10);
+                    if (m >= 0 && m <= 3) (this._renderer as RendererWithDebug).setDebugSlice(m as 0 | 1 | 2 | 3);
+                }
             }
         }
         return this._renderer;
@@ -80,6 +117,13 @@ export class MooShowStage {
     get contentIndex(): ContentIndex | null { return this.loader.index; }
     get bodies(): Body[] { return this._bodies; }
     get selectedActor(): number { return this._selectedActor; }
+
+    /** Set plumb-bob scale at runtime (default 1). */
+    async setPlumbBobScale(scale: number): Promise<void> {
+        this._plumbBobScale = scale;
+        const r = await this._getRenderer();
+        if (r) r.setPlumbBobScale(scale);
+    }
     get activeScene(): string | null { return this._activeScene; }
     get paused(): boolean { return this._paused; }
     get running(): boolean { return this._running; }
@@ -158,6 +202,9 @@ export class MooShowStage {
             }
         }
 
+        const now = performance.now();
+        this._plumbBobThrobStart = now;
+        if (idx >= 0) this._plumbBobSelectionTime = now;
         this._selectedActor = idx;
         this.hooks.onSelectionChange?.(idx);
         this.sound.simlishGreet(idx, this._bodies);
@@ -180,16 +227,19 @@ export class MooShowStage {
         this._renderFrame();
     }
 
-    pick(screenX: number, screenY: number): number {
-        if (this._bodies.length === 0) return -1;
-        return pickActorAtScreen(
-            screenX, screenY,
-            this.canvas.getBoundingClientRect(),
-            this.canvas.width, this.canvas.height,
-            this._bodies, this._cameraTarget,
-            this.spin.rotY, this.spin.rotX, this.spin.zoom,
-            this._selectedActor
-        );
+    async pick(screenX: number, screenY: number): Promise<number> {
+        const renderer = await this._getRenderer();
+        if (!renderer || this._bodies.length === 0) return -1;
+        const rect = this.canvas.getBoundingClientRect();
+        const localX = screenX - rect.left;
+        const localY = screenY - rect.top;
+        const scaleX = this.canvas.width / (rect.width || 1);
+        const scaleY = this.canvas.height / (rect.height || 1);
+        const bufferX = localX * scaleX;
+        const bufferY = localY * scaleY;
+        const { type, objectId } = await renderer.readObjectIdAt(bufferX, bufferY);
+        if (type === ObjectIdType.CHARACTER || type === ObjectIdType.PLUMB_BOB) return objectId;
+        return -1;
     }
 
     set speedScale(v: number) { this._speedScale = v; }
@@ -302,14 +352,27 @@ export class MooShowStage {
         this._rafId = requestAnimationFrame(this._loop);
     };
 
+    private _debugSliceFromUrl(): 0 | 1 | 2 | 3 | null {
+        const ds = new URLSearchParams(window.location.search).get('debugSlice');
+        if (ds === null) return null;
+        const m = parseInt(ds, 10);
+        return (m >= 0 && m <= 3) ? (m as 0 | 1 | 2 | 3) : null;
+    }
+
     private async _renderFrame(): Promise<void> {
         const renderer = await this._getRenderer();
         if (!renderer) return;
 
+        const debugSlice = this._debugSliceFromUrl();
+        if (debugSlice !== null) {
+            (renderer as RendererWithDebug).setDebugSlice(debugSlice);
+        }
+
         const spinSpeed = Math.abs(this.spin.rotationVelocity);
         const anyActive = this._bodies.some(b => b.top.active);
+        const useFadeTrail = anyActive && spinSpeed > 1.0 && debugSlice === null;
 
-        if (anyActive && spinSpeed > 1.0) {
+        if (useFadeTrail) {
             const trailLength = Math.max(0.08, 0.4 - spinSpeed * 0.02);
             renderer.fadeScreen(0.1, 0.1, 0.15, trailLength);
         } else {
@@ -336,7 +399,7 @@ export class MooShowStage {
             const bodyDir = spinDeg * Math.PI / 180;
             const cosD = Math.cos(bodyDir);
             const sinD = Math.sin(bodyDir);
-
+            let meshIndex = 0;
             for (const { mesh, boneMap, texture } of body.meshes) {
                 try {
                     let verts: any[], norms: any[];
@@ -369,8 +432,13 @@ export class MooShowStage {
                         }
                     }
 
-                    renderer.drawMesh(mesh, verts, norms, texture || null);
+                    renderer.drawMesh(mesh, verts, norms, texture || null, {
+                        type: ObjectIdType.CHARACTER,
+                        objectId: bi,
+                        subObjectId: meshIndex,
+                    });
                 } catch { /* skip bad mesh */ }
+                meshIndex++;
             }
         }
 
@@ -378,6 +446,18 @@ export class MooShowStage {
             const now = performance.now();
             const plumbRot = now * 0.001 * Math.PI;
             const bob = Math.sin(now * 0.002) * 0.12;
+            const RISE_MS = 120;
+            const THROB_MS = 220;
+            const THROB_AMP = 0.18;
+            const riseT = this._plumbBobSelectionTime
+                ? Math.min(1, (now - this._plumbBobSelectionTime) / RISE_MS)
+                : 1;
+            const riseFactor = 1 - (1 - riseT) * (1 - riseT);
+            const throbElapsed = now - this._plumbBobThrobStart;
+            const throbScale = throbElapsed < THROB_MS
+                ? 1 + THROB_AMP * Math.sin((throbElapsed / THROB_MS) * Math.PI)
+                : 1;
+            const basePlumbSize = 0.18;
             const indicesToDraw = (this._selectedActor >= 0 && this._selectedActor < this._bodies.length)
                 ? [this._selectedActor]
                 : this._bodies.map((_, i) => i);
@@ -397,7 +477,13 @@ export class MooShowStage {
                 }
                 const rx = hx * cosD - hz * sinD;
                 const rz = hx * sinD + hz * cosD;
-                renderer.drawDiamond(rx + body.x, hy + 1.5 + bob, rz + body.z, 0.18, plumbRot, 0.2, 1.0, 0.2, 0.9);
+                const isSelected = bi === this._selectedActor;
+                const yOffset = (1.5 + bob) * (isSelected ? riseFactor : 1);
+                const size = basePlumbSize * (isSelected ? throbScale : 1);
+                renderer.drawDiamond(
+                    rx + body.x, hy + yOffset, rz + body.z, size, plumbRot, 0.2, 1.0, 0.2, 0.9,
+                    { type: ObjectIdType.PLUMB_BOB, objectId: bi },
+                );
                 this.hooks.onPlumbBobChange?.(bi, true);
             };
 
@@ -428,16 +514,38 @@ export class MooShowStage {
         c.addEventListener('contextmenu', e => e.preventDefault());
         c.style.cursor = 'grab';
 
-        c.addEventListener('mousedown', (e: MouseEvent) => {
+        c.addEventListener('mousedown', async (e: MouseEvent) => {
             this.sound.ensureAudio();
             this.spin.startDrag(e.clientX, e.clientY, e.button, e.shiftKey);
             c.style.cursor = 'grabbing';
 
             if (e.button === 0 && this._bodies.length > 0) {
-                const picked = this.pick(e.clientX, e.clientY);
-                if (picked >= 0) {
-                    this.selectActor(picked);
-                    this.hooks.onPick?.(picked, e.clientX, e.clientY);
+                const renderer = await this._getRenderer();
+                if (renderer) {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const localX = e.clientX - rect.left;
+                    const localY = e.clientY - rect.top;
+                    const scaleX = this.canvas.width / (rect.width || 1);
+                    const scaleY = this.canvas.height / (rect.height || 1);
+                    const bufferX = localX * scaleX;
+                    const bufferY = localY * scaleY;
+                    const { type, objectId, subObjectId } = await renderer.readObjectIdAt(bufferX, bufferY);
+                    if (_stagePickLogCount < DEBUG_STAGE_PICK_LOGS) {
+                        _stagePickLogCount++;
+                        console.log('[stage] mousedown pick', {
+                            rectW: rect.width, rectH: rect.height,
+                            canvasW: this.canvas.width, canvasH: this.canvas.height,
+                            localX, localY, scaleX, scaleY, bufferX, bufferY,
+                            type, objectId, subObjectId,
+                        });
+                    }
+                    const picked = (type === ObjectIdType.CHARACTER || type === ObjectIdType.PLUMB_BOB) ? objectId : -1;
+                    if (picked >= 0) {
+                        this.selectActor(picked);
+                        this.hooks.onPick?.(picked, e.clientX, e.clientY);
+                    } else if (this._bodies.length > 1) {
+                        this.selectActor(-1);
+                    }
                 } else if (this._bodies.length > 1) {
                     this.selectActor(-1);
                 }
@@ -515,14 +623,26 @@ export class MooShowStage {
                 e.preventDefault();
             }
 
-            if (e.key === '0') {
+            if (e.ctrlKey && ['0', '1', '2', '3'].includes(e.key)) {
+                const m = e.key === '0' ? 0 : parseInt(e.key, 10);
+                this._getRenderer().then((r) => {
+                    if (r) {
+                        (r as RendererWithDebug).setDebugSlice(m as 0 | 1 | 2 | 3);
+                        console.log('[stage] debugSlice', m, '0=normal 1=UV RG 2=checker 3=red');
+                    }
+                });
+                e.preventDefault();
+                return;
+            }
+
+            if (e.key === '0' && !e.ctrlKey) {
                 this.togglePause();
                 this.hooks.onKeyAction?.('togglePause');
                 e.preventDefault();
             }
 
             const speedKeys: Record<string, number> = { '1': 25, '2': 50, '3': 100, '4': 150, '5': 200, '6': 300, '7': 500, '8': 750, '9': 1000 };
-            if (speedKeys[e.key]) {
+            if (speedKeys[e.key] && !e.ctrlKey) {
                 this._paused = false;
                 this._speedScale = speedKeys[e.key] / 100;
                 this._lastFrameTime = 0;

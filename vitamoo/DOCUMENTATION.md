@@ -8,25 +8,26 @@ This document describes all layers, components, data flow, and how to reuse or e
 
 ```mermaid
 flowchart TB
-  subgraph app["vitamoospace<br>(SvelteKit app)"]
-    A["<br>Routes, VitaMooSpace.svelte,<br>menus, app state"]
+  subgraph app["vitamoospace (SvelteKit app)"]
+    direction LR
+    A["Routes, VitaMooSpace.svelte, menus, app state"]
   end
-  subgraph runtime["mooshow<br>(graphics/runtime)"]
-    B["<br>MooShowStage, ContentLoader,<br>SpinController"]
-    C["<br>picking, audio"]
-    D["<br>Hooks: onPick, onSceneChange,<br>onKeyAction, onPlumbBobChange…"]
+  subgraph runtime["mooshow (graphics / runtime)"]
+    direction LR
+    B["MooShowStage, ContentLoader, SpinController"]
+    C["picking, audio"]
+    D["Hooks: onPick, onSceneChange, onKeyAction, onPlumbBobChange…"]
   end
-  subgraph core["vitamoo<br>(core)"]
-    E["<br>Parsers: CMX, SKN, CFP…"]
-    F["<br>skeleton, mesh deformation,<br>Practice"]
-    G["<br>Renderer WebGL,<br>loadTexture"]
-    H["<br>No DOM;<br>Node or browser"]
+  subgraph core["vitamoo (core)"]
+    direction LR
+    E["Parsers: CMX, SKN, CFP…"]
+    F["skeleton, mesh deformation, Practice"]
+    G["Renderer WebGL, loadTexture"]
+    H["No DOM; Node or browser"]
   end
   app --> runtime
   runtime --> core
 ```
-
-Node labels use a leading `<br>` for top spacing; Mermaid does not support vertical padding on flowchart nodes.
 
 - **vitamoo**: Pure animation/data core. No concept of “scene” or “UI”; only skeletons, meshes, skills, and animation ticks.
 - **mooshow**: One place that knows about “bodies” (character instances), camera, input, and rendering. Exposes a single stage API and hooks so the app layer can stay UI-framework-agnostic.
