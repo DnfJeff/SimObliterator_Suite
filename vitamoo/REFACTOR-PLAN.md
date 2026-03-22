@@ -4,14 +4,14 @@
 
 | Phase | Status | Notes |
 |-------|--------|--------|
-| **0** Setup and baseline | Done | mooshow + vitamoospace exist; demo/ untouched; pnpm filters in use. |
+| **0** Setup and baseline | Done | mooshow + vitamoospace exist; pnpm filters in use. |
 | **1** Extract runtime state | Done | Stage has bodies, selectedActor, setScene, setCharacterSolo, ContentLoader, animation loop. |
 | **2** Rendering and hooks | Done | Hooks (onPick, onHover, onSelectionChange, onHighlight, onPlumbBobChange, etc.), picking, SpinController, SoundEngine. |
 | **3** VitaMooSpace.svelte | Done | Single full-page component, scene/actor/character/animation controls, loads `/data/content.json`, api/health placeholder. |
-| **4** GitHub Pages | Done | `.github/workflows/pages.yml` builds vitamoo → mooshow → vitamoospace and deploys `vitamoospace/build`. |
-| **5** Cleanup and parity | Open | Legacy `demo/` still present and runnable. Parity doc and monorepo migration notes not yet written. |
+| **4** GitHub Pages | Done | `.github/workflows/pages.yml` builds vitamoo → mooshow → vitamoospace and deploys `vitamoospace/build`. Deploy runs only when `VITAMOOSPACE_PAGES_URL` is set (variable or secret) on that repository. |
+| **5** Cleanup and parity | Partial | Legacy standalone `demo/` removed from the tree (recoverable from git history). Optional parity write-up and monorepo migration notes still open. |
 
-Definition of Done: items 1–4 are met. Item 5 (parity review + optional migration notes) is the only remaining checklist item.
+Definition of Done: items 1–4 are met. Item 5: demo removal done; parity doc and migration notes remain optional.
 
 **Beyond Phase 5:** WebGPU renderer (see DOCUMENTATION.md §6 Plan for mooshow): object-ID rendering, RGB+alpha+z layered sprites from 3D (for object creation), and one reusable pipeline for holodeck runtime (pre-rendered z-buffered background + real-time characters), Sims object creation tools, and save file viewing/editing.
 
@@ -19,25 +19,18 @@ Definition of Done: items 1–4 are met. Item 5 (parity review + optional migrat
 
 ## Goal
 
-Split the current demo into three clear layers inside `vitamoo/`:
+The former monolithic viewer was split into three clear layers inside `vitamoo/`:
 
 1. `vitamoo/vitamoo` - low-level animation/data core (no UI, no scene editor logic)
-2. `vitamoo/mooshow` - graphics/runtime layer (WebGL renderer, picking/highlighting hooks, plumb bob hooks, camera, input adapters)
+2. `vitamoo/mooshow` - graphics/runtime layer (WebGPU renderer via vitamoo `Renderer`, picking via object IDs, hooks, plumb bob, camera, input adapters)
 3. `vitamoo/vitamoospace` - SvelteKit app (single full-page UI, menus/scenes from JSON, mouse interactions, demo orchestration)
 
 This is monorepo-ready without doing the full monorepo move yet.
 
 ## Current State
 
-- Core library files already live in `vitamoo/vitamoo/*.ts`.
-- Legacy demo is in `vitamoo/demo/` with a large `viewer.js` that mixes:
-  - content loading
-  - character and scene state
-  - animation ticking
-  - WebGL rendering
-  - picking/spinning/camera input
-  - UI/menu behavior
-- `demo/content.json` already defines scene-friendly data used by the viewer.
+- Core library files live in `vitamoo/vitamoo/*.ts`.
+- The browser app is **vitamoospace** (SvelteKit + mooshow + vitamoo `Renderer`). Scene data lives under `vitamoospace/static/data/` (including `content.json`).
 
 ## Target Layout (inside `vitamoo/`)
 
@@ -49,9 +42,9 @@ This is monorepo-ready without doing the full monorepo move yet.
     - `package.json`, `tsconfig.json`
     - **src/**
       - `index.ts`
-      - **runtime/** — `stage.ts`, `camera.ts`, `scene.ts`, `animation-loop.ts`
-      - **render/** — `webgl-renderer.ts`, `mesh-draw.ts`
-      - **interaction/** — `picking.ts`, `spin-controller.ts`, `highlight.ts`
+      - **runtime/** — `stage.ts` (WebGPU via vitamoo `Renderer.create`, frame loop, bodies), `content-loader.ts`, `types.ts`
+      - **interaction/** — `picking.ts`, `spin-controller.ts`, `top-physics.ts`
+      - **audio/** — `sound-engine.ts`, `voice.ts`
       - **hooks/** — `types.ts`, `defaults.ts`
   - **vitamoospace/** — SvelteKit app
     - `package.json`, `svelte.config.js`, `vite.config.ts`, `tsconfig.json`
@@ -81,7 +74,7 @@ This is monorepo-ready without doing the full monorepo move yet.
 ### `mooshow` (graphics/runtime)
 
 - Responsibilities:
-  - WebGL draw orchestration on a canvas
+  - WebGPU draw orchestration on a canvas (vitamoo `Renderer`)
   - character instances and scene graph runtime
   - camera controls and viewport resize handling
   - picking/highlighting/plumb bob extension hooks
@@ -125,9 +118,9 @@ Suggested API shape:
 
 ## Data and Configuration Strategy
 
-- Keep existing `demo/content.json` schema as initial source of truth.
-- Move runtime-consumed content to:
-  - `vitamoospace/static/data/content.json`
+- Treat `vitamoospace/static/data/content.json` as the runtime content index (same schema the old viewer used).
+- Runtime-consumed assets stay under:
+  - `vitamoospace/static/data/`
 - Add optional app-facing scene config:
   - `vitamoospace/src/lib/config/scenes.json` (or TS module after schema validation)
 - Rule:
@@ -140,7 +133,7 @@ Suggested API shape:
 
 1. Create `mooshow` package skeleton with TypeScript build.
 2. Create `vitamoospace` SvelteKit app scaffold.
-3. Keep `demo/` untouched as reference baseline.
+3. Legacy `demo/` folder removed from the tree (recoverable from git history).
 4. Add scripts at `vitamoo/` root:
    - build all local packages/apps
    - run vitamoospace dev server
@@ -202,10 +195,10 @@ Acceptance:
 Update `.github/workflows/pages.yml` to build and deploy the SvelteKit static site
 instead of the legacy `vitamoo/dist` demo.
 
-Current workflow:
+Historical workflow (pre–vitamoospace):
 
 1. `npm ci` in `vitamoo/`
-2. `npm run build` (tsc + copy demo to dist)
+2. `npm run build` (tsc only today; older commits copied a static demo into `dist/`)
 3. Upload `vitamoo/dist` to Pages
 
 New workflow:
@@ -224,18 +217,18 @@ SvelteKit adapter-static config:
 - `prerender: { default: true }` in `svelte.config.js`.
 - Base path: set via `paths.base` if deployed under a subpath (e.g. `/SimObliterator_Suite`).
 
-Trigger: keep `workflow_dispatch` for now; optionally add push trigger on `main` later.
+Trigger: `push` to `main`/`master` (paths under `vitamoo/` and workflow) and `workflow_dispatch`. Deploy job is skipped unless `VITAMOOSPACE_PAGES_URL` is configured on the repo.
 
 Acceptance:
 
 - Pages site serves the SvelteKit-built app at the same URL as today.
 - Static assets (data files, textures) load correctly from `static/data/`.
-- Legacy demo files are no longer deployed (but remain in repo under `demo/`).
+- Legacy standalone demo is not deployed.
 
 ## Phase 5 - Cleanup and Parity Review
 
-1. Compare legacy `demo` features and document parity status.
-2. Keep `demo/` for now as fallback and reference implementation.
+1. Compare former `demo/` features against vitamoospace and document parity status (optional).
+2. Legacy `demo/` removed from tree; recover from git if required.
 3. Add internal migration notes for future monorepo move:
    - `vitamoo` -> `packages/vitamoo`
    - `mooshow` -> `packages/mooshow`
@@ -243,8 +236,8 @@ Acceptance:
 
 Acceptance:
 
-- New app is default demo path.
-- Legacy demo remains runnable until explicit removal.
+- New app is the only supported demo path.
+- Legacy standalone viewer is not in the working tree.
 
 ## Build and Tooling Notes
 
@@ -267,7 +260,7 @@ Acceptance:
    - Mitigation: keep original filenames and mirror the `content.json` references in `static/data`.
 
 4. Risk: too much rewrite at once.
-   - Mitigation: preserve `demo/` until parity is accepted.
+   - Mitigation: ship vitamoospace first; remove the old tree only after the new path is stable (done).
 
 ## Definition of Done
 

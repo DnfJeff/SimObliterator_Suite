@@ -6,15 +6,12 @@
   "main": "dist/vitamoo.js",
   "scripts": {
     "clean": "rm -rf dist",
-    "build:lib": "tsc",
-    "build:demo": "cp -r demo/* dist/",
-    "build": "npm run clean && npm run build:lib && npm run build:demo",
-    "dev": "npm run build && npx live-server dist",
-    "serve": "npx http-server dist -o -c-1"
+    "build": "npm run clean && tsc",
+    "dev": "npm run build",
+    "serve": "npm run build && npx http-server dist -o -c-1"
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.38",
-    "live-server": "^1.2.2",
     "typescript": "^5.4"
   }
 }

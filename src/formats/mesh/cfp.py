@@ -122,7 +122,7 @@ class CFPReader:
         Decompress translation vectors (X, Y, Z sequences).
         
         CFP stores all X values, then all Y values, then all Z values.
-        Coordinate conversion: Z is negated for DirectX -> WebGL handedness.
+        Coordinate conversion: Z is negated for DirectX-oriented game data vs GPU viewer convention.
         """
         if count == 0:
             return []
@@ -154,7 +154,7 @@ class CFPReader:
         """
         Decompress rotation quaternions (W, X, Y, Z sequences).
         
-        Coordinate conversion: W is negated for DirectX -> WebGL handedness.
+        Coordinate conversion: W is negated for DirectX-oriented game data vs GPU viewer convention.
         """
         if count == 0:
             return []

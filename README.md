@@ -270,7 +270,7 @@ SimObliterator_Suite/
 | ---------------------- | ---------------- | ----- | ----------------------------- |
 | `src/Tools/gui/`       | DearPyGui        | 32    | Stable, full editing features |
 | `src/Tools/webviewer/` | HTML/JS/Flask    | 6     | Active development            |
-| `docs/` + `vitamoo/`   | TypeScript/WebGL | 15+   | VitaMoo 3D viewer             |
+| `docs/` + `vitamoo/`   | TypeScript/WebGPU | 15+   | VitaMoo 3D viewer             |
 
 > **Note:** The DearPyGui desktop GUI (`src/Tools/gui/`) provides all editing functionality. Browser-based tooling (`webviewer/`, `vitamoo/`) focuses on visualization and is the emerging direction for cross-platform support.
 

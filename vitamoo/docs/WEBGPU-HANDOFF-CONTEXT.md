@@ -1,6 +1,6 @@
 # WebGPU renderer — context and next pass
 
-**Purpose:** Handoff doc for the WebGPU renderer. The stack is **WebGPU-only**; WebGL has been removed. Use this file to iterate on the next pass.
+**Purpose:** Handoff doc for the vitamoo WebGPU **`Renderer`**: a framework meant to support broader Sims content and plug-ins (UI, visualization, editors); character animation is the first integrated slice. Use this file to iterate on the next pass.
 
 ---
 

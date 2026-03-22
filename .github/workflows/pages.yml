@@ -1,6 +1,44 @@
+# VitaMooSpace static app → GitHub Pages.
+#
+# Upstream / default: the deploy job is skipped unless you configure a public site URL
+# on THIS repository (forks use their own settings).
+#
+# Configure either:
+#   - Settings → Secrets and variables → Actions → Variables: VITAMOOSPACE_PAGES_URL
+#   - or the same name as a repository secret (non-public URL is unusual; variable is preferred)
+#
+# Value: the URL users open in the browser, for example:
+#   - Project Pages: https://YOUR_USER.github.io/REPO_NAME/
+#   - User/org site at root: https://YOUR_USER.github.io/
+#   - Custom domain: https://example.com/
+#
+# The workflow derives SvelteKit paths.base from the URL path and, for non-github.io hosts,
+# writes a CNAME file into the build output so GitHub Pages can serve the custom domain.
+#
+# Also enable: Settings → Pages → Build and deployment → Source: GitHub Actions.
+#
+# Manual trigger (same as Actions → Run workflow), after VITAMOOSPACE_PAGES_URL is set:
+#   gh workflow run "Deploy VitaMooSpace to GitHub Pages" --repo OWNER/REPO
+# workflow_dispatch with no inputs is valid YAML: it only registers the manual trigger.
+
 name: Deploy VitaMooSpace to GitHub Pages
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'vitamoo/vitamoo/**'
+      - 'vitamoo/mooshow/**'
+      - 'vitamoo/vitamoospace/**'
+      - 'vitamoo/package.json'
+      - 'vitamoo/pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'pnpm-lock.yaml'
+      - 'package.json'
+      - '.github/workflows/pages.yml'
+      - '.github/scripts/resolve-vitamoospace-pages-site.mjs'
+
   workflow_dispatch:
 
 permissions:
@@ -14,6 +52,7 @@ concurrency:
 
 jobs:
   build-and-deploy:
+    if: ${{ (vars.VITAMOOSPACE_PAGES_URL != '') || (secrets.VITAMOOSPACE_PAGES_URL != '') }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -28,6 +67,12 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Resolve public site URL
+        id: site
+        env:
+          PAGES_SITE_URL: ${{ vars.VITAMOOSPACE_PAGES_URL || secrets.VITAMOOSPACE_PAGES_URL }}
+        run: node .github/scripts/resolve-vitamoospace-pages-site.mjs
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
@@ -39,8 +84,14 @@ jobs:
 
       - name: Build vitamoospace
         env:
-          BASE_PATH: ${{ secrets.BASE_PATH || format('/{0}', github.event.repository.name) }}
+          BASE_PATH: ${{ steps.site.outputs.base_path }}
         run: pnpm --filter vitamoospace run build
+
+      - name: Write CNAME for custom domain
+        if: steps.site.outputs.cname_host != ''
+        env:
+          CNAME_HOST: ${{ steps.site.outputs.cname_host }}
+        run: printf '%s\n' "$CNAME_HOST" > vitamoo/vitamoospace/build/CNAME
 
       - uses: actions/configure-pages@v4
 

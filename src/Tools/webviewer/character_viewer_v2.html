@@ -289,8 +289,8 @@
                 renderer = new Renderer(canvas);
                 renderer.context.viewport(0, 0, canvas.width, canvas.height);
             } catch (e) {
-                $('status').textContent = 'WebGL error: ' + e.message;
-                console.error('WebGL init failed:', e);
+                $('status').textContent = 'Renderer error: ' + e.message;
+                console.error('Graphics init failed:', e);
             }
         }
         

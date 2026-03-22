@@ -16,7 +16,7 @@ The project has **two parallel UI systems**:
 |-----------|------------|-------|--------|
 | **Desktop App** | DearPyGui | 32 files in `src/Tools/gui/` | Stable, full editing |
 | **Web Viewers** | HTML/JS/Flask | 6 files in `src/Tools/webviewer/` | Active development |
-| **VitaMoo** | TypeScript/WebGL | `docs/` + `vitamoo/` | 3D character viewer |
+| **VitaMoo** | TypeScript/WebGPU | `docs/` + `vitamoo/` | 3D character viewer |
 
 ### DearPyGui Desktop GUI (32 files)
 
@@ -83,7 +83,7 @@ Location: `src/Tools/webviewer/`
 
 Location: `docs/` (GitHub Pages) + `vitamoo/` (TypeScript source)
 
-- 3D character rendering with WebGL
+- 3D character rendering with WebGPU
 - Animation playback controls
 - Scene presets with multiple characters
 - Keyboard navigation
@@ -106,7 +106,7 @@ Integrated items:
 - ✅ **FREESO_BEHAVIORAL_ARCHITECTURE.md** (35KB) - Deep FreeSO engine analysis
 - ✅ **GLOBAL_BEHAVIOR_DATABASE.json** (23KB) - Complete global BHAV ID mappings
 - ✅ **Webviewer** folder - Complete web-based viewers for characters, objects, meshes
-- ✅ **VitaMoo** - 3D character viewer (TypeScript/WebGL)
+- ✅ **VitaMoo** - 3D character viewer (TypeScript/WebGPU)
 - ✅ **characters.json** (2MB), **objects.json** (3MB), **meshes.json** (209KB)
 
 ---

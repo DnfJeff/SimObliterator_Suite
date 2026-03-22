@@ -1,13 +1,13 @@
 # VitaMoo
 
-Character animation for **Sims 1**-style meshes, skeletons, and skins: parse CMX/SKN/CFP, drive skeletons, deform meshes, and render in the browser with WebGL. No game engine—just TypeScript and a small, layered stack you can reuse or replace.
+**VitaMoo** is a **Sims 1**-style animation and asset stack: parse CMX/SKN/CFP, drive skeletons, deform meshes. The **WebGPU `Renderer`** (WGSL) is a **framework** aimed at rendering **more than characters** over time—other Sims content types, tooling, and **plug-ins** such as custom UI and data visualization—with **skinned character animation** as the **first** integrated slice. No game engine: TypeScript and a small layered stack you can reuse or replace.
 
 ## What’s in this directory
 
 | Layer | Role |
 |-------|------|
 | **vitamoo/** | Core: parsers, skeleton math, mesh deformation, animation ticks. No DOM, no canvas. |
-| **mooshow/** | Graphics/runtime: WebGL renderer, camera, spin/pick input, hooks for UI (selection, plumb bob, keys). Depends on `vitamoo`. |
+| **mooshow/** | Graphics/runtime: WebGPU stage (`Renderer.create`), camera, object-ID picking, spin input, hooks for UI (selection, plumb bob, keys). Depends on `vitamoo`. |
 | **vitamoospace/** | SvelteKit app: full-page demo, scene/character/animation menus, one `VitaMooSpace` component that uses `vitamoo` + `mooshow`. |
 
 Scenes and characters come from a **content index** (e.g. `content.json`) plus CMX/SKN/BMP/CFP assets. Bodies are an array of characters; the loader fills it from a scene or from one character by index. The app can use a current character index (e.g. -1 for “all” in the UI).

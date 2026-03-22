@@ -1,6 +1,8 @@
 # WebGPU renderer: current state and advanced features
 
-Design for the WebGPU-only renderer and its extension to Sims-style holodeck rendering: z-buffered sprites, procedural terrain and architecture, and UI feedback (highlighting, selection, pie menu).
+The vitamoo **WebGPU `Renderer`** is a **rendering framework**, not a single-purpose character toy. It is meant to grow into the common GPU layer for **the rest of Sims-era and adjacent content** (lots, objects, architecture, UI chrome, tooling views) and for **plug-ins** such as custom user interface, data visualization, editors, and holodeck-style composition. **Skinned character animation** (CMX/SKN/CFP, `deformMesh`, `drawMesh`) is the **first shipped slice**; the same pipeline (depth, object IDs, display-list shapes, WGSL passes) extends to terrain, sprites, overlays, and third-party draws.
+
+This document covers the **current** WebGPU surface and the **roadmap** for Sims-style holodeck rendering: z-buffered sprites, procedural terrain and architecture, and UI feedback (highlighting, selection, pie menu).
 
 ---
 
@@ -8,12 +10,12 @@ Design for the WebGPU-only renderer and its extension to Sims-style holodeck ren
 
 ### 1.1 Implemented (vitamoo)
 
-All GPU use is in **vitamoo**; WebGL has been removed.
+All GPU drawing lives in **vitamoo** (`Renderer`); **mooshow** orchestrates it for the character viewer (and **vitamoospace** hosts the demo app).
 
 | File | Role |
 |------|------|
-| `vitamoo/renderer.ts` | Single `Renderer` class. WebGPU only. `Renderer.create(canvas)` → `Promise<Renderer \| null>`. Methods: `clear`, `fadeScreen`, `setCamera`, `setCulling`, `drawMesh(mesh, verts, norms, texture?, objectId?)`, `drawDiamond(…, objectId?)`, `setViewport`, `endFrame`, `getTextureFactory`, `readObjectIdAt`, `setDebugSlice`, `setPlumbBobMeshes`, `setPlumbBobScale`. **Dual attachments:** color target + `rgba32uint` object-ID texture (same pass, shared depth). WGSL mesh + fullscreen fade + diamond. One encoder/pass per frame; depth from `setViewport`. |
-| `vitamoo/texture.ts` | `parseBMP(buffer)` (pure). `loadTexture(device, queue, url)` → `Promise<TextureHandle>` (GPUTexture). BMP → parseBMP → ImageData → createImageBitmap → copyExternalImageToTexture; other formats → fetch → createImageBitmap → same. |
+| `vitamoo/vitamoo/renderer.ts` | Single `Renderer` class. WebGPU only. `Renderer.create(canvas)` → `Promise<Renderer>`. Methods: `clear`, `fadeScreen`, `setCamera`, `setCulling`, `drawMesh(mesh, verts, norms, texture?, objectId?)`, `drawDiamond(…, objectId?)`, `setViewport`, `endFrame`, `getTextureFactory`, `readObjectIdAt`, `setDebugSlice`, `setPlumbBobMeshes`, `setPlumbBobScale`. **Dual attachments:** color target + `rgba32uint` object-ID texture (same pass, shared depth). WGSL mesh + fullscreen fade + diamond. One encoder/pass per frame; depth from `setViewport`. |
+| `vitamoo/vitamoo/texture.ts` | `parseBMP(buffer)` (pure). `loadTexture(device, queue, url)` → `Promise<TextureHandle>` (GPUTexture). BMP → parseBMP → ImageData → createImageBitmap → copyExternalImageToTexture; other formats → fetch → createImageBitmap → same. |
 
 **mooshow:** `Renderer.create(canvas)`; `setTextureFactory`, `setViewport`. Per frame: `clear` or `fadeScreen` → `setCamera` → CPU `deformMesh` then `drawMesh` / `drawDiamond` with pick ids → `endFrame`. Picking and hover use `readObjectIdAt`. `setDebugSlice` is wired for debug display modes. No raw WebGPU in the loader.
 
@@ -220,7 +222,7 @@ The plumb-bob is currently a **procedural diamond** (see §1.1). To allow custom
 ### 6.1 Display list (no per-frame geometry regeneration)
 
 - **Mesh identity:** Procedural meshes (e.g. `createDiamondMesh()`) or loaded meshes (e.g. from glTF) are created or loaded once and stored as `MeshData`.
-- **Per frame:** Only the **transform** (position, rotation, scale) is applied each frame via `transformMesh(mesh, x, y, z, rotY, scale)`; the result is passed to `drawMesh` / `drawMeshObjectId`. No regeneration of triangles or topology.
+- **Per frame:** Only the **transform** (position, rotation, scale) is applied each frame via `transformMesh(mesh, x, y, z, rotY, scale)`; the result is passed to `drawMesh(..., objectId?)`. No regeneration of triangles or topology.
 
 ### 6.2 Standard format: glTF 2.0
 
@@ -230,7 +232,7 @@ The plumb-bob is currently a **procedural diamond** (see §1.1). To allow custom
 
 ### 6.3 Plug-in plumb-bobs
 
-- **User flow:** Provide a way (config, UI, or asset path) to specify a glTF file for the plumb-bob. At load time, fetch and parse the glTF, convert to `MeshData`, and store it. Each frame, use that mesh with the same display-list path: `transformMesh(plumbBobMesh, x, y, z, rotY, scale)` then `drawMesh` / `drawMeshObjectId`. No code change required for new shapes; users can author plumb-bobs in Blender (or any glTF exporter) and drop the file in.
+- **User flow:** Provide a way (config, UI, or asset path) to specify a glTF file for the plumb-bob. At load time, fetch and parse the glTF, convert to `MeshData`, and store it. Each frame, use that mesh with the same display-list path: `transformMesh(plumbBobMesh, x, y, z, rotY, scale)` then `drawMesh(..., objectId?)`. No code change required for new shapes; users can author plumb-bobs in Blender (or any glTF exporter) and drop the file in.
 
 ### 6.4 Summary
 
@@ -337,4 +339,4 @@ Use **one standard JSON 3D format (glTF 2.0)** and map it into existing vitamoo 
 
 ---
 
-This document is the single design reference for the WebGPU upgrade and advanced Sims-style renderer features; implementation can be done incrementally with AI-assisted development and typically shortens the calendar time (e.g. full refactor in a few days with AI assist).
+This document is the single design reference for the WebGPU renderer and advanced Sims-style features; implementation can be done incrementally.

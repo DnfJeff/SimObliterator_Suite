@@ -93,9 +93,9 @@ The specific transform depends on Blender's bone conventions:
 - Rest pose matrices are in armature space
 - World-space evaluation gives posed transforms
 
-For VitaMoo's WebGL renderer, we already apply coordinate conversion
+For VitaMoo's WebGPU renderer, we already apply coordinate conversion
 in `parseCFP`: Z negated on translations, W negated on quaternions
-(DirectX left-hand to WebGL right-hand). The Blender exporter would
+(from the original DirectX-oriented game data to the convention the viewer uses). The Blender exporter would
 produce data in the same coordinate space as the original game files.
 
 **Recommended approach:** Match the original game's coordinate convention
@@ -1095,7 +1095,7 @@ Tracked in the VitaMoo project TODO:
   with extended passes (UV maps, object ID, depth, normals)
 - **Content generator integration**: UV and object ID maps for Picture-o-Matic
   and AI-driven texture generation pipelines
-- **Browser sprite exporter**: WebGL-based sprite rendering (TypeScript port
+- **Browser sprite exporter**: WebGPU-based sprite rendering (TypeScript port
   of the Blender pipeline for browser-based content tools)
 - **FAR archive support**: Read/write game archive files directly
 - **SPR/SPR2 sprite format**: Read/write the game's sprite sheet format

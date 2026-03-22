@@ -2,6 +2,8 @@
 
 This document describes all layers, components, data flow, and how to reuse or extend the stack.
 
+The vitamoo **WebGPU `Renderer`** is designed as a **framework** for drawing **Sims-style and related content** beyond characters: lots, objects, architecture, layered sprites, tooling, and **plug-ins** (custom UI, data visualization, editors). **Character animation** (parsers, skeleton, `deformMesh`, staged `drawMesh`) is the **first** integrated use case; mooshow is the first runtime host. New content types and tools should plug into the same depth buffer, object-ID convention, and pass structure where possible.
+
 ---
 
 ## 1. Architecture overview
@@ -22,7 +24,7 @@ flowchart TB
     direction LR
     E["Parsers: CMX, SKN, CFP…"]
     F["skeleton, mesh deformation, Practice"]
-    G["Renderer WebGL, loadTexture"]
+    G["Renderer WebGPU, loadTexture"]
     H["No DOM; Node or browser"]
   end
   app --> runtime
@@ -47,28 +49,29 @@ flowchart TB
 - Build and update skeletons: `buildSkeleton`, `updateTransforms`, `findBone`, `findRoot`.
 - Deform meshes from skeleton state: `deformMesh`.
 - Animation: `Practice` (skill + skeleton), tick and drive transforms.
-- Optional WebGL: `Renderer` (canvas), `loadTexture`, `parseBMP`.
+- Optional WebGPU: `Renderer.create(canvas)` (WGSL mesh pipeline, depth, object-ID attachment), `loadTexture(device, queue, url)`, `parseBMP`.
 
 ### Public API (from `vitamoo`)
 
 - **Types:** `Vec2`, `Vec3`, `Quat`, `Bone`, `SkeletonData`, `MeshData`, `SuitData`, `SkillData`, `MotionData`, `BoneData`, `SkinData`, `BoneBinding`, `BlendBinding`, `Face`, `CMXFile`.
 - **Parse/write:** `parseCMX`, `parseSKN`, `parseBCF`, `parseBMF`, `parseCFP`, `writeCMX`, `writeSKN`, `writeReport`, `writeBCF`, `writeBMF`, `writeCFP`.
 - **Skeleton:** `buildSkeleton`, `findRoot`, `findBone`, `updateTransforms`, `deformMesh`.
-- **Renderer:** `Renderer`.
+- **Renderer:** `Renderer` (`Renderer.create`, `drawMesh`, `drawDiamond`, `readObjectIdAt`, `endFrame`, …). Types: `ObjectIdType`, `SubObjectId`.
 - **I/O:** `DataReader`, `TextReader`, `BinaryReader`, `BinaryWriter`, `buildDeltaTable`, `decompressFloats`, `compressFloats`.
-- **Texture:** `parseBMP`, `loadTexture`.
+- **Texture:** `parseBMP`, `loadTexture` (returns `GPUTexture` via `TextureHandle`).
+- **Display / assets:** `createDiamondMesh`, `transformMesh`, `loadGltfMeshes`, display-list types (`DisplayListEntry`, …).
 - **Animation:** `Practice`, `RepeatMode`.
 
 ### Boundaries
 
-- Does **not** depend on DOM, canvas, or app-level state.
+- Parsers and skeleton math do **not** depend on DOM, canvas, or app-level state.
 - Does **not** load content index or scenes; it only parses and animates data it is given.
-- Safe to use from Node (e.g. tooling) or browser; WebGL bits are only used when you instantiate `Renderer` and pass a canvas.
+- Safe to use from Node (e.g. tooling) or browser. WebGPU drawing applies only when you use `Renderer.create` with a canvas and a browser that exposes `navigator.gpu`.
 
 ### Reuse
 
 - Use `vitamoo` alone when you need parsers, skeleton math, or mesh deformation and will supply your own render loop and I/O.
-- Replace or wrap `Renderer` if you need a different WebGL setup; mooshow uses it internally but you can bypass mooshow and drive vitamoo directly.
+- Replace or wrap `Renderer` only if you need a different GPU API; mooshow uses vitamoo’s `Renderer` internally, or you can bypass mooshow and drive vitamoo directly. The supported browser demo is **vitamoospace**.
 
 ---
 
@@ -100,7 +103,7 @@ const stage = createMooShowStage({
 - **`setCharacterSolo(charIndex)`** — Sets bodies to one character at charIndex (same body model as scenes).
 - **`setAnimation(animName, actorIndex?)`** — Sets animation for one actor or all.
 - **`selectActor(idx)`** — `idx`: 0..n-1 for one body, -1 for “all”. Affects spin, plumb bob, and sound.
-- **`pick(screenX, screenY)`** — Returns body index under point, or -1.
+- **`pick(screenX, screenY)`** — `async`; returns `Promise<number>`: body index under the point, or `-1`. Uses the renderer’s **`readObjectIdAt`** on the object-ID attachment (character and plumb-bob types map to `objectId` = body index).
 - **`start()` / `stop()`** — Start/stop the requestAnimationFrame loop.
 - **`render()`** — Force one frame (e.g. after slider change).
 - **`destroy()`** — Stops the loop.
@@ -146,7 +149,9 @@ Bodies are the only runtime representation of characters.
 
 ### 3.5 Picking
 
-`pickActorAtScreen(screenX, screenY, canvasRect, width, height, bodies, cameraTarget, rotY, rotX, zoom, selectedActorIndex)`: projects body positions (e.g. spine) to screen and returns the index of the closest within a pixel radius. Used by the stage’s `pick()`.
+The stage resolves clicks and hover by reading the **`rgba32uint` object-ID buffer** after the main color pass (`vitamoo` `Renderer.readObjectIdAt`). That yields `type`, `objectId`, and `subObjectId` per pixel; mooshow maps character and plumb-bob hits to a body index.
+
+`pickActorAtScreen` in `mooshow/src/interaction/picking.ts` is an optional **CPU projection** helper (screen-space distance to body anchor points). It is **not** what `MooShowStage.pick` uses at runtime.
 
 ### 3.6 SoundEngine
 
@@ -195,7 +200,7 @@ ContentLoader is used internally by the stage; its types are exported so the app
 
 ### Data and assets
 
-- Content index and assets are served from `vitamoospace/static/data/` (e.g. `content.json`, CMX, SKN, BMP, CFP). Copy or symlink from your vitamoo build or demo data.
+- Content index and assets are served from `vitamoospace/static/data/` (e.g. `content.json`, CMX, SKN, BMP, CFP). Maintain that directory as your content pack.
 - `assetsBaseUrl` is set so the stage loads from `/data/` (or the same path with a base path if using SvelteKit `paths.base`).
 
 ### Build and deploy
@@ -220,7 +225,7 @@ ContentLoader is used internally by the stage; its types are exported so the app
 ### Use only vitamoo
 
 - Add `vitamoo` as a dependency; import parsers, `buildSkeleton`, `updateTransforms`, `deformMesh`, `Practice`.
-- You own loading (content index, fetch), rendering (your WebGL or other), and input. No stage, no bodies array from this repo.
+- You own loading (content index, fetch), rendering (WebGPU via `Renderer`, or your own backend), and input. No stage, no bodies array from this repo.
 
 ### Use mooshow with your own UI
 
@@ -252,17 +257,18 @@ ContentLoader is used internally by the stage; its types are exported so the app
 
 **Goal:** Support a hybrid z-buffer, sprite, and procedural-architecture pipeline like The Sims. Render terrain, grass, floors, walls, roofs, and other architecture procedurally or from tiles; render Sims-style objects with z-buffered sprites; and run vitamoo characters (skinned meshes, animation) inside the same scene so characters live in the world. One unified stage: environment + objects + characters, with correct depth ordering and a single camera.
 
-**WebGPU (current):** The live renderer is **WebGPU-only** (WGSL, depth buffer, dual-render-target object IDs). There is no WebGL path. Character meshes still use **CPU** `deformMesh` each frame; the GPU draws deformed vertices and writes pick ids. Roadmap: holodeck layers (background, terrain, walls) in `docs/WEBGPU-RENDERER-DESIGN.md` §4; optional **GPU skeletal deformation** in §5. Day-to-day handoff: `docs/WEBGPU-HANDOFF-CONTEXT.md`.
+**Rendering framework:** The vitamoo **`Renderer`** is **WebGPU** (WGSL, depth buffer, dual attachments: surface color + `rgba32uint` object IDs). Character meshes still use **CPU** `deformMesh` each frame; the GPU draws deformed vertices and writes pick ids—that path is the **first** consumer. The same framework is meant to host **additional Sims content types**, **in-app UI** (menus, pie chrome, highlights), **data visualization**, and **editor** views as further draws and passes. Roadmap: holodeck layers (background, terrain, walls) in `docs/WEBGPU-RENDERER-DESIGN.md` §4; optional **GPU skeletal deformation** in §5. Day-to-day handoff: `docs/WEBGPU-HANDOFF-CONTEXT.md`.
 
 **Object ID and layered sprites:** The main pass writes an **`rgba32uint` id attachment** (type, object id, sub-object id) alongside color; mooshow uses `readObjectIdAt` for picking. That same output can feed **RGB + alpha + z layered sprites** for authoring: render assets (OBJ, glTF, Sims-era data) into color, alpha, and depth, then use layers as z-buffered sprites in the holodeck.
 
-**Reusable renderer vision:** The same WebGPU renderer is intended for:
+**Reusable renderer vision:** The same `Renderer` is intended for:
 
 - **Holodeck-style runtime:** Pre-rendered z-buffered background (rooms, terrain, props as layered sprites) plus real-time polygon characters (vitamoo skinned meshes). One camera, one depth buffer, correct ordering.
 - **Sims object creation tools:** Load or import 3D geometry, render to RGB/alpha/z layers, export or pack as object art for use in-game or in save files.
 - **Save file viewing and editing:** Same rendering pipeline to display and edit saved lots/households/objects with consistent look and picking.
+- **Plug-ins:** Custom UI layers, diagnostics, and data-visualization overlays that share the camera, depth, and object-ID conventions.
 
-So the renderer is not only for the current character viewer: it is shared infrastructure for holodeck runtime, object authoring, and save-file tooling.
+So the **`Renderer`** is shared infrastructure for the character viewer **and** for growing Sims content coverage, tooling, and extensibility—not a one-off viewer hack.
 
 ---
 
@@ -284,7 +290,20 @@ Order matters: vitamoospace depends on mooshow, mooshow on vitamoo. For developm
 - **mooshow:** `pnpm --filter mooshow run build` → `mooshow/dist/`.
 - **vitamoospace:** `pnpm --filter vitamoospace run build` → `vitamoospace/build/` (static) or run `vite dev` for dev server.
 
-Demo assets: ensure `vitamoospace/static/data/` contains `content.json` and the CMX/SKN/BMP/CFP files referenced there (e.g. copy from `vitamoo/dist/` or your own content pack).
+Demo assets: ensure `vitamoospace/static/data/` contains `content.json` and the CMX/SKN/BMP/CFP files referenced there (maintain your own content pack in that tree).
+
+### GitHub Pages (optional)
+
+The workflow `.github/workflows/pages.yml` builds **vitamoo** → **mooshow** → **vitamoospace** and deploys `vitamoospace/build` with `actions/deploy-pages`.
+
+On the **default upstream repo**, the deploy job does **not** run unless you set a public site URL:
+
+- **Repository variable** (recommended): `VITAMOOSPACE_PAGES_URL` — e.g. `https://youruser.github.io/SimObliterator_Suite/` for project Pages, or `https://youruser.github.io/` if the app is served from the site root, or `https://example.com/` for a custom domain.
+- **Repository secret** (optional): same name `VITAMOOSPACE_PAGES_URL` if you prefer not to expose the value (unusual for a public URL). If both are set, the variable is used when non-empty.
+
+The workflow parses that URL to set SvelteKit `paths.base` (`BASE_PATH` during build). Hostnames that are not `*.github.io` produce a **`CNAME`** file in the published site (hostname only) for GitHub’s custom-domain flow.
+
+Enable **Settings → Pages → Source: GitHub Actions** on the repo that publishes. Forks use **their own** variables/secrets, so the main repo can stay inert while a fork publishes.
 
 ### If pnpm doesn't handle dependencies
 
